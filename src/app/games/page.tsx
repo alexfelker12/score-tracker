@@ -1,7 +1,7 @@
-export default function Home() {
+export default function Games() {
   return (
     <main>
-      Home
+      Games
       <br/>
     </main>
   );

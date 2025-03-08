@@ -42,9 +42,11 @@ export default function RootLayout({
           <Header />
 
           {/* main content */}
-          {children}
+          <div className="[&_>_main]:max-w-4xl [&_>_main]:px-4 [&_>_main]:w-full py-4 flex justify-center">
+            {children}
+          </div>
 
-          {/* footer content */}
+          {/* bottom/footer content */}
           <div></div>
 
         </ThemeProvider>
