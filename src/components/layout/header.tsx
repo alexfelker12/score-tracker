@@ -1,9 +1,9 @@
+import { HeaderWrap } from "./header-wrap";
+
 export default function Header() {
   return (
-    <header className="border-b h-16">
-      <div>
-
-      </div>
+    <header className="top-0 sticky flex justify-center border-b h-16">
+      <HeaderWrap />
     </header>
   );
 }
