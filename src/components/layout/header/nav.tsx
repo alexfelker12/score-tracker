@@ -66,8 +66,8 @@ export type NavLinkItem = {
 
 export const NAV_LINKS: NavLinkItem[] = [
   {
-    href: "/games",
-    text: "Games"
+    href: "/trackers",
+    text: "Trackers"
   },
   {
     href: "/leaderboards",
