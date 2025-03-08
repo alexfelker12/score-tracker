@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link";
 
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -10,7 +8,7 @@ import { MenuIcon } from "lucide-react";
 
 export const MainNav = () => {
   return (
-    <nav className="flex gap-4">
+    <nav className="md:flex gap-4 hidden">
       {NAV_LINKS.map((item) => (
         <Link key={item.href} href={item.href}>
           {item.text}
@@ -23,7 +21,7 @@ export const MainNav = () => {
 export const MobileNav = () => {
   return (
     <Sheet>
-      <SheetTrigger asChild>
+      <SheetTrigger asChild className="block md:hidden">
 
         {/* Menu Button */}
         <Button variant="outline" size="icon">
