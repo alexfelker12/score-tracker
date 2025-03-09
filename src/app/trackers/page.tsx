@@ -1,4 +1,5 @@
-import { GameLink, type GameLinkProps } from "./_components/game-link";
+import { GAMES } from "@/lib/constants";
+import { GameLink } from "./_components/game-link";
 
 export default function Trackers() {
   return (
@@ -18,12 +19,3 @@ export default function Trackers() {
     </main>
   );
 }
-
-export const GAMES: GameLinkProps[] = [
-  {
-    name: "Schwimmen",
-    href: "/trackers/schwimmen",
-    description: "Achieve the highest amount of points with 3 cards.",
-    categories: ["Cards", "2-11 Players"]
-  },
-]
