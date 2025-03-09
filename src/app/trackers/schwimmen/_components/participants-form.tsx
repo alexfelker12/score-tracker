@@ -146,7 +146,8 @@ export const ParticipantsForm = () => {
                         placeholder={`Player ${index + 1}`}
                         //* pass own ref
                         ref={(el) => { inputRefs.current[index] = el }}
-                        {...field}
+                        // {...field}
+                        {...Object.fromEntries(Object.entries(field).filter(([key]) => key !== "ref"))} // Removes `ref`
                         onKeyDown={(e) => { handleInputKeyDown(e, index) }}
                       />
                       <Button
