@@ -135,7 +135,7 @@ export const ParticipantsForm = () => {
               control={form.control}
               name={`players.${index}.name`}
               //* filter out ref from form
-              render={({ field: { ref: _ref, ...field } }) => (
+              render={({ field }) => (
                 <FormItem className="w-full">
                   <FormControl>
                     <div className="flex space-x-2">
