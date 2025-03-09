@@ -5,9 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function isFormDirty(dirtyFields: any) {
+//? dirtyFields => form.formState.dirtyFields
+export function isFormDirty(dirtyFields: unknown[]) {
   //* use some to identify any field returning true
-  return Object.values(dirtyFields).some((field): boolean | any => {
+  return Object.values(dirtyFields).some((field): boolean | unknown => {
     // check if boolean to directly return its value
     if (typeof field === "boolean") return field
     // if field is an object it could be an array or a object
