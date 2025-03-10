@@ -172,7 +172,15 @@ export const ParticipantsForm = () => {
             variant="ghost"
             disabled={!canAddfield}
             // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-            onClick={() => { if (canAddfield) append({ name: "" }) }}
+            onClick={() => {
+              if (canAddfield) {
+                append({ name: "" })
+                setTimeout(() => {
+                  // after append focus last field
+                  inputRefs.current[inputRefs.current.length - 1]?.focus()
+                }, 0)
+              }
+            }}
             className="justify-start !pl-2 w-auto h-8 text-muted-foreground"
           >
             <PlusIcon className="size-5" /> Add player
