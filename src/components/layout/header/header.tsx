@@ -1,6 +1,6 @@
-import { WebIcon } from '@/components/layout/header/web-icon';
 import { MainNav, MobileNav } from '@/components/layout/header/nav';
-import { User } from '@/components/layout/header/user';
+import { WebIcon } from '@/components/layout/header/web-icon';
+import { FullscreenToggle } from './fullscreen-toggle';
 
 export default function Header() {
   return (
@@ -16,8 +16,11 @@ export default function Header() {
         {/* Main Nav */}
         <MainNav />
 
-        {/* user icon */}
-        <User />
+        {/* fullscreen toggle */}
+        <FullscreenToggle />
+
+        {/* user icon - hidden for now */}
+        {/* <User /> */}
 
       </div>
     </header>

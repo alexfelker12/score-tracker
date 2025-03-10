@@ -43,7 +43,7 @@ export default function RootLayout({
           <Header />
 
           {/* main content */}
-          <div className="[&_>_main]:max-w-4xl [&_>_main]:px-4 [&_>_main]:w-full py-4 flex justify-center">
+          <div className="[&_>_main]:max-w-4xl [&_>_main]:p-4 [&_>_main]:w-full flex justify-center">
             {children}
           </div>
 
