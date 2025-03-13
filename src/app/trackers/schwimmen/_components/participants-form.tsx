@@ -19,25 +19,38 @@ import { Input } from "@/components/ui/input"
 import { PlusIcon, Trash2Icon } from "lucide-react"
 
 
-const MIN_PLAYERS = 2
-const MAX_PLAYERS = 11
+// const MIN_PLAYERS = 2
+// const MAX_PLAYERS = 11
 
 export const zPlayerName = z.string().min(1, {
   message: "This field may not be empty"
 })
 
-export const participantsSchema = z.object({
+export const participantsSchemaBase = z.object({
   players: z.array(
     z.object({
       name: zPlayerName
     })
-  ).min(MIN_PLAYERS).max(MAX_PLAYERS),
+  )
+  // .min(MIN_PLAYERS).max(MAX_PLAYERS),
 })
 
 const HANDLEDKEYDOWNKEYS = ["Enter", "Backspace", "Delete"]
 
+export type ParticipantsFormType = {
+  minPlayers: number
+  maxPlayers: number
+  onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
+}
 
-export const ParticipantsForm = () => {
+export const ParticipantsForm = ({ minPlayers, maxPlayers, onSubmit }: ParticipantsFormType) => {
+  //* Memoized schema with dynamic min/max
+  const participantsSchema = React.useMemo(() => {
+    return participantsSchemaBase.extend({
+      items: participantsSchemaBase.shape.players.min(minPlayers).max(maxPlayers),
+    });
+  }, [minPlayers, maxPlayers]);
+
   //* refs, for manual focus handling
   const inputRefs = React.useRef<Array<HTMLInputElement | null>>([])
 
@@ -55,13 +68,13 @@ export const ParticipantsForm = () => {
     control: form.control,
     name: "players",
     rules: {
-      minLength: MIN_PLAYERS,
-      maxLength: MAX_PLAYERS
+      minLength: minPlayers,
+      maxLength: maxPlayers
     }
   });
 
-  const canAddfield = form.getValues("players").length < MAX_PLAYERS
-  const canDelField = form.getValues("players").length > MIN_PLAYERS
+  const canAddfield = form.getValues("players").length < maxPlayers
+  const canDelField = form.getValues("players").length > minPlayers
   const isLastField = (index: number) => fields.length === index + 1
   const isFirstField = (index: number) => !index //? simple truthy check
 
@@ -121,20 +134,19 @@ export const ParticipantsForm = () => {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof participantsSchema>) {
+  async function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
     console.log(values)
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit ??= defaultOnSubmit)} className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
           {fields.map((field, index) => (
             <FormField
               key={field.id}
               control={form.control}
               name={`players.${index}.name`}
-              //* filter out ref from form
               render={({ field }) => (
                 <FormItem className="w-full">
                   <FormControl>
@@ -144,9 +156,10 @@ export const ParticipantsForm = () => {
                         className="px-2 h-8"
                         autoComplete="off"
                         placeholder={`Player ${index + 1}`}
+                        // {...field}
                         //* pass own ref
                         ref={(el) => { inputRefs.current[index] = el }}
-                        // {...field}
+                        //* filter out ref from form
                         {...Object.fromEntries(Object.entries(field).filter(([key]) => key !== "ref"))} // Removes `ref`
                         onKeyDown={(e) => { handleInputKeyDown(e, index) }}
                       />

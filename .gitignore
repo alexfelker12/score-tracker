@@ -40,3 +40,6 @@ next-env.d.ts
 
 #  test
 **/test*.*
+
+# prisma migration lock
+prisma/*/migration_lock.toml

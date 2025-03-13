@@ -1,0 +1,27 @@
+//? Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//* Tracker tables
+model Tracker {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  playerData Json?
+
+  TrackerSession TrackerSession?
+}
+
+model TrackerSession {
+  id        String @id @default(cuid())
+  trackerId String @unique
+  // TODO additional data - depends on tracking state shape 
+
+  tracker Tracker @relation(fields: [trackerId], references: [id])
+}
