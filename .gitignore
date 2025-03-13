@@ -1,3 +1,6 @@
+# vscode
+.vscode
+
 # dependencies
 /node_modules
 /.pnp
@@ -43,3 +46,7 @@ next-env.d.ts
 
 # prisma migration lock
 prisma/*/migration_lock.toml
+
+# test/onhold components/pages
+src/app/trackers/schwimmen/\[trackerId\]/page-with-rq.tsx
+src/app/trackers/schwimmen/\[trackerId\]/_components/tracker-with-rq.tsx

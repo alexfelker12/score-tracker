@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { PlusIcon, Trash2Icon } from "lucide-react"
+import { ClipboardPlusIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useMutation } from "@tanstack/react-query"
+import { createTracker } from "@/server/actions/trackerActions"
+import { Prisma } from "@prisma/client/edge"
+import { useRouter } from "next/navigation"
 
 
 // const MIN_PLAYERS = 2
@@ -43,16 +47,13 @@ export type ParticipantsFormType = {
   onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
 }
 
-export const ParticipantsForm = ({ minPlayers, maxPlayers, onSubmit }: ParticipantsFormType) => {
+export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormType) => {
   //* Memoized schema with dynamic min/max
   const participantsSchema = React.useMemo(() => {
     return participantsSchemaBase.extend({
-      items: participantsSchemaBase.shape.players.min(minPlayers).max(maxPlayers),
+      players: participantsSchemaBase.shape.players.min(minPlayers).max(maxPlayers),
     });
   }, [minPlayers, maxPlayers]);
-
-  //* refs, for manual focus handling
-  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([])
 
   const form = useForm<z.infer<typeof participantsSchema>>({
     resolver: zodResolver(participantsSchema),
@@ -73,6 +74,13 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, onSubmit }: Participa
     }
   });
 
+  //* refs, for manual focus handling
+  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([])
+
+  //* router for redirect after create
+  const router = useRouter()
+
+  //* form logic
   const canAddfield = form.getValues("players").length < maxPlayers
   const canDelField = form.getValues("players").length > minPlayers
   const isLastField = (index: number) => fields.length === index + 1
@@ -134,13 +142,32 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, onSubmit }: Participa
     }
   }
 
+  //* POST mutation: tracker
+  const { mutate, isPending } = useMutation({
+    // mutationKey: ["create-tracker"],
+    mutationFn: createTracker,
+    onSettled: (data, error, variables, context) => {
+      if (!error && data) {
+        const redirectUrl = `/trackers/schwimmen/${data.data?.id}`
+        router.push(redirectUrl)
+      }
+    },
+  })
+
+  // form on submit
   async function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
-    console.log(values)
+    const participants = values.players as Prisma.JsonArray
+    const newTracker = await mutate({
+      data: {
+        playerData: participants
+      }
+    })
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit ??= defaultOnSubmit)} className="flex flex-col gap-4">
+      {/* onSubmit ??= defaultOnSubmit */}
+      <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
           {fields.map((field, index) => (
             <FormField
@@ -205,8 +232,14 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, onSubmit }: Participa
           <Button
             type="submit"
             className="w-full md:w-auto"
+            disabled={isPending}
           >
-            Create Round
+            {isPending ?
+              <Loader2Icon className="animate-spin" />
+              :
+              <ClipboardPlusIcon />
+            }
+            Create tracker
           </Button>
         </div>
 

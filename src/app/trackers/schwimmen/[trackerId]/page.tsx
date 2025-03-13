@@ -1,13 +1,21 @@
+import { getTracker } from "@/server/actions/trackerActions";
+import { Tracker } from "./_components/tracker";
+
 export default async function TrackerSessionPage({
   params,
 }: {
-  params: Promise<{ trackerSessionId: string }>
+  params: Promise<{ trackerId: string }>
 }) {
-  const { trackerSessionId } = await params
+  const { trackerId } = await params
+  const { data, error } = await getTracker({
+    where: {
+      id: trackerId
+    }
+  })
 
   return (
     <main>
-      trackerSessionId: {trackerSessionId}
+      <Tracker trackerData={data} error={error} />
     </main>
   );
 }
