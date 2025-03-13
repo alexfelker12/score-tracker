@@ -13,7 +13,7 @@ export type TrackerLinkProps = {
   maxPlayers?: number
 }
 
-export const TrackerLink = ({name, href, description, categories, minPlayers, maxPlayers}: TrackerLinkProps) => {
+export const TrackerLink = ({ name, href, description, categories }: TrackerLinkProps) => {
   return (
     <Link href={`/trackers/${href}`} className="group">
       <Card className="group-hover:bg-accent justify-between gap-4 py-4 w-full h-full transition-all">

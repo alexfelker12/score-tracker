@@ -35,7 +35,7 @@ export const FullscreenToggle = () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [])
+  }, [toggleFullscreen])
 
   return (
     <Button

@@ -28,7 +28,7 @@ async function createSession(createSessionArgs: Prisma.TrackerSessionCreateArgs)
 export type CreateTrackerSessionReturnType = Prisma.PromiseReturnType<typeof createSession>
 export async function createTrackerSession(createSessionArgs: Prisma.TrackerSessionCreateArgs) {
   try {
-    const data = await prisma.trackerSession.create(createSessionArgs)
+    const data = await createSession(createSessionArgs)
     return { data }
   } catch (error) { return { error } }
 }
