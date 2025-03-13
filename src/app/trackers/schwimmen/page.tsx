@@ -10,7 +10,7 @@ export default function Schwimmen() {
       </div>
 
       {/* form - main content */}
-      <ParticipantsForm />
+      <ParticipantsForm minPlayers={2} maxPlayers={9} />
     </main>
   );
 }
