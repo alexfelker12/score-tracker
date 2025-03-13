@@ -1,5 +1,5 @@
-import { GAMES } from "@/lib/constants";
-import { GameLink } from "./_components/game-link";
+import { TRACKERS } from "@/lib/constants";
+import { TrackerLink } from "./_components/tracker-link";
 
 export default function Trackers() {
   return (
@@ -12,8 +12,8 @@ export default function Trackers() {
 
       {/* games list */}
       <div className="gap-4 grid md:grid-cols-2">
-        {GAMES.map((game) => (
-          <GameLink key={game.href} {...game} />
+        {TRACKERS.map((tracker) => (
+          <TrackerLink key={tracker.href} {...tracker} />
         ))}
       </div>
     </main>

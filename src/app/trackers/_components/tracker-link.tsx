@@ -1,18 +1,21 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRightIcon } from "lucide-react";
-import Link from "next/link";
 
-export type GameLinkProps = {
+export type TrackerLinkProps = {
   name: string
   href: string
   description: string
   categories: string[]
+  minPlayers?: number
+  maxPlayers?: number
 }
 
-export const GameLink = ({ name, href, description, categories }: GameLinkProps) => {
+export const TrackerLink = ({name, href, description, categories, minPlayers, maxPlayers}: TrackerLinkProps) => {
   return (
-    <Link href={href} className="group">
+    <Link href={`/trackers/${href}`} className="group">
       <Card className="group-hover:bg-accent justify-between gap-4 py-4 w-full h-full transition-all">
         <CardHeader className="px-4">
 
