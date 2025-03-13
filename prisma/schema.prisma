@@ -10,10 +10,16 @@ datasource db {
 }
 
 //* Tracker tables
+enum TrackerName {
+  SCHWIMMEN
+}
+
 model Tracker {
   id         String   @id @default(cuid())
   createdAt  DateTime @default(now())
   playerData Json?
+
+  name TrackerName
 
   TrackerSession TrackerSession?
 }

@@ -1,43 +1,47 @@
 "use client"
 
-import { GetTrackerReturnType } from "@/server/actions/trackerActions";
-import Link from "next/link";
-import { participantsSchemaBase } from "../../_components/participants-form";
+import { useSchwimmenSessionStore } from "@/store/schwimmenSessionStore";
+import React from "react";
+import { z } from "zod";
+import { SCHWIMMENLOCALSTORAGEBASEKEY } from "@/lib/constants";
+import { LoaderCircleIcon } from "lucide-react";
+import { participantsSchemaBase } from "@/schema/participants";
 
 export type TrackerType = {
-  trackerData: GetTrackerReturnType | undefined
-  error?: unknown;
+  trackerData: z.infer<typeof participantsSchemaBase.shape.players>
+  trackerId: string
 }
 
-export const Tracker = ({ trackerData, error }: TrackerType) => {
+export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
   //* hooks here
+  const trackerSession = useSchwimmenSessionStore();
+  const [isHydrated, setIsHydrated] = React.useState(false)
 
-  //* check for data validity or errors
-  if (error) return <ErrorMessage error={error} />;
-  if (!trackerData) return <InvalidTrackerMessage />;
+  React.useEffect(() => {
+    if (trackerData) {
+      // dynamic storage name
+      useSchwimmenSessionStore.persist.setOptions({
+        name: `schwimmen-tracker-${trackerId}`,
+      })
+      useSchwimmenSessionStore.persist.rehydrate()
+      localStorage.removeItem(SCHWIMMENLOCALSTORAGEBASEKEY)
 
-  //* valided json data on participants schema
-  const { success, data } = participantsSchemaBase.shape.players.safeParse(trackerData.playerData);
-  if (!success) return <InvalidTrackerMessage />;
+      setIsHydrated(useSchwimmenSessionStore.persist.hasHydrated())
+      trackerSession.init(trackerData)
+    }
+  }, [trackerData])
+
+  if (!isHydrated) return (
+    <div className="flex justify-center items-center w-full h-full">
+      <LoaderCircleIcon className="size-8" />
+    </div>
+  )
 
   return (
     <>
-      {data.map((player, idx) => (
-        <p key={idx}>{player.name}</p>
+      {trackerSession.session.players.map((player) => (
+        <p key={player.id}>{player.name}</p>
       ))}
     </>
   );
 }
-
-const ErrorMessage = ({ error }: { error: unknown }) => (
-  <p>
-    There was an error loading this tracker: {JSON.stringify(error)}
-  </p>
-);
-
-const InvalidTrackerMessage = () => (
-  <p>
-    This tracker is invalid. Create a new one{" "}
-    <Link href="/trackers/schwimmen" className="text-primary">here</Link>.
-  </p>
-);

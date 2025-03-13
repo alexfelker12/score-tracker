@@ -8,3 +8,5 @@ export const TRACKERS: TrackerLinkProps[] = [
     categories: ["Cards", "2-9 Players"]
   },
 ]
+
+export const SCHWIMMENLOCALSTORAGEBASEKEY = "schwimmen-tracker-base" 

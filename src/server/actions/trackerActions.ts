@@ -11,6 +11,18 @@ export async function getAllTrackers() {
   } catch (error) { return { error } }
 }
 
+//* GET all trackers by argument
+async function findTrackersByArg(findTrackerByArgArgs: Prisma.TrackerFindManyArgs) {
+  return await prisma.tracker.findMany(findTrackerByArgArgs)
+}
+export type GetTrackerByArgReturnType = Prisma.PromiseReturnType<typeof findTrackersByArg>
+export async function getAllTrackersByArg(findTrackerByArgArgs: Prisma.TrackerFindManyArgs) {
+  try {
+    const data = await findTrackersByArg(findTrackerByArgArgs)
+    return { data }
+  } catch (error) { return { error } }
+}
+
 //* GET single tracker
 async function findTracker(findTrackerArgs: Prisma.TrackerFindFirstArgs) {
   return await prisma.tracker.findFirst(findTrackerArgs)

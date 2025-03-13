@@ -21,23 +21,11 @@ import { useMutation } from "@tanstack/react-query"
 import { createTracker } from "@/server/actions/trackerActions"
 import { Prisma } from "@prisma/client/edge"
 import { useRouter } from "next/navigation"
+import { participantsSchemaBase, zPlayerName } from "@/schema/participants"
 
 
 // const MIN_PLAYERS = 2
 // const MAX_PLAYERS = 11
-
-export const zPlayerName = z.string().min(1, {
-  message: "This field may not be empty"
-})
-
-export const participantsSchemaBase = z.object({
-  players: z.array(
-    z.object({
-      name: zPlayerName
-    })
-  )
-  // .min(MIN_PLAYERS).max(MAX_PLAYERS),
-})
 
 const HANDLEDKEYDOWNKEYS = ["Enter", "Backspace", "Delete"]
 
@@ -159,6 +147,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
     const participants = values.players as Prisma.JsonArray
     const newTracker = await mutate({
       data: {
+        name: "SCHWIMMEN",
         playerData: participants
       }
     })
