@@ -4,7 +4,7 @@ import { z } from "zod"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-export type PlayerState = {
+export type Player = {
   id: number
   name: string
   lifes: number
@@ -12,7 +12,7 @@ export type PlayerState = {
 
 type SchwimmenSessionState = {
   session: {
-    players: PlayerState[]
+    players: Player[]
     playerSwimming: number
   }
 }
@@ -20,9 +20,9 @@ type SchwimmenSessionState = {
 type SchwimmenSessionActions = {
   init: (playerData: z.infer<typeof participantsSchemaBase.shape.players>) => void
   subtractLifes: (playerIds: number[]) => void
-  getSwimmingPlayer: () => PlayerState | undefined
+  getSwimmingPlayer: () => Player | undefined
   setSwimmingPlayer: (playerId: number) => void
-  detonateNuke: (detonatorId: number) => PlayerState[] | void
+  detonateNuke: (detonatorId: number) => Player[] | void
 }
 
 export type SchwimmenSessionStore = SchwimmenSessionState & SchwimmenSessionActions
@@ -52,13 +52,13 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
       subtractLifes: (playerIds) => set((state) => {
         const { players, playerSwimming } = state.session;
 
-        //* save punished player depending on if a player is swimming or not
-        const potentialSwimmingPlayer = playerIds.length === 1 && playerSwimming === 0
+        //* save punished player
+        const potentialSwimmingPlayer = playerIds.length === 1
           ? players.find((player) => playerIds.includes(player.id))
           : null;
 
-        const swimmingPlayer = potentialSwimmingPlayer && potentialSwimmingPlayer.lifes === 1
-          //* if player has only one life remaining, he will swim 
+        const swimmingPlayer = potentialSwimmingPlayer && potentialSwimmingPlayer.lifes === 1 && playerSwimming === 0
+          //* if player has only one life remaining and if no one is swimming, he will swim 
           ? potentialSwimmingPlayer.id
           //* else if not or a player is already swimming, id stays the same
           : playerSwimming;
@@ -72,13 +72,15 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
         }
 
         //* if no potentially swimming player was found, subtract lifes accordingly
-        if (!potentialSwimmingPlayer) {
+        if (!(potentialSwimmingPlayer && potentialSwimmingPlayer.lifes === 1 && playerSwimming === 0)) {
           newState.session.players = players.map((player, idx) =>
             //* lifes cant go under 0
-            playerIds.includes(idx) && player.lifes > 0
+            playerIds.includes(idx + 1) && player.lifes > 0
               ? { ...player, lifes: player.lifes - 1 }
               : player
           );
+
+          console.log("updating new state with:", newState)
         }
 
         return newState
@@ -96,9 +98,8 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
       //* detonating a "nuke" means every player except the player with the passed playerId loses a life (life - 1)
       detonateNuke: (detonatorId) => {
         const { players, playerSwimming } = get().session;
-        //* nukedPlayers: contains all players except the detonator
-        const nukedPlayers = players.filter((player) => player.id !== detonatorId)
-        const playersWithOneLife = nukedPlayers.filter((player) => player.lifes === 1)
+        //* playersWithOneLife: contains all players with and never the detonator
+        const playersWithOneLife = players.filter((player) => player.lifes === 1 && player.id !== detonatorId)
 
         if (playerSwimming !== 0 || playersWithOneLife.length <= 1) {
           //? condition: playerSwimming !== 0 
@@ -111,7 +112,7 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
               ...state.session,
               players: state.session.players.map((player) =>
                 //* lifes cant go under 0
-                player.lifes > 0 ? {
+                player.lifes > 0 && detonatorId !== player.id ? {
                   ...player,
                   lifes: player.lifes - 1
                 } : player

@@ -17,7 +17,7 @@ export const TrackerListing = async ({ trackerName }: TrackerListingType) => {
     }
   })
 
-  await delay(2000)
+  await delay(300)
 
   if (trackers && trackers.data) return (
     <div className="gap-4 grid md:grid-cols-2">

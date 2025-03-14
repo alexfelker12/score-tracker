@@ -134,7 +134,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
   const { mutate, isPending } = useMutation({
     // mutationKey: ["create-tracker"],
     mutationFn: createTracker,
-    onSettled: (data, error, variables, context) => {
+    onSettled: (data, error) => {
       if (!error && data) {
         const redirectUrl = `/trackers/schwimmen/${data.data?.id}`
         router.push(redirectUrl)
@@ -145,7 +145,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
   // form on submit
   async function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
     const participants = values.players as Prisma.JsonArray
-    const newTracker = await mutate({
+    await mutate({
       data: {
         name: "SCHWIMMEN",
         playerData: participants
