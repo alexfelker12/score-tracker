@@ -37,9 +37,9 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
       })
       useSchwimmenSessionStore.persist.rehydrate()
       if (localStorage.getItem(SCHWIMMENLOCALSTORAGEBASEKEY)) localStorage.removeItem(SCHWIMMENLOCALSTORAGEBASEKEY);
-      
+
       setIsHydrated(useSchwimmenSessionStore.persist.hasHydrated())
-      
+
       if (!localStorage.getItem(`schwimmen-tracker-${trackerId}`)) trackerSession.init(trackerData)
     }
   }, [trackerData])
@@ -130,7 +130,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
             <AlertDialogTitle>A nuke is incoming</AlertDialogTitle>
             <AlertDialogDescription>There are several people about to drown. Who is surviving (for now)?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:justify-between gap-4">
             {toBeNukedPlayers.map((player) => (
               <AlertDialogAction
                 key={player.id}
@@ -142,7 +142,15 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
                   //* pass survivor id to set as swimming
                   player.id
                 )}
-              >{player.name}</AlertDialogAction>
+                asChild
+              >
+                <Button
+                  size="card"
+                  className="bg-transparent p-0 [&>*]:flex-1 [&>*]:w-full h-auto"
+                >
+                  <ParticipantCard {...player} size={size} />
+                </Button>
+              </AlertDialogAction>
             ))}
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -159,7 +167,6 @@ const ICON_SIZE_MAP = [
   "size-9",
   "size-10",
 ] as const
-
 const TEXT_SIZE_MAP = [
   "text-lg",
   "text-xl",
@@ -170,7 +177,7 @@ const TEXT_SIZE_MAP = [
 
 type ParticipantCardType = Player & {
   size: number
-  playerSwimming: number
+  playerSwimming?: number
 }
 const ParticipantCard = ({ id, lifes, name, size, playerSwimming }: ParticipantCardType) => {
   return (
@@ -180,12 +187,13 @@ const ParticipantCard = ({ id, lifes, name, size, playerSwimming }: ParticipantC
         lifes <= 0 && "opacity-50 pointer-events-none"
       )}
     >
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
         <span
           className={cn("text-sm",
             TEXT_SIZE_MAP[size]
           )}
         >{name}</span>
+
         <div className="flex gap-1 w-fit">
           {playerSwimming === id && lifes > 0 ?
             <ManSwimmingIcon className={ICON_SIZE_MAP[size]} />
