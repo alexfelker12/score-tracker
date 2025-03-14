@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { delay, timeElapsed } from "@/lib/utils";
+import { timeElapsed } from "@/lib/utils";
 import { getAllTrackersByArg } from "@/server/actions/trackerActions";
 import { Tracker, TrackerName } from "@prisma/client/edge";
 import { ArrowRightIcon } from "lucide-react";
@@ -17,7 +17,7 @@ export const TrackerListing = async ({ trackerName }: TrackerListingType) => {
     }
   })
 
-  await delay(300)
+  // await delay(300)
 
   if (trackers && trackers.data) return (
     <div className="gap-4 grid md:grid-cols-2">

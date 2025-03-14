@@ -36,12 +36,13 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
         name: `schwimmen-tracker-${trackerId}`,
       })
       useSchwimmenSessionStore.persist.rehydrate()
-      localStorage.removeItem(SCHWIMMENLOCALSTORAGEBASEKEY)
-
+      if (localStorage.getItem(SCHWIMMENLOCALSTORAGEBASEKEY)) localStorage.removeItem(SCHWIMMENLOCALSTORAGEBASEKEY);
+      
       setIsHydrated(useSchwimmenSessionStore.persist.hasHydrated())
-      trackerSession.init(trackerData)
+      
+      if (!localStorage.getItem(`schwimmen-tracker-${trackerId}`)) trackerSession.init(trackerData)
     }
-  }, [trackerData, trackerId, trackerSession])
+  }, [trackerData])
 
   const handleDetonateNuke = (playerId: number) => {
     const conflictingPlayers = trackerSession.detonateNuke(playerId)
@@ -70,13 +71,14 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
         {/* reset - dialog */}
         <ResetSessionDialog trackerSession={trackerSession} trackerData={trackerData} />
 
+        {/* text size slider */}
         <div className="flex flex-1 gap-2">
           <span className="text-sm leading-none">XS</span>
           <Slider
             min={0}
             max={4}
-            defaultValue={[size]}
             value={[size]}
+            defaultValue={[size]}
             onValueChange={(value) => setSize(value[0])}
             step={1}
           />
@@ -85,6 +87,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
 
       </div>
 
+      {/* participants cards */}
       <div className="flex flex-col gap-4 w-full">
         {trackerSession.session.players.map((player) => (
           <DropdownMenu key={player.id}>
@@ -120,6 +123,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
         ))}
       </div>
 
+      {/* nuke conflict dialog */}
       <AlertDialog open={openNukeDialog} onOpenChange={setOpenNukeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -164,7 +168,6 @@ const TEXT_SIZE_MAP = [
   "text-4xl",
 ] as const
 
-
 type ParticipantCardType = Player & {
   size: number
   playerSwimming: number
@@ -174,7 +177,7 @@ const ParticipantCard = ({ id, lifes, name, size, playerSwimming }: ParticipantC
     <Card
       key={id}
       className={cn("p-2",
-        lifes === 0 && "opacity-50 pointer-events-none"
+        lifes <= 0 && "opacity-50 pointer-events-none"
       )}
     >
       <div className="flex justify-between items-center">

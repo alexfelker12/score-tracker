@@ -107,15 +107,18 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
           //? condition: playersWithOneLife.length <= 1
           //* if there is only one player with 1 life there can also be no conflict
 
+          const survivingPlayer = playersWithOneLife.length === 1 && playerSwimming === 0 ? playersWithOneLife[0].id : playerSwimming
+
           return set((state) => ({
             session: {
-              ...state.session,
+              playerSwimming: survivingPlayer,
               players: state.session.players.map((player) =>
                 //* lifes cant go under 0
-                player.lifes > 0 && detonatorId !== player.id ? {
-                  ...player,
-                  lifes: player.lifes - 1
-                } : player
+                player.lifes > 0 && detonatorId !== player.id && !(playerSwimming === 0 && player.id === survivingPlayer)
+                  ? {
+                    ...player,
+                    lifes: player.lifes - 1
+                  } : player
               )
             }
           }))
