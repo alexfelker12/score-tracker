@@ -130,7 +130,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
             <AlertDialogTitle>A nuke is incoming</AlertDialogTitle>
             <AlertDialogDescription>There are several people about to drown. Who is surviving (for now)?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:justify-between gap-4">
+          <AlertDialogFooter className="flex-col sm:flex-col sm:justify-between gap-4">
             {toBeNukedPlayers.map((player) => (
               <AlertDialogAction
                 key={player.id}
@@ -145,8 +145,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
                 asChild
               >
                 <Button
-                  size="card"
-                  className="bg-transparent p-0 [&>*]:flex-1 [&>*]:w-full h-auto"
+                  className="rounded-xl bg-transparent p-0 [&>*]:flex-1 [&>*]:w-full h-auto hover:bg-transparent hover:[&>*]:bg-accent"
                 >
                   <ParticipantCard {...player} size={size} />
                 </Button>
