@@ -1,10 +1,23 @@
 import { Suspense } from "react";
 import { ParticipantsForm } from "./_components/participants-form";
 import { TrackerCardLoading, TrackerListing } from "./_components/tracker-listing";
+import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
+
+const navTrail: BreadcrumbType[] = [
+  {
+    name: "trackers",
+    href: "/trackers"
+  },
+  {
+    name: "schwimmen",
+  }
+]
 
 export default async function Schwimmen() {
   return (
     <main className="flex flex-col gap-6">
+      <Breadcrumbs navTrail={navTrail} />
+
       <div>
         {/* heading + description */}
         <h1 className="text-2xl">Create tracker for `Schwimmen`</h1>

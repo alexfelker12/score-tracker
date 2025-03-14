@@ -3,12 +3,33 @@ import Link from "next/link";
 import { Tracker } from "./_components/tracker";
 import { participantsSchemaBase } from "@/schema/participants";
 
+import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
+
+const navTrail: BreadcrumbType[] = [
+  {
+    name: "trackers",
+    href: "/trackers"
+  },
+  {
+    name: "schwimmen",
+    href: "/trackers/schwimmen"
+  }
+]
+
 export default async function TrackerSessionPage({
   params,
 }: {
   params: Promise<{ trackerId: string }>
 }) {
   const { trackerId } = await params
+
+  const dynNavTrail: BreadcrumbType[] = [
+    ...navTrail,
+    {
+      name: `${trackerId.slice(0, 5)}...`
+    }
+  ]
+
   const { data, error } = await getTracker({
     where: {
       id: trackerId
@@ -24,7 +45,8 @@ export default async function TrackerSessionPage({
   if (!success) return <InvalidTrackerMessage />;
 
   return (
-    <main>
+    <main className="flex flex-col gap-6">
+      <Breadcrumbs navTrail={dynNavTrail} />
       <Tracker trackerData={parsedData} trackerId={trackerId} />
     </main>
   );
