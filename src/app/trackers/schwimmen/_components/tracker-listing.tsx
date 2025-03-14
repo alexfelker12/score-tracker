@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { delay, timeElapsed } from "@/lib/utils";
 import { getAllTrackersByArg } from "@/server/actions/trackerActions";
-import { Prisma, TrackerName } from "@prisma/client/edge";
+import { Tracker, TrackerName } from "@prisma/client/edge";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -28,7 +28,7 @@ export const TrackerListing = async ({ trackerName }: TrackerListingType) => {
   );
 }
 
-export type TrackerCardType = Prisma.TrackerGetPayload<{}>
+export type TrackerCardType = Tracker
 export const TrackerCard = ({ id, name, createdAt }: TrackerCardType) => {
   return (
     <Link href={`/trackers/schwimmen/${id}`} className="group">

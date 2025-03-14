@@ -1,4 +1,3 @@
-import { Divide, LoaderCircleIcon } from "lucide-react";
 import { Suspense } from "react";
 import { ParticipantsForm } from "./_components/participants-form";
 import { TrackerCardLoading, TrackerListing } from "./_components/tracker-listing";
