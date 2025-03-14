@@ -39,7 +39,7 @@ export const Breadcrumbs = ({ navTrail }: BreadcrumbsProps) => {
                 {/* if href was passed and not last crumb, treat crumb item as link */}
                 {crumb.href && !lastCrumb ?
                   <BreadcrumbLink asChild>
-                    <Link href="/trackers">{crumb.name}</Link>
+                    <Link href={crumb.href}>{crumb.name}</Link>
                   </BreadcrumbLink>
                   :
                   // if last crumb render <BreadCrumbPage />, else a simple span
