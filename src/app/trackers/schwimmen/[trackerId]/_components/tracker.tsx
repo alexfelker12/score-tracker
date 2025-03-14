@@ -41,7 +41,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
       setIsHydrated(useSchwimmenSessionStore.persist.hasHydrated())
       trackerSession.init(trackerData)
     }
-  }, [trackerData])
+  }, [trackerData, trackerId, trackerSession])
 
   const handleDetonateNuke = (playerId: number) => {
     const conflictingPlayers = trackerSession.detonateNuke(playerId)
