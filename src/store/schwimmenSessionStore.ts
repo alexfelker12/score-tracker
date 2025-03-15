@@ -14,6 +14,7 @@ type SchwimmenSessionState = {
   session: {
     players: Player[]
     playerSwimming: number
+    cardSize: number
   }
 }
 
@@ -23,6 +24,7 @@ type SchwimmenSessionActions = {
   getSwimmingPlayer: () => Player | undefined
   setSwimmingPlayer: (playerId: number) => void
   detonateNuke: (detonatorId: number) => Player[] | void
+  setCardSize: (size: number) => void
 }
 
 export type SchwimmenSessionStore = SchwimmenSessionState & SchwimmenSessionActions
@@ -35,11 +37,13 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
         players: [],
         //* rule: the first player which life count gets reduced to 0 will "swim" (one time save)
         //? playerSwimming -> id of swimming player
-        playerSwimming: 0
+        playerSwimming: 0,
+        cardSize: 3
       },
-      //* init the session with player data and asign an index id and 3 lifes
-      init: (playerData) => set({
+      // * init the session with player data and asign an index id and 3 lifes
+      init: (playerData) => set((state) => ({
         session: {
+          ...state.session,
           players: playerData.map((player, idx) => ({
             id: idx + 1,
             name: player.name,
@@ -47,7 +51,7 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
           })),
           playerSwimming: 0
         }
-      }),
+      })),
       //* players whose id is included in the passed array get a life subtracted (life - 1)
       subtractLifes: (playerIds) => set((state) => {
         const { players, playerSwimming } = state.session;
@@ -79,8 +83,6 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
               ? { ...player, lifes: player.lifes - 1 }
               : player
           );
-
-          console.log("updating new state with:", newState)
         }
 
         return newState
@@ -111,6 +113,7 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
 
           return set((state) => ({
             session: {
+              ...state.session,
               playerSwimming: survivingPlayer,
               players: state.session.players.map((player) =>
                 //* lifes cant go under 0
@@ -126,7 +129,13 @@ export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
           //* ... else there is a conflict which needs to be manually resolved
           return playersWithOneLife
         }
-      }
+      },
+      setCardSize: (size) => set((state) => ({
+        session: {
+          ...state.session,
+          cardSize: size
+        }
+      }))
     }),
     { name: SCHWIMMENLOCALSTORAGEBASEKEY }
   )
