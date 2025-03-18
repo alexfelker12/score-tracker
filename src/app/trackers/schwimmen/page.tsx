@@ -2,6 +2,8 @@ import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
 import { ParticipantsForm } from "./_components/participants-form";
 import { TrackerListing } from "./_components/tracker-listing";
 
+export const dynamic = 'force-dynamic'
+
 const navTrail: BreadcrumbType[] = [
   {
     name: "trackers",
