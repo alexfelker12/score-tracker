@@ -1,6 +1,7 @@
 import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
 import { ParticipantsForm } from "./_components/participants-form";
 import { TrackerListing } from "./_components/tracker-listing";
+import { HydrationBoundary } from "@tanstack/react-query";
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,9 @@ export default async function Schwimmen() {
         <h2 className="mt-2 font-bold text-xl">Available trackers for `Schwimmen`</h2>
 
         {/* see available trackers */}
-        <TrackerListing trackerName="SCHWIMMEN" />
+        <HydrationBoundary>
+          <TrackerListing trackerName="SCHWIMMEN" />
+        </HydrationBoundary>
       </div>
     </main>
   );
