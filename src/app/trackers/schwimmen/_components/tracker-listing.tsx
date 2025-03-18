@@ -1,6 +1,6 @@
 import { getAllTrackers } from "@/server/actions/trackerActions";
 import { TrackerName } from "@prisma/client/edge";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+// import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 import { getQueryClient } from "@/lib/get-query-client";
 import { TrackerList } from "./tracker-list";
@@ -18,10 +18,10 @@ export const TrackerListing = async ({ trackerName }: TrackerListingType) => {
   })
 
   return (
-    <HydrationBoundary
-      state={dehydrate(qc)}
-    >
+    // <HydrationBoundary
+    //   state={dehydrate(qc)}
+    // >
       <TrackerList trackerName={trackerName} />
-    </HydrationBoundary>
+    // </HydrationBoundary>
   );
 }
