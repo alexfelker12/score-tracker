@@ -85,10 +85,10 @@ export const TrackerList = ({ trackerName }: TrackerListProps) => {
 
         {/* listing */}
         <AccordionContent className="gap-4 grid md:grid-cols-2">
-          {(isCreatePending && isFetching) && <TrackerCard.Loading />}
+          {(isCreatePending && isFetching) && <TrackerCardLoading />}
           {isPending
             ? Array.from({ length: 2 }).map((_, idx) => (
-              <TrackerCard.Loading key={`today-${idx}`} />
+              <TrackerCardLoading key={`today-${idx}`} />
             ))
             : todayTrackers.length > 0
               ? todayTrackers.map((tracker) => (
@@ -116,7 +116,7 @@ export const TrackerList = ({ trackerName }: TrackerListProps) => {
         <AccordionContent className="gap-4 grid md:grid-cols-2">
           {isPending || isLoading
             ? Array.from({ length: 2 }).map((_, idx) => (
-              <TrackerCard.Loading key={`past-${idx}`} />
+              <TrackerCardLoading key={`past-${idx}`} />
             ))
             : pastTrackers.length > 0
               ? pastTrackers.map((tracker) => (
@@ -204,7 +204,7 @@ export const TrackerCard = ({ id, name, createdAt, playerData, isPending, delete
     </Card>
   )
 }
-TrackerCard.Loading = () => {
+const TrackerCardLoading = () => {
   return (
     <Skeleton className="rounded-xl h-[124px]"></Skeleton>
   )
