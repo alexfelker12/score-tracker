@@ -25,14 +25,43 @@ export function isFormDirty(dirtyFields: unknown[]) {
 }
 
 //* get time passed from passed string to now in a generalized format
-export function timeElapsed(date: Date): string {
+// export function old_timeElapsed(date: Date): string {
+//   const now = new Date();
+//   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+//   if (seconds < 60) {
+//     return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+//   }
+
+//   const minutes = Math.floor(seconds / 60);
+//   if (minutes < 60) {
+//     return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+//   }
+
+//   const hours = Math.floor(minutes / 60);
+//   const days = Math.floor(hours / 24);
+//   if (days < 1) {
+//     return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+//   }
+
+//   if (days < 7) {
+//     return `${days} day${days !== 1 ? "s" : ""} ago`;
+//   }
+
+//   return date.toLocaleDateString();
+// }
+
+export function timeElapsed(date: Date, inSeconds: boolean = false): string {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+  if (inSeconds) return `${seconds}`;
+
   if (seconds < 60) {
-    return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+    // return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+    return `just now`;
   }
-  
+
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
     return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
@@ -44,14 +73,28 @@ export function timeElapsed(date: Date): string {
     return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
   }
 
-  if (days < 7) {
-    return `${days} day${days !== 1 ? "s" : ""} ago`;
-  }
+  // if (days < 7) {
+  //   return `${days} day${days !== 1 ? "s" : ""} ago`;
+  // }
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("de-DE", {
+    month: "2-digit",
+    day: "2-digit",
+    hour12: false
+  });
 }
 
 //* mock longer loading times
 export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function isToday(date: Date) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const dateCopy = new Date(date)
+  dateCopy.setHours(0, 0, 0, 0)
+
+  return dateCopy.getTime() === today.getTime()
 }

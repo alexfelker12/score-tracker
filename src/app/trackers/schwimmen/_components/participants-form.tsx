@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { ClipboardPlusIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
-import { useMutation } from "@tanstack/react-query"
-import { createTracker } from "@/server/actions/trackerActions"
-import { Prisma } from "@prisma/client/edge"
-import { useRouter } from "next/navigation"
+import { getQueryClient } from "@/lib/get-query-client"
 import { participantsSchemaBase, zPlayerName } from "@/schema/participants"
+import { createTracker } from "@/server/actions/trackerActions"
+import { Prisma, TrackerName } from "@prisma/client/edge"
+import { useMutation } from "@tanstack/react-query"
+import { ClipboardPlusIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 
 // const MIN_PLAYERS = 2
@@ -32,10 +34,11 @@ const HANDLEDKEYDOWNKEYS = ["Enter", "Backspace", "Delete"]
 export type ParticipantsFormType = {
   minPlayers: number
   maxPlayers: number
+  trackerName: TrackerName
   onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
 }
 
-export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormType) => {
+export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: ParticipantsFormType) => {
   //* Memoized schema with dynamic min/max
   const participantsSchema = React.useMemo(() => {
     return participantsSchemaBase.extend({
@@ -67,6 +70,9 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
 
   //* router for redirect after create
   const router = useRouter()
+
+  //* query client
+  const qc = getQueryClient()
 
   //* form logic
   const canAddfield = form.getValues("players").length < maxPlayers
@@ -132,12 +138,26 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
 
   //* POST mutation: tracker
   const { mutate, isPending } = useMutation({
-    // mutationKey: ["create-tracker"],
+    mutationKey: ['tracker-create', trackerName],
     mutationFn: createTracker,
-    onSettled: (data, error) => {
+    onSettled: async (data, error) => {
       if (!error && data) {
         const redirectUrl = `/trackers/schwimmen/${data.data?.id}`
-        router.push(redirectUrl)
+
+        toast.success("Tracker was created successfully", {
+          action: {
+            label: "Go to tracker",
+            onClick: () => router.push(redirectUrl)
+          }
+        })
+
+        // console.log(data.data?.createdAt.getTime())
+        // console.log(new Date().getTime())
+        // console.log(data.data?.createdAt.toISOString())
+        // console.log(new Date().toISOString())
+
+        //* invalidate query to refetch latest data
+        await qc.invalidateQueries({ queryKey: ["trackers", trackerName] })
       }
     },
   })
@@ -146,10 +166,8 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
   async function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
     const participants = values.players as Prisma.JsonArray
     await mutate({
-      data: {
-        name: "SCHWIMMEN",
-        playerData: participants
-      }
+      name: "SCHWIMMEN",
+      playerData: participants
     })
   }
 
@@ -169,6 +187,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers }: ParticipantsFormTyp
                     <div className="flex space-x-2">
                       {/* <Test /> */}
                       <Input
+                        id={field.name === "players.0.name" ? "firstPlayer" : undefined}
                         className="px-2 h-8"
                         autoComplete="off"
                         placeholder={`Player ${index + 1}`}

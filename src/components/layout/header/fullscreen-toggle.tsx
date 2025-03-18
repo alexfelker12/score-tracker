@@ -22,18 +22,21 @@ export const FullscreenToggle = () => {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "F11" || e.key === "Escape") {
-        e.preventDefault()
-        toggleFullscreen()
+      switch (true) {
+        case e.key === "F11" && !isFullscreen:
+        case e.key === "Escape" && isFullscreen:
+          e.preventDefault()
+          toggleFullscreen()
+          break;
       }
     }
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
-    document.addEventListener("keydown", handleKeyDown)
+    const ctrl = new AbortController()
+    document.addEventListener("fullscreenchange", handleFullscreenChange, ctrl)
+    document.addEventListener("keydown", handleKeyDown, ctrl)
 
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange)
-      document.removeEventListener("keydown", handleKeyDown)
+      ctrl.abort()
     }
   }, [toggleFullscreen])
 

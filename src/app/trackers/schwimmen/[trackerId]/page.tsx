@@ -1,4 +1,4 @@
-import { getTracker } from "@/server/actions/trackerActions";
+import { getTrackerById } from "@/server/actions/trackerActions";
 import Link from "next/link";
 import { Tracker } from "./_components/tracker";
 import { participantsSchemaBase } from "@/schema/participants";
@@ -30,11 +30,7 @@ export default async function TrackerSessionPage({
     }
   ]
 
-  const { data, error } = await getTracker({
-    where: {
-      id: trackerId
-    }
-  })
+  const { data, error } = await getTrackerById(trackerId)
 
   //* check for data validity or errors
   if (error) return <ErrorMessage error={error} />;

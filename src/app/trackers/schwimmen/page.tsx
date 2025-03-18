@@ -1,7 +1,6 @@
-import { Suspense } from "react";
-import { ParticipantsForm } from "./_components/participants-form";
-import { TrackerCardLoading, TrackerListing } from "./_components/tracker-listing";
 import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
+import { ParticipantsForm } from "./_components/participants-form";
+import { TrackerListing } from "./_components/tracker-listing";
 
 const navTrail: BreadcrumbType[] = [
   {
@@ -18,26 +17,20 @@ export default async function Schwimmen() {
     <main className="flex flex-col gap-6">
       <Breadcrumbs navTrail={navTrail} />
 
-      <div>
+      <div className="space-y-2">
         {/* heading + description */}
-        <h1 className="text-2xl">Create tracker for `Schwimmen`</h1>
+        <h1 className="font-bold text-2xl">Create tracker for `Schwimmen`</h1>
         {/* <p className="text-muted-foreground text-sm">Choose all players participating in this round</p> */}
+
+        {/* create tracker form */}
+        <ParticipantsForm minPlayers={2} maxPlayers={9} trackerName="SCHWIMMEN" />
       </div>
 
-      {/* form - main content */}
-      <ParticipantsForm minPlayers={2} maxPlayers={9} />
+      <div>
+        <h2 className="mt-2 font-bold text-xl">Available trackers for `Schwimmen`</h2>
 
-      <div className="space-y-4">
-        <h2 className="font-medium text-lg">Available trackers for `Schwimmen`</h2>
-        <Suspense fallback={
-          <div className="gap-4 grid md:grid-cols-2">
-            {Array.from({ length: 2 }).map((_, idx) => (
-              <TrackerCardLoading key={idx} />
-            ))}
-          </div>
-        }>
-          <TrackerListing trackerName="SCHWIMMEN" />
-        </Suspense>
+        {/* see available trackers */}
+        <TrackerListing trackerName="SCHWIMMEN" />
       </div>
     </main>
   );

@@ -1,48 +1,150 @@
 "use server"
 
 import { prisma } from "@/server/prisma"
-import { Prisma } from "@prisma/client/edge"
+import { Prisma, TrackerName } from "@prisma/client/edge"
 
-//* GET all trackers
-export async function getAllTrackers() {
+
+
+// //* GET all trackers created today
+// async function findTodaysTrackers(trackerName: TrackerName) {
+//   const midnight = new Date()
+//   midnight.setHours(0, 0, 0, 0)
+
+//   const queryArgs: Prisma.TrackerFindManyArgs = {
+//     where: {
+//       name: trackerName,
+//       createdAt: {
+//         gte: midnight.toISOString()
+//       }
+//     },
+//     orderBy: {
+//       createdAt: "desc"
+//     }
+//   }
+
+//   return await prisma.tracker.findMany(queryArgs)
+// }
+// export type GetAllTodaysTrackersReturn = Prisma.PromiseReturnType<typeof findTodaysTrackers>
+// type FindTodaysTrackersArgs = Parameters<typeof findTodaysTrackers>
+
+// export async function getAllTodaysTrackers(args: FindTodaysTrackersArgs[0]) {
+//   try {
+//     const data = await findTodaysTrackers(args)
+//     return { data }
+//   } catch (error) { return { error } }
+// }
+
+// //* GET all trackers created in the past
+// async function findPastTrackers(trackerName: TrackerName) {
+//   const midnight = new Date()
+//   midnight.setHours(0, 0, 0, 0)
+
+//   const queryArgs: Prisma.TrackerFindManyArgs = {
+//     where: {
+//       name: trackerName,
+//       createdAt: {
+//         lt: midnight.toISOString()
+//       }
+//     },
+//     orderBy: {
+//       createdAt: "desc"
+//     }
+//   }
+
+//   return await prisma.tracker.findMany(queryArgs)
+// }
+// export type GetAllPastTrackersReturn = Prisma.PromiseReturnType<typeof findPastTrackers>
+// type FindPastTrackersArgs = Parameters<typeof findPastTrackers>
+
+// export async function getAllPastTrackers(args: FindPastTrackersArgs[0]) {
+//   try {
+//     const data = await findPastTrackers(args)
+//     return { data }
+//   } catch (error) { return { error } }
+// }
+
+
+//* GET all trackers 
+async function findTrackers(trackerName: TrackerName) {
+  const queryArgs: Prisma.TrackerFindManyArgs = {
+    where: {
+      name: trackerName,
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  }
+  return await prisma.tracker.findMany(queryArgs)
+}
+export type GetAllTrackersReturn = Prisma.PromiseReturnType<typeof findTrackers>
+type FindTrackersArgs = Parameters<typeof findTrackers>
+
+export async function getAllTrackers(args: FindTrackersArgs[0]) {
   try {
-    const data = await prisma.tracker.findMany()
+    const data = await findTrackers(args)
     return { data }
   } catch (error) { return { error } }
 }
 
-//* GET all trackers by argument
-async function findTrackersByArg(findTrackerByArgArgs: Prisma.TrackerFindManyArgs) {
-  return await prisma.tracker.findMany(findTrackerByArgArgs)
-}
-export type GetTrackerByArgReturnType = Prisma.PromiseReturnType<typeof findTrackersByArg>
-export async function getAllTrackersByArg(findTrackerByArgArgs: Prisma.TrackerFindManyArgs) {
-  try {
-    const data = await findTrackersByArg(findTrackerByArgArgs)
-    return { data }
-  } catch (error) { return { error } }
-}
+
 
 //* GET single tracker
-async function findTracker(findTrackerArgs: Prisma.TrackerFindFirstArgs) {
-  return await prisma.tracker.findFirst(findTrackerArgs)
+async function findTrackerById(trackerId: Prisma.TrackerWhereInput["id"]) {
+  const queryArgs: Prisma.TrackerFindFirstArgs = {
+    where: {
+      id: trackerId
+    }
+  }
+
+  return await prisma.tracker.findFirst(queryArgs)
 }
-export type GetTrackerReturnType = Prisma.PromiseReturnType<typeof findTracker>
-export async function getTracker(findTrackerArgs: Prisma.TrackerFindFirstArgs) {
+export type GetTrackerReturn = Prisma.PromiseReturnType<typeof findTrackerById>
+type GetTrackerByIdArgs = Parameters<typeof findTrackerById>
+
+export async function getTrackerById(args: GetTrackerByIdArgs[0]) {
   try {
-    const data = await findTracker(findTrackerArgs)
+    const data = await findTrackerById(args)
     return { data }
   } catch (error) { return { error } }
 }
 
+
+
 //* POST create tracker
-async function createSingleTracker(createTrackerArgs: Prisma.TrackerCreateArgs) {
-  return await prisma.tracker.create(createTrackerArgs)
+async function createSingleTracker(createData: Prisma.TrackerCreateArgs["data"]) {
+  const createArgs: Prisma.TrackerCreateArgs = {
+    data: createData
+  }
+
+  return await prisma.tracker.create(createArgs)
 }
-export type CreateTrackerReturnType = Prisma.PromiseReturnType<typeof createSingleTracker>
-export async function createTracker(createTrackerArgs: Prisma.TrackerCreateArgs) {
+export type CreateSingleTrackerReturn = Prisma.PromiseReturnType<typeof createSingleTracker>
+type CreateSingleTrackerArgs = Parameters<typeof createSingleTracker>
+
+export async function createTracker(args: CreateSingleTrackerArgs[0]) {
   try {
-    const data = await createSingleTracker(createTrackerArgs)
+    const data = await createSingleTracker(args)
+    return { data }
+  } catch (error) { return { error } }
+}
+
+
+
+//* POST delete tracker
+async function deleteSingleTracker(trackerId: Prisma.TrackerDeleteArgs["where"]["id"]) {
+  const deleteArgs: Prisma.TrackerDeleteArgs= {
+    where: {
+      id: trackerId
+    }
+  }
+  return await prisma.tracker.delete(deleteArgs)
+}
+export type DeleteTrackerReturn = Prisma.PromiseReturnType<typeof deleteSingleTracker>
+type DeleteSingleTrackerArgs = Parameters<typeof deleteSingleTracker>
+
+export async function deleteTracker(args: DeleteSingleTrackerArgs[0]) {
+  try {
+    const data = await deleteSingleTracker(args)
     return { data }
   } catch (error) { return { error } }
 }
