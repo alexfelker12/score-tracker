@@ -174,7 +174,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: Partic
   return (
     <Form {...form}>
       {/* onSubmit ??= defaultOnSubmit */}
-      <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col">
         <div className="flex flex-wrap gap-2">
           {fields.map((field, index) => (
             <FormField
