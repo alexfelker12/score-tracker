@@ -5,14 +5,17 @@ import Link from "next/link";
 import React from "react";
 
 //* packages
-import { deleteTracker, getAllTrackers } from "@/server/actions/trackerActions";
 import { Tracker, TrackerName } from "@prisma/client/edge";
-import { useMutation, useMutationState, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useMutationState, useQuery } from "@tanstack/react-query";
+
+//* actions
+import { getAllPastTrackers, getAllTodaysTrackers } from "@/server/actions/trackerActions";
 
 //* lib
-import { getQueryClient } from "@/lib/get-query-client";
-import { isToday, timeElapsed } from "@/lib/utils";
+import { timeElapsed } from "@/lib/utils";
+
+//* hooks
+import { useDeleteTracker, UseHandleDeleteFunc } from "@/hooks/use-delete-tracker";
 
 //* schema
 import { participantsSchemaBase } from "@/schema/participants";
@@ -21,7 +24,6 @@ import { participantsSchemaBase } from "@/schema/participants";
 import { ArrowRightIcon, Trash2Icon } from "lucide-react";
 
 //* components
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,36 +33,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 export type TrackerListProps = {
   trackerName: TrackerName
 }
-export const TrackerList = ({ trackerName }: TrackerListProps) => {
-  //* query client
-  const qc = getQueryClient()
-
-  //* GET all schwimmen trackers
-  const { data, isFetching, isLoading, isPending } = useQuery({
-    queryKey: ["trackers", trackerName],
-    queryFn: () => getAllTrackers(trackerName),
+export const TrackerListToday = ({ trackerName }: TrackerListProps) => {
+  //* GET all schwimmen trackers created today
+  const { data, isFetching, isPending } = useQuery({
+    queryKey: ["trackers", trackerName, "today"],
+    queryFn: () => getAllTodaysTrackers(trackerName),
     refetchOnMount: false,
     refetchOnReconnect: false
   })
 
 
   //* DELETE mutation: tracker
-  const { mutate, isPending: isDeletePending } = useMutation({
-    // mutationKey: ["delete-tracker"],
-    mutationFn: deleteTracker,
-    onSettled: (data, error) => {
-      if (!error && data) {
-        toast.success("Tracker was deleted successfully")
-        qc.invalidateQueries({
-          queryKey: ["trackers", trackerName],
-          // refetchType: "none"
-        })
-      }
-    },
-  })
-  const handleMutate = (trackerId: string) => {
-    mutate(trackerId)
-  }
+  const { deleteTracker, isDeletePending } = useDeleteTracker()
 
   //* get status of create mutation to display loading skeleton for new tracker
   const isCreatePending = useMutationState({
@@ -68,76 +52,73 @@ export const TrackerList = ({ trackerName }: TrackerListProps) => {
     select: (mutation) => mutation.state.status === 'pending',
   })[0];
 
-
-  const todayTrackers = data && data.data
-    ? data.data.filter(tracker => isToday(tracker.createdAt))
-    : []
-  const pastTrackers = data && data.data
-    ? data.data.filter(tracker => !isToday(tracker.createdAt))
-    : []
-
-  return (
-    <Accordion type="multiple" defaultValue={["today"]}>
-
-      {/* trackers created today */}
-      <AccordionItem value="today">
-        <AccordionTrigger><span className="font-semibold text-lg">Created today</span></AccordionTrigger>
-
-        {/* listing */}
-        <AccordionContent className="gap-4 grid md:grid-cols-2">
-          {(isCreatePending && isFetching) && <TrackerCardLoading />}
-          {isPending
-            ? Array.from({ length: 2 }).map((_, idx) => (
-              <TrackerCardLoading key={`today-${idx}`} />
-            ))
-            : todayTrackers.length > 0
-              ? todayTrackers.map((tracker) => (
-                <TrackerCard key={tracker.id} {...tracker} deleteTracker={handleMutate} isPending={isDeletePending} />
-              ))
-              : !(isCreatePending && isFetching) && <div className="flex justify-center col-span-2 px-3 py-4 border rounded-md">
-                <span className="text-muted-foreground text-sm">No trackers created today. <Button
-                  variant="link"
-                  className="p-0 h-auto"
-                  asChild
-                >
-                  <a href={"#firstPlayer"}>Create one above</a>
-                </Button>
-                </span>
-              </div>
-          }
-        </AccordionContent>
-      </AccordionItem>
-
-      {/* trackers created past time */}
-      <AccordionItem value="past">
-        <AccordionTrigger><span className="font-semibold text-lg">Created in the past</span></AccordionTrigger>
-
-        {/* listing */}
-        <AccordionContent className="gap-4 grid md:grid-cols-2">
-          {isPending || isLoading
-            ? Array.from({ length: 2 }).map((_, idx) => (
-              <TrackerCardLoading key={`past-${idx}`} />
-            ))
-            : pastTrackers.length > 0
-              ? pastTrackers.map((tracker) => (
-                <TrackerCard key={tracker.id} {...tracker} deleteTracker={handleMutate} isPending={isPending} />
-              ))
-              : <div className="flex justify-center col-span-2 p-4 border rounded-md">
-                <span className="text-muted-foreground text-sm">There are no trackers created in the past</span>
-              </div>
-          }
-        </AccordionContent>
-      </AccordionItem>
-
-    </Accordion>
+  //* loading
+  if (isPending) return <TrackerCardsLoading />
+  //* no trackers | show if:
+  if ((data && data.data && data.data.length === 0) // ...no trackers in list
+    && !(isCreatePending && isFetching) // ...and trackers not fetching and create pending
+  ) return (
+    <div className="flex justify-center col-span-2 p-4 border rounded-md">
+      <span className="text-muted-foreground text-sm">There are no trackers created in the past</span>
+    </div>
+  )
+  //* listing
+  if (data && data.data) return (
+    <>
+      {(isCreatePending && isFetching) && <TrackerCardsLoading length={1} />}
+      {data.data.map((tracker) => (
+        <TrackerCard
+          key={tracker.id}
+          deleteTracker={deleteTracker}
+          isPending={isDeletePending}
+          {...tracker}
+        />
+      ))}
+    </>
   )
 }
 
-export type TrackerCardType = Tracker & {
-  deleteTracker: (trackerId: string) => void
+export const TrackerListPast = ({ trackerName }: TrackerListProps) => {
+  //* GET all schwimmen trackers created in the past
+  const { data, isLoading, isPending } = useQuery({
+    queryKey: ["trackers", trackerName, "past"],
+    queryFn: () => getAllPastTrackers(trackerName),
+    refetchOnMount: false,
+    refetchOnReconnect: false
+  })
+
+  //* DELETE mutation: tracker
+  const { deleteTracker, isDeletePending } = useDeleteTracker()
+
+  //* loading
+  if (isPending || isLoading) return (
+    <TrackerCardsLoading />
+  )
+  //* no trackers
+  if (data && data.data && data.data.length === 0) return (
+    <div className="flex justify-center col-span-2 p-4 border rounded-md">
+      <span className="text-muted-foreground text-sm">There are no trackers created in the past</span>
+    </div>
+  )
+  //* listing
+  if (data && data.data) return (
+    data.data.map((tracker) => (
+      <TrackerCard
+        key={tracker.id}
+        deleteTracker={deleteTracker}
+        isPending={isDeletePending}
+        {...tracker}
+      />
+    ))
+  )
+}
+
+
+export type TrackerCardParams = Tracker & {
+  deleteTracker: UseHandleDeleteFunc
   isPending: boolean
 }
-export const TrackerCard = ({ id, name, createdAt, playerData, isPending, deleteTracker }: TrackerCardType) => {
+export const TrackerCard = ({ id, name, createdAt, playerData, isPending, deleteTracker }: TrackerCardParams) => {
   //* parse playerData to get amount of players
   const { success, data: parsedData } = participantsSchemaBase.shape.players.safeParse(playerData);
 
@@ -180,7 +161,7 @@ export const TrackerCard = ({ id, name, createdAt, playerData, isPending, delete
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => deleteTracker(id)}
+                onClick={() => { if (!isPending) deleteTracker(id) }}
               >Confirm</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -204,11 +185,19 @@ export const TrackerCard = ({ id, name, createdAt, playerData, isPending, delete
     </Card>
   )
 }
-const TrackerCardLoading = () => {
+
+
+export type TrackerCardsLoadingParams = {
+  length?: number
+}
+export const TrackerCardsLoading = ({ length = 2 }: TrackerCardsLoadingParams) => {
   return (
-    <Skeleton className="rounded-xl h-[124px]"></Skeleton>
+    Array.from({ length }).map((_, idx) => (
+      <Skeleton key={`today-${idx}`} className="rounded-xl h-[124px]"></Skeleton>
+    ))
   )
 }
+
 
 const TimeElapsed = ({ createdAt }: { createdAt: Date }) => {
   const [elapsed, setElapsed] = React.useState<string>("");
