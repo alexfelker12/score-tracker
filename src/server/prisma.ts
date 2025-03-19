@@ -11,6 +11,6 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
 export const caching = {
   cacheStrategy: {
     // ttl: 60, // Time-to-live in seconds
-    swr: 60, // Stale-while-revalidate duration in seconds
+    // swr: 60, // Stale-while-revalidate duration in seconds
   },
 }

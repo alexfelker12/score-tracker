@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { ManSwimmingIcon } from "@/components/ui/icons/man-swimming";
-import { SkullIcon } from "@/components/ui/icons/skull";
+import { ManSwimmingIcon } from "@/components/icons/man-swimming";
+import { SkullIcon } from "@/components/icons/skull";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SCHWIMMEN_ICON_SIZE_MAP, SCHWIMMEN_TEXT_SIZE_MAP } from "@/lib/constants";
 import { cn } from "@/lib/utils";

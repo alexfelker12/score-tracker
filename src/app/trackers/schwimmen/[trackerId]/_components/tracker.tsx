@@ -21,7 +21,7 @@ import { HeartCrackIcon } from "lucide-react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { RadioActiveIcon } from "@/components/ui/icons/radioactive";
+import { RadioActiveIcon } from "@/components/icons/radioactive";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 
