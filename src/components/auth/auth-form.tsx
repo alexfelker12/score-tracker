@@ -28,6 +28,7 @@ import { useRouter } from 'next/navigation'
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
+import { toast } from 'sonner'
 
 export type AuthFormProps = {
   type: "sign-in" | "sign-up"
@@ -282,10 +283,9 @@ export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsPr
       callbackURL: "/",
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
-          // toast.error()
-          // form.setError("root", {
-          //   message: ctx.error.message
-          // })
+          toast.error(type === "sign-in" ? "Sign-in failed" : "Sign-up failed", {
+            description: ctx.error.message
+          })
         },
         //? ctx: ResponseContext
         onResponse: () => {
