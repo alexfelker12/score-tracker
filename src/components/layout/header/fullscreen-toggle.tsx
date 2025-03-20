@@ -5,6 +5,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MaximizeIcon, MinimizeIcon } from 'lucide-react';
 
+
 export const FullscreenToggle = () => {
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false)
 
@@ -46,12 +47,10 @@ export const FullscreenToggle = () => {
       size="icon"
       onClick={toggleFullscreen}
     >
-      {isFullscreen ?
-        <MinimizeIcon className="size-5" />
-        :
-        <MaximizeIcon className="size-5" />
+      {isFullscreen
+        ? <MinimizeIcon className="size-5" />
+        : <MaximizeIcon className="size-5" />
       }
-      <span className="sr-only">Toggle fullscreen mode</span>
     </Button>
   );
 } 

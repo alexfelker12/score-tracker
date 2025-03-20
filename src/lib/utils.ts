@@ -80,6 +80,7 @@ export function timeElapsed(date: Date, inSeconds: boolean = false): string {
   return date.toLocaleDateString("de-DE", {
     month: "2-digit",
     day: "2-digit",
+    year: "numeric",
     hour12: false
   });
 }

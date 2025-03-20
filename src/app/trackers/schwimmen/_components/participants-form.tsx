@@ -174,7 +174,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: Partic
   return (
     <Form {...form}>
       {/* onSubmit ??= defaultOnSubmit */}
-      <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col">
+      <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col gap-4 sm:gap-0">
         <div className="flex flex-wrap gap-2">
           {fields.map((field, index) => (
             <FormField
@@ -239,7 +239,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: Partic
         <div className="flex justify-end">
           <Button
             type="submit"
-            className="w-full md:w-auto"
+            className="w-full sm:w-auto"
             disabled={isPending}
           >
             {isPending ?

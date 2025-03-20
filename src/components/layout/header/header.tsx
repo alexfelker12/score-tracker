@@ -1,10 +1,10 @@
 import { MainNav, MobileNav } from '@/components/layout/header/nav';
 import { WebIcon } from '@/components/layout/header/web-icon';
-import { FullscreenToggle } from './fullscreen-toggle';
+import { User } from './user';
 
 export default function Header() {
   return (
-    <header className="top-0 z-50 sticky flex justify-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b h-16">
+    <header className="top-0 z-50 sticky flex justify-center bg-background/95 supports-[backdrop-filter]:bg-background/60 backdrop-blur border-b h-16">
       <div className="flex justify-between items-center gap-x-8 px-4 w-full max-w-4xl h-full">
 
         {/* Mobile Nav */}
@@ -16,11 +16,8 @@ export default function Header() {
         {/* Main Nav */}
         <MainNav />
 
-        {/* fullscreen toggle */}
-        <FullscreenToggle />
-
         {/* user icon - hidden for now */}
-        {/* <User /> */}
+        <User />
 
       </div>
     </header>
