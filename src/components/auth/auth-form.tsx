@@ -15,7 +15,7 @@ import { signIn, signUp } from '@/lib/auth-client'
 
 //* icons
 import { GoogleIcon } from '@/components/icons/google-logo'
-import { Divide, Loader2Icon, LoaderCircleIcon } from 'lucide-react'
+import { Loader2Icon, LoaderCircleIcon } from 'lucide-react'
 
 //* components
 import { Button } from '@/components/ui/button'
@@ -25,10 +25,10 @@ import { Separator } from "@/components/ui/separator"
 
 //* local
 import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
-import { toast } from 'sonner'
 
 export type AuthFormProps = {
   type: "sign-in" | "sign-up"
