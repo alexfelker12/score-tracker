@@ -24,7 +24,7 @@ import { Form, FormField } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
 
 //* local
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
@@ -87,6 +87,10 @@ export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => 
   const [credentialsLoading, setCredentialsLoading] = React.useState<boolean>(false)
   const router = useRouter()
 
+  //* retreive "from" param for redirect to originating protected route if present else home
+  const searchParams = useSearchParams()
+  const fromProtectedRouteOrHome = searchParams.get("from") || "/"
+
   const type = "sign-in"
   const schema = signInFormSchema
   const defaultValues = signInDefaultValues
@@ -118,7 +122,8 @@ export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => 
         },
         // ctx: SuccessContext
         onSuccess() {
-          router.push("/")
+          router.push(fromProtectedRouteOrHome)
+          router.refresh()
         },
       }
     })
@@ -178,6 +183,7 @@ export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => 
 export type AuthFormSignUpProps = AuthFormBaseProps & {}
 export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => {
   const [credentialsLoading, setCredentialsLoading] = React.useState<boolean>(false)
+  const router = useRouter()
 
   const type = "sign-up"
   const schema = signUpFormSchema
@@ -211,6 +217,12 @@ export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => 
         onResponse: () => {
           setLoading(false)
           setCredentialsLoading(false)
+        },
+        // ctx: SuccessContext
+        onSuccess() {
+          //* default redirect to home page
+          router.push("/")
+          router.refresh()
         },
       }
     })

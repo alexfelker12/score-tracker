@@ -1,5 +1,8 @@
 import { MainNav, MobileNav } from '@/components/layout/header/nav';
 import { WebIcon } from '@/components/layout/header/web-icon';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ChevronUpIcon } from 'lucide-react';
+import { Suspense } from 'react';
 import { User } from './user';
 
 export default function Header() {
@@ -16,8 +19,15 @@ export default function Header() {
         {/* Main Nav */}
         <MainNav />
 
-        {/* user icon - hidden for now */}
-        <User />
+        {/* user icon */}
+        <Suspense fallback={
+          <div className="flex items-center gap-1 p-1 translate-x-1">
+            <ChevronUpIcon className="size-4 shrink-0" />
+            <Skeleton className="rounded-full size-9" />
+          </div>
+        }>
+          <User />
+        </Suspense>
 
       </div>
     </header>

@@ -59,7 +59,14 @@ export const TrackerListToday = ({ trackerName }: TrackerListProps) => {
     && !(isCreatePending && isFetching) // ...and trackers not fetching and create pending
   ) return (
     <div className="flex justify-center col-span-2 p-4 border rounded-md">
-      <span className="text-muted-foreground text-sm">There are no trackers created in the past</span>
+      <span className="text-muted-foreground text-sm">No trackers created today. <Button
+        variant="link"
+        className="p-0 h-auto"
+        asChild
+      >
+        <a href={"#firstPlayer"}>Create one above</a>
+      </Button>
+      </span>
     </div>
   )
   //* listing
@@ -124,7 +131,7 @@ export const TrackerCard = ({ id, name, createdAt, playerData, isPending, delete
 
   return (
     <Card className="justify-between gap-4 py-4 w-full h-full transition-all">
-      <CardHeader className="flex-row justify-between gap-4 px-4">
+      <CardHeader className="flex-row justify-between items-start gap-4 px-4">
 
         {/* tracker name & time elapsed since now */}
         <div className="flex flex-col gap-1.5">
@@ -135,10 +142,10 @@ export const TrackerCard = ({ id, name, createdAt, playerData, isPending, delete
           </CardDescription>
         </div>
 
-        <div className="text-muted-foreground text-sm">
-          {/* time since creation */}
+        {/* time since creation */}
+        <span className="text-muted-foreground text-sm leading-none">
           <TimeElapsed createdAt={createdAt} />
-        </div>
+        </span>
 
       </CardHeader>
       <CardContent className="flex justify-between items-center px-4">
@@ -225,5 +232,5 @@ const TimeElapsed = ({ createdAt }: { createdAt: Date }) => {
 
   if (!isReady) return <Skeleton className="w-24 h-5" />
 
-  return <span>{elapsed}</span>;
+  return <>{elapsed}</>;
 };

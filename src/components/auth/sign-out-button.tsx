@@ -31,7 +31,9 @@ export const SignOutButton = ({ session, asChild, children }: SignOutButtonProps
         // ctx: SuccessContext
         onSuccess: () => {
           toast.success("You have signed out successfully")
-          router.push("/sign-in")
+          // router.push("/sign-in")
+          //* refresh current page on sign out to trigger middleware redirect to sign-in page with current url search params (if not "/")
+          router.refresh()
         },
       }
     })
