@@ -12,7 +12,7 @@ import { toast } from "sonner"
 import { signOut } from "@/lib/auth-client"
 
 //* components
-import { AuthenticatedUserProps } from "@/components/layout/header/user"
+import { AuthenticatedUserProps } from "@/components/layout/header/user-dropdowns"
 import { Button } from "@/components/ui/button"
 
 

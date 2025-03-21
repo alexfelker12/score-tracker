@@ -1,4 +1,6 @@
 import { AuthForm } from "@/components/auth/auth-form";
+import { Loader2Icon } from "lucide-react";
+import { Suspense } from "react";
 
 export default async function Home() {
   // const session = await auth.api.getSession({
@@ -7,7 +9,13 @@ export default async function Home() {
 
   return (
     <main className="flex flex-col justify-center items-center space-y-4 p-4 h-full">
-      <AuthForm type="sign-in" />
+      <Suspense fallback={
+        <div className="flex justify-center items-center w-full h-full">
+          <Loader2Icon />
+        </div>
+      }>
+        <AuthForm type="sign-in" />
+      </Suspense>
 
       {/* [&_a]:hover:text-primary [&_a]:underline [&_a]:underline-offset-4 */}
       {/* <div className="max-w-sm text-balance text-center text-muted-foreground text-xs">

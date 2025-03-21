@@ -6,7 +6,7 @@ import { betterFetch } from '@better-fetch/fetch';
 import { Session } from "better-auth";
 
 export default async function middleware(request: NextRequest) {
-  //? node runtime not supported outside of canary :23
+  //? node runtime not supported outside of canary
   // const session = await auth.api.getSession({ headers: await headers() })
 
   //* get session with fetch call

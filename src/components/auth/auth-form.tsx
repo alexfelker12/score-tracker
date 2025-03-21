@@ -2,12 +2,14 @@
 
 //* react/next
 import Link from 'next/link'
-import React, { Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React from 'react'
 
 //* packages
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { ErrorContext } from 'better-auth/react'
 import { useForm } from "react-hook-form"
+import { toast } from 'sonner'
 import { z } from "zod"
 
 //* lib
@@ -15,7 +17,7 @@ import { signIn, signUp } from '@/lib/auth-client'
 
 //* icons
 import { GoogleIcon } from '@/components/icons/google-logo'
-import { Loader2Icon, LoaderCircleIcon } from 'lucide-react'
+import { LoaderCircleIcon } from 'lucide-react'
 
 //* components
 import { Button } from '@/components/ui/button'
@@ -24,8 +26,6 @@ import { Form, FormField } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
 
 //* local
-import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from 'sonner'
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
@@ -37,12 +37,20 @@ export type AuthFormProps = {
 export type AuthFormBaseProps = {
   loading: boolean
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  callbackUrl: string
 }
 
 export const AuthForm = ({ type }: AuthFormProps) => {
   const [loading, setLoading] = React.useState<boolean>(false)
 
   const FormComp = type === "sign-in" ? AuthFormSignIn : AuthFormSignUp
+
+  //* retreive "from" param for redirect to originating protected route if present else home
+  const searchParams = useSearchParams()
+  const fromProtectedRouteOrHome = searchParams.get("from") || "/"
+  const originalParamsOrBlank = searchParams.toString() !== ""
+    ? `?${searchParams.toString()}`
+    : ""
 
   return (
     <Card className='w-full max-w-sm'>
@@ -54,32 +62,39 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
       {/* -- login options */}
       <CardContent className='space-y-6'>
-        <Suspense fallback={
-          <div className="flex justify-center items-center w-full h-full">
-            <Loader2Icon />
-          </div>
-        }>
-          {/* credential login */}
-          <FormComp
-            loading={loading}
-            setLoading={setLoading}
-          />
+        {/* credential login */}
+        <FormComp
+          loading={loading}
+          setLoading={setLoading}
+          callbackUrl={fromProtectedRouteOrHome}
+        />
 
-          {/* login options divider */}
-          <div className='relative'>
-            <Separator />
-            <span className='top-1/2 left-1/2 absolute bg-card px-2 text-muted-foreground text-sm -translate-x-1/2 -translate-y-1/2'>or continue with</span>
-          </div>
+        {/* login options divider */}
+        <div className='relative'>
+          <Separator />
+          <span className='top-1/2 left-1/2 absolute bg-card px-2 text-muted-foreground text-sm -translate-x-1/2 -translate-y-1/2'>or continue with</span>
+        </div>
 
-          {/* alternative/social logins */}
-          <AuthFormSocials type={type} loading={loading} setLoading={setLoading} />
-        </Suspense>
+        {/* alternative/social logins */}
+        <AuthFormSocials
+          type={type}
+          loading={loading}
+          setLoading={setLoading}
+          callbackUrl={fromProtectedRouteOrHome}
+        />
       </CardContent>
 
       {/* -- login form footer */}
       <CardFooter className='w-full text-center text-sm'>
         <span className='w-full'>{formTextData[type].pageSwitchPhrase}{" "}
-          <Link className='underline underline-offset-4' href={type === "sign-in" ? "/sign-up" : "/sign-in"}>
+          <Link
+            className='underline underline-offset-4'
+            href={
+              type === "sign-in"
+                ? `/sign-up${originalParamsOrBlank}`
+                : `/sign-in${originalParamsOrBlank}`
+            }
+          >
             {formTextData[type].pageSwitchLink}
           </Link>
         </span>
@@ -89,13 +104,9 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 }
 
 export type AuthFormSignInProps = AuthFormBaseProps & {}
-export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => {
+export const AuthFormSignIn = ({ loading, setLoading, callbackUrl }: AuthFormSignInProps) => {
   const [credentialsLoading, setCredentialsLoading] = React.useState<boolean>(false)
   const router = useRouter()
-
-  //* retreive "from" param for redirect to originating protected route if present else home
-  const searchParams = useSearchParams()
-  const fromProtectedRouteOrHome = searchParams.get("from") || "/"
 
   const type = "sign-in"
   const schema = signInFormSchema
@@ -128,7 +139,7 @@ export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => 
         },
         // ctx: SuccessContext
         onSuccess() {
-          router.push(fromProtectedRouteOrHome)
+          router.push(callbackUrl)
           router.refresh()
         },
       }
@@ -187,7 +198,7 @@ export const AuthFormSignIn = ({ loading, setLoading }: AuthFormSignInProps) => 
 }
 
 export type AuthFormSignUpProps = AuthFormBaseProps & {}
-export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => {
+export const AuthFormSignUp = ({ loading, setLoading, callbackUrl }: AuthFormSignUpProps) => {
   const [credentialsLoading, setCredentialsLoading] = React.useState<boolean>(false)
   const router = useRouter()
 
@@ -212,7 +223,7 @@ export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => 
       password,
       username,
       name: username,
-      callbackURL: "/",
+      // callbackURL: callbackUrl,
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
           form.setError("root", {
@@ -227,7 +238,7 @@ export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => 
         // ctx: SuccessContext
         onSuccess() {
           //* default redirect to home page
-          router.push("/")
+          router.push(callbackUrl)
           router.refresh()
         },
       }
@@ -286,13 +297,9 @@ export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => 
 }
 
 export type AuthFormSocialsProps = AuthFormProps & AuthFormBaseProps & {}
-export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsProps) => {
+export const AuthFormSocials = ({ type, loading, setLoading, callbackUrl }: AuthFormSocialsProps) => {
   const [socialsLoading, setSocialsLoading] = React.useState<boolean>(false)
   // const router = useRouter()
-
-  //* retreive "from" param for redirect to originating protected route if present else home
-  const searchParams = useSearchParams()
-  const fromProtectedRouteOrHome = searchParams.get("from") || "/"
 
   //* sign up/in with socials
   // google
@@ -303,7 +310,7 @@ export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsPr
 
     signIn.social({
       provider: "google",
-      callbackURL: fromProtectedRouteOrHome,
+      callbackURL: callbackUrl,
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
           toast.error(type === "sign-in" ? "Sign-in failed" : "Sign-up failed", {
