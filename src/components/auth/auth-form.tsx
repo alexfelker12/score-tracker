@@ -2,7 +2,7 @@
 
 //* react/next
 import Link from 'next/link'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 //* packages
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,7 +15,7 @@ import { signIn, signUp } from '@/lib/auth-client'
 
 //* icons
 import { GoogleIcon } from '@/components/icons/google-logo'
-import { LoaderCircleIcon } from 'lucide-react'
+import { Divide, Loader2Icon, LoaderCircleIcon } from 'lucide-react'
 
 //* components
 import { Button } from '@/components/ui/button'
@@ -54,20 +54,26 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
       {/* -- login options */}
       <CardContent className='space-y-6'>
-        {/* credential login */}
-        <FormComp
-          loading={loading}
-          setLoading={setLoading}
-        />
+        <Suspense fallback={
+          <div className="flex justify-center items-center w-full h-full">
+            <Loader2Icon />
+          </div>
+        }>
+          {/* credential login */}
+          <FormComp
+            loading={loading}
+            setLoading={setLoading}
+          />
 
-        {/* login options divider */}
-        <div className='relative'>
-          <Separator />
-          <span className='top-1/2 left-1/2 absolute bg-card px-2 text-muted-foreground text-sm -translate-x-1/2 -translate-y-1/2'>or continue with</span>
-        </div>
+          {/* login options divider */}
+          <div className='relative'>
+            <Separator />
+            <span className='top-1/2 left-1/2 absolute bg-card px-2 text-muted-foreground text-sm -translate-x-1/2 -translate-y-1/2'>or continue with</span>
+          </div>
 
-        {/* alternative/social logins */}
-        <AuthFormSocials type={type} loading={loading} setLoading={setLoading} />
+          {/* alternative/social logins */}
+          <AuthFormSocials type={type} loading={loading} setLoading={setLoading} />
+        </Suspense>
       </CardContent>
 
       {/* -- login form footer */}
@@ -282,6 +288,11 @@ export const AuthFormSignUp = ({ loading, setLoading }: AuthFormSignUpProps) => 
 export type AuthFormSocialsProps = AuthFormProps & AuthFormBaseProps & {}
 export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsProps) => {
   const [socialsLoading, setSocialsLoading] = React.useState<boolean>(false)
+  // const router = useRouter()
+
+  //* retreive "from" param for redirect to originating protected route if present else home
+  const searchParams = useSearchParams()
+  const fromProtectedRouteOrHome = searchParams.get("from") || "/"
 
   //* sign up/in with socials
   // google
@@ -292,7 +303,7 @@ export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsPr
 
     signIn.social({
       provider: "google",
-      callbackURL: "/",
+      callbackURL: fromProtectedRouteOrHome,
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
           toast.error(type === "sign-in" ? "Sign-in failed" : "Sign-up failed", {
@@ -304,6 +315,10 @@ export const AuthFormSocials = ({ type, loading, setLoading }: AuthFormSocialsPr
           setLoading(false)
           setSocialsLoading(false)
         },
+        // ctx: SuccessContext
+        // onSuccess: () => {
+        //   router.refresh()
+        // },
       }
     })
   }
