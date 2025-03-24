@@ -1,7 +1,19 @@
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { HouseIcon } from "lucide-react";
-import Link from "next/link";
+"use client"
+
+//* react/next
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+//* lib
+import { getNavTrailFromString } from "@/lib/utils";
+
+//* icons
+import { HouseIcon } from "lucide-react";
+
+//* components
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+
 
 export type BreadcrumbType = {
   name: string
@@ -9,14 +21,19 @@ export type BreadcrumbType = {
 }
 
 export type BreadcrumbsProps = {
-  navTrail: BreadcrumbType[]
+  navTrail?: BreadcrumbType[]
+  lastTrail?: BreadcrumbType
 }
 
-export const Breadcrumbs = ({ navTrail }: BreadcrumbsProps) => {
+export const Breadcrumbs = ({ navTrail, lastTrail }: BreadcrumbsProps) => {
+  const pathname = usePathname()
+
+  const crumbs: BreadcrumbType[] = navTrail || getNavTrailFromString(pathname)
+
   //* helper function to determine if crumb is last item of navTrail
-  const isLastCrumb = React.useCallback((idx: number) => {
-    return navTrail.length === idx + 1
-  }, [navTrail])
+  const isLastCrumb = React.useCallback((crumbs: BreadcrumbType[], idx: number) => {
+    return crumbs.length === idx + 1
+  }, [crumbs])
 
   return (
     <Breadcrumb>
@@ -30,22 +47,26 @@ export const Breadcrumbs = ({ navTrail }: BreadcrumbsProps) => {
         </BreadcrumbItem>
 
         {/* for every crumb in the nav trail render a separator and crumb item */}
-        {navTrail.map((crumb, idx) => {
-          const lastCrumb = isLastCrumb(idx)
+        {crumbs.map((crumb, idx) => {
+          const lastCrumb = isLastCrumb(crumbs, idx)
+          //* if last trail is provided, overwrite last iteration with last trail
+          const dynLastCrumb = lastCrumb && lastTrail ? lastTrail : false
+          const thisCrumb = dynLastCrumb || crumb
+
           return (
-            <React.Fragment key={`${crumb.name}-${idx}`}>
+            <React.Fragment key={`${thisCrumb.name}-${idx}`}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 {/* if href was passed and not last crumb, treat crumb item as link */}
-                {crumb.href && !lastCrumb ?
+                {thisCrumb.href && !lastCrumb ?
                   <BreadcrumbLink asChild>
-                    <Link href={crumb.href}>{crumb.name}</Link>
+                    <Link href={thisCrumb.href}>{thisCrumb.name}</Link>
                   </BreadcrumbLink>
                   :
                   // if last crumb render <BreadCrumbPage />, else a simple span
                   lastCrumb
-                    ? <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
-                    : <span>{crumb.name}</span>
+                    ? <BreadcrumbPage>{thisCrumb.name}</BreadcrumbPage>
+                    : <span>{thisCrumb.name}</span>
                 }
               </BreadcrumbItem>
             </React.Fragment>

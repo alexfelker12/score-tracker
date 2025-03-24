@@ -24,8 +24,8 @@ export const SignOutButton = ({ session, asChild, children }: SignOutButtonProps
   const router = useRouter()
   const Comp = asChild ? Slot : Button
 
-  // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  const handleSignOut = () => {
+  const handleSignOut = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault()
     signOut({
       fetchOptions: {
         // ctx: SuccessContext

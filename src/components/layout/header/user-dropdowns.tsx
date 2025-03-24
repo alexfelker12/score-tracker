@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { auth } from "@/lib/auth";
 
 //* icons
-import { ChevronDownIcon, ChevronUpIcon, ContactIcon, LogInIcon, LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
+import { ChevronDownIcon, ContactIcon, LogInIcon, LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
 
 //* components
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -26,8 +26,9 @@ export const UnAuthenticatedUser = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-1 p-1 translate-x-1 cursor-pointer [&[data-state=open]>svg]:-rotate-180">
-        <ChevronUpIcon className="transition-transform duration-200 size-4 shrink-0" />
+      {/* p-1 translate-x-1 */}
+      <DropdownMenuTrigger className="relative flex items-center cursor-pointer [&[data-state=open]>svg]:-rotate-180">
+        <ChevronDownIcon className="-left-5 absolute transition-transform duration-200 size-4 shrink-0" />
         <Avatar className="size-9">
           <AvatarImage></AvatarImage>
           <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>
@@ -57,8 +58,9 @@ export type AuthenticatedUserProps = {
 export const AuthenticatedUser = ({ session }: AuthenticatedUserProps) => {
   if (session) return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-1 p-1 translate-x-1 cursor-pointer [&[data-state=open]>svg]:rotate-180">
-        <ChevronDownIcon className="transition-transform duration-200 size-4 shrink-0" />
+      {/* p-1 translate-x-1 */}
+      <DropdownMenuTrigger className="relative flex items-center cursor-pointer [&[data-state=open]>svg]:rotate-180">
+        <ChevronDownIcon className="-left-5 absolute transition-transform duration-200 size-4 shrink-0" />
         <Avatar className="size-9">
           <AvatarImage src={session.user.image || undefined}></AvatarImage>
           <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>

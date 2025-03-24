@@ -1,4 +1,4 @@
-import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 import { Suspense } from "react";
@@ -9,20 +9,10 @@ import { TrackerListingToday } from "./_components/tracker-listing-today";
 
 export const dynamic = 'force-dynamic'
 
-const navTrail: BreadcrumbType[] = [
-  {
-    name: "trackers",
-    href: "/trackers"
-  },
-  {
-    name: "schwimmen",
-  }
-]
-
 export default async function Schwimmen() {
   return (
     <main className="flex flex-col gap-6">
-      <Breadcrumbs navTrail={navTrail} />
+      <Breadcrumbs />
 
       <div className="space-y-2">
         {/* heading + description */}

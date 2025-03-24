@@ -1,20 +1,12 @@
-import { getTrackerById } from "@/server/actions/trackerActions";
 import Link from "next/link";
-import { Tracker } from "./_components/tracker";
+
+import { getTrackerById } from "@/server/actions/trackerActions";
+
 import { participantsSchemaBase } from "@/schema/participants";
 
 import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
+import { Tracker } from "./_components/tracker";
 
-const navTrail: BreadcrumbType[] = [
-  {
-    name: "trackers",
-    href: "/trackers"
-  },
-  {
-    name: "schwimmen",
-    href: "/trackers/schwimmen"
-  }
-]
 
 export default async function TrackerSessionPage({
   params,
@@ -23,12 +15,9 @@ export default async function TrackerSessionPage({
 }) {
   const { trackerId } = await params
 
-  const dynNavTrail: BreadcrumbType[] = [
-    ...navTrail,
-    {
-      name: `${trackerId.slice(0, 5)}...`
-    }
-  ]
+  const dynNavTrail: BreadcrumbType = {
+    name: `${trackerId.slice(0, 5)}...`
+  }
 
   const { data, error } = await getTrackerById(trackerId)
 
@@ -42,7 +31,7 @@ export default async function TrackerSessionPage({
 
   return (
     <main className="flex flex-col gap-6">
-      <Breadcrumbs navTrail={dynNavTrail} />
+      <Breadcrumbs lastTrail={dynNavTrail} />
       <Tracker trackerData={parsedData} trackerId={trackerId} />
     </main>
   );
@@ -54,7 +43,7 @@ const ErrorMessage = ({ error }: { error: unknown }) => (
       There was an error loading this tracker: {JSON.stringify(error)}
     </p>
   </main>
-);
+)
 
 const InvalidTrackerMessage = () => (
   <main>
@@ -63,4 +52,4 @@ const InvalidTrackerMessage = () => (
       <Link href="/trackers/schwimmen" className="text-primary">here</Link>.
     </p>
   </main>
-);
+)

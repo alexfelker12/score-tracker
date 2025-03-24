@@ -1,15 +1,9 @@
-import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
-
-const navTrail: BreadcrumbType[] = [
-  {
-    name: "leaderboards",
-  }
-]
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default function Leaderboards() {
   return (
     <main className="flex flex-col gap-6">
-      <Breadcrumbs navTrail={navTrail} />
+      <Breadcrumbs />
       Leaderboards
       <br />
     </main>
