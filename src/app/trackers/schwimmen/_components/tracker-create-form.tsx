@@ -10,12 +10,22 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { getQueryClient } from "@/lib/get-query-client"
 import { participantsSchemaBase, zPlayerName } from "@/schema/participants"
 import { createTracker } from "@/server/actions/trackerActions"
@@ -24,6 +34,8 @@ import { useMutation } from "@tanstack/react-query"
 import { ClipboardPlusIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useSession } from "@/lib/auth-client"
+import { getAllTrackersByCreator } from "@/server/actions/tracker/actions"
 
 
 // const MIN_PLAYERS = 2
@@ -31,14 +43,16 @@ import { useRouter } from "next/navigation"
 
 const HANDLEDKEYDOWNKEYS = ["Enter", "Backspace", "Delete"]
 
-export type ParticipantsFormType = {
+export type TrackerGameFormType = {
   minPlayers: number
   maxPlayers: number
   trackerName: TrackerName
   onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
 }
 
-export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: ParticipantsFormType) => {
+export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: TrackerGameFormType) => {
+  const { data: session } = useSession()
+
   //* Memoized schema with dynamic min/max
   const participantsSchema = React.useMemo(() => {
     return participantsSchemaBase.extend({
@@ -49,10 +63,7 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: Partic
   const form = useForm<z.infer<typeof participantsSchema>>({
     resolver: zodResolver(participantsSchema),
     defaultValues: {
-      players: [
-        { name: "" },
-        { name: "" }
-      ]
+      players: []
     },
   })
 
@@ -167,72 +178,125 @@ export const ParticipantsForm = ({ minPlayers, maxPlayers, trackerName }: Partic
     const participants = values.players as Prisma.JsonArray
     await mutate({
       name: "SCHWIMMEN",
-      playerData: participants
+      guestPlayerData: participants,
+      creator: {
+        connect: {
+          id: session?.user.id
+        }
+      },
     })
   }
+
+  // // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  // onClick={() => {
+  //   if (canAddfield) {
+  //     append({ name: "" })
+  //     setTimeout(() => {
+  //       // after append focus last field
+  //       inputRefs.current[inputRefs.current.length - 1]?.focus()
+  //     }, 0)
+  //   }
+  // }}
 
   return (
     <Form {...form}>
       {/* onSubmit ??= defaultOnSubmit */}
       <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col gap-4 sm:gap-0">
         <div className="flex flex-wrap gap-2">
-          {fields.map((field, index) => (
-            <FormField
-              key={field.id}
-              control={form.control}
-              name={`players.${index}.name`}
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <div className="flex space-x-2">
-                      {/* <Test /> */}
-                      <Input
-                        id={field.name === "players.0.name" ? "firstPlayer" : undefined}
-                        className="px-2 h-8"
-                        autoComplete="off"
-                        placeholder={`Player ${index + 1}`}
-                        // {...field}
-                        //* pass own ref
-                        ref={(el) => { inputRefs.current[index] = el }}
-                        //* filter out ref from form
-                        {...Object.fromEntries(Object.entries(field).filter(([key]) => key !== "ref"))} // Removes `ref`
-                        onKeyDown={(e) => { handleInputKeyDown(e, index) }}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={!canDelField}
-                        // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-                        onClick={() => { if (canDelField) remove(index) }}
-                        className="transition-opacity size-8"
-                      ><Trash2Icon className="size-5" /></Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-destructive" />
-                </FormItem>
-              )}
-            />
-          ))}
 
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={!canAddfield}
-            // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-            onClick={() => {
-              if (canAddfield) {
-                append({ name: "" })
-                setTimeout(() => {
-                  // after append focus last field
-                  inputRefs.current[inputRefs.current.length - 1]?.focus()
-                }, 0)
-              }
-            }}
-            className="justify-start !pl-2 w-auto h-8 text-muted-foreground"
-          >
-            <PlusIcon className="size-5" /> Add player
-          </Button>
+          <FormField control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem className="mb-4 w-full">
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  {/* <Test /> */}
+                  <Input
+                    className="px-2 h-8"
+                    autoComplete="off"
+                    placeholder="Tracker name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>By this name you can associate your tracker later on and find it in your list</FormDescription>
+                <FormMessage className="text-destructive" />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex flex-col gap-2 w-full">
+            <h3 className="text-base">Participants</h3>
+            {fields.map((field, index) => (
+              <FormField
+                key={field.id}
+                control={form.control}
+                name={`players.${index}.name`}
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <div className="flex space-x-2">
+                        {/* <Test /> */}
+                        <Input
+                          id={field.name === "players.0.name" ? "firstPlayer" : undefined}
+                          className="px-2 h-8"
+                          autoComplete="off"
+                          placeholder={`Player ${index + 1}`}
+                          // {...field}
+                          //* pass own ref
+                          ref={(el) => { inputRefs.current[index] = el }}
+                          //* filter out ref from form
+                          {...Object.fromEntries(Object.entries(field).filter(([key]) => key !== "ref"))} // Removes `ref`
+                          onKeyDown={(e) => { handleInputKeyDown(e, index) }}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={!canDelField}
+                          // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+                          onClick={() => { if (canDelField) remove(index) }}
+                          className="transition-opacity size-8"
+                        ><Trash2Icon className="size-5" /></Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-destructive" />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!canAddfield}
+                className="justify-start !pl-2 w-auto h-8 text-muted-foreground"
+              >
+                <PlusIcon className="size-5" /> Add player
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add a player</DialogTitle>
+                <DialogDescription>
+                  Either add an existing user to your tracker or create a guest player
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex">
+                
+                {/* TODO: add listing of players to add to a tracker */}
+
+                {/* TODO: add input field for guest player */}
+
+              </div>
+              <DialogFooter>
+                <Button type="submit">Save changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
 
         </div>
 

@@ -12,23 +12,24 @@ datasource db {
 //* AUTH TABLES ----------
 
 model User {
-  id            String   @id
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-
-  sessions Session[]
-  accounts Account[]
-
+  id              String   @id
+  name            String
+  email           String
+  emailVerified   Boolean
+  image           String?
+  createdAt       DateTime
+  updatedAt       DateTime
   username        String?
   displayUsername String?
 
+  sessions Session[]
+  accounts Account[]
+  creator  Tracker[]
+  player   TrackerPlayer[]
+
   @@unique([email])
-  @@map("user")
   @@unique([username])
+  @@map("user")
 }
 
 model Session {
@@ -77,6 +78,7 @@ model Verification {
 
   @@map("verification")
 }
+
 //* ----------------------
 
 //* Tracker tables
@@ -86,19 +88,62 @@ enum TrackerName {
 }
 
 model Tracker {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
-  playerData Json?
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  creatorId   String
+  name        TrackerName
+  displayName String?
+  archived    Boolean     @default(false)
 
-  name TrackerName
+  creator User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  players TrackerPlayer[]
+  games   Game[]
 
-  TrackerSession TrackerSession?
+  @@index([creatorId, name])
 }
 
-model TrackerSession {
-  id        String @id @default(cuid())
-  trackerId String @unique
-  // TODO additional data - depends on tracking state shape 
+model TrackerPlayer {
+  id        String  @id @default(cuid())
+  trackerId String
+  playerId  String?
+  name      String?
 
-  tracker Tracker @relation(fields: [trackerId], references: [id])
+  tracker          Tracker            @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  player           User?              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  RoundPlayerState RoundPlayerState[]
+}
+
+model Game {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  trackerId   String
+  completedAt DateTime?
+  winnerId    String?
+  firstAtZero String?
+  lastTwo     Json?
+
+  tracker Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  rounds  Round[]
+}
+
+model Round {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  gameId      String
+  roundNumber Int
+
+  game   Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  states RoundPlayerState[]
+
+  @@unique([gameId, roundNumber]) // Ensures unique round numbers per game
+}
+
+model RoundPlayerState {
+  id       String @id @default(cuid())
+  roundId  String
+  playerId String
+  lifes    Int
+
+  round  Round         @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  player TrackerPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 }

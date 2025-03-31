@@ -126,17 +126,17 @@ export type CreateSingleTrackerReturn = Prisma.PromiseReturnType<typeof createSi
 export type CreateSingleTrackerArgs = Parameters<typeof createSingleTracker>
 
 export async function createTracker(args: CreateSingleTrackerArgs[0]) {
-  try {
-    const data = await createSingleTracker(args)
-    return { data }
-  } catch (error) { return { error } }
+  // try {
+  const data = await createSingleTracker(args)
+  return { data }
+  // } catch (error) { return { error } }
 }
 
 
 
 //* POST delete tracker
 async function deleteSingleTracker(trackerId: Prisma.TrackerDeleteArgs["where"]["id"]) {
-  const deleteArgs: Prisma.TrackerDeleteArgs= {
+  const deleteArgs: Prisma.TrackerDeleteArgs = {
     where: {
       id: trackerId
     }

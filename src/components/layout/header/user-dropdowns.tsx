@@ -59,6 +59,7 @@ export const AuthenticatedUser = ({ session }: AuthenticatedUserProps) => {
   if (session) return (
     <DropdownMenu>
       {/* p-1 translate-x-1 */}
+      {/* User icon button */}
       <DropdownMenuTrigger className="relative flex items-center cursor-pointer [&[data-state=open]>svg]:rotate-180">
         <ChevronDownIcon className="-left-5 absolute transition-transform duration-200 size-4 shrink-0" />
         <Avatar className="size-9">
@@ -66,12 +67,18 @@ export const AuthenticatedUser = ({ session }: AuthenticatedUserProps) => {
           <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="end">
+
+        {/* user signature */}
         <DropdownMenuLabel>
-          <span className="block leading-[1.1]">Hello, {session.user.displayUsername}!</span>
+          <span className="block leading-[1.1]">Hello, {session.user.displayUsername || session.user.name}!</span>
           <span className="text-muted-foreground text-xs">{session.user.email}</span>
         </DropdownMenuLabel>
+
         <DropdownMenuSeparator />
+
+        {/* profile links */}
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
             <Link href="/profile">
@@ -83,12 +90,17 @@ export const AuthenticatedUser = ({ session }: AuthenticatedUserProps) => {
               <SettingsIcon /> Settings
             </Link>
           </DropdownMenuItem>
-          <SignOutButton session={session} asChild>
-            <DropdownMenuItem>
-              <LogOutIcon /> Sign out
-            </DropdownMenuItem>
-          </SignOutButton>
         </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        {/* sing out */}
+        <SignOutButton session={session} asChild>
+          <DropdownMenuItem>
+            <LogOutIcon /> Sign out
+          </DropdownMenuItem>
+        </SignOutButton>
+
       </DropdownMenuContent>
     </DropdownMenu>
   );
