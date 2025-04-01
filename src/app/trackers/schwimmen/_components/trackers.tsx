@@ -27,19 +27,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { TrackerListingParams } from "./tracker-listing";
-
+import { queryFuncMap, TrackerListingParams } from "./tracker-listing";
 
 
 export type TrackersProps = TrackerListingParams
-export const Trackers = ({ trackerName, userId, queryFunc }: TrackersProps) => {
+export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: TrackersProps) => {
   //* GET data by query function
   const { data, isFetching, isPending } = useQuery({
-    queryKey: ["trackers", trackerName, "today"],
+    queryKey: ["trackers", trackerName, userId, queryFuncMap[queryFuncName]],
     queryFn: () => queryFunc(trackerName, userId),
     refetchOnMount: false,
     refetchOnReconnect: false
   })
+
+  console.log(queryFuncName, data)
 
   //* DELETE mutation: tracker
   const { deleteTracker, isDeletePending } = useDeleteTracker()
@@ -67,9 +68,12 @@ export const Trackers = ({ trackerName, userId, queryFunc }: TrackersProps) => {
         {(isCreatePending && isFetching) && <TrackerCardsLoading length={1} />}
         {/* tracker cards */}
         {data.data.map((tracker) => (
-          <CommandItem asChild>
+          <CommandItem
+            asChild
+            key={tracker.id}
+            value={tracker.displayName}
+          >
             <TrackerCard
-              key={tracker.id}
               deleteTracker={deleteTracker}
               isPending={isDeletePending}
               {...tracker}
@@ -86,7 +90,8 @@ export type TrackerCardParams = Tracker & {
   deleteTracker: UseHandleDeleteFunc
   isPending: boolean
 }
-export const TrackerCard = ({ id, name, createdAt, isPending, deleteTracker }: TrackerCardParams) => {
+//TODO adjust TrackerCard to new db schema/app logic
+export const TrackerCard = ({ id, name, createdAt, isPending }: TrackerCardParams) => {
   return (
     <Card className="justify-between gap-4 py-4 w-full h-full transition-all">
       <CardHeader className="flex-row justify-between items-start gap-4 px-4">
@@ -133,7 +138,7 @@ export type TrackerCardsLoadingParams = {
 export const TrackerCardsLoading = ({ length = 2 }: TrackerCardsLoadingParams) => {
   return (
     Array.from({ length }).map((_, idx) => (
-      <Skeleton key={`today-${idx}`} className="rounded-xl h-[124px]"></Skeleton>
+      <Skeleton key={`tracker-${idx}`} className="rounded-xl h-[124px]"></Skeleton>
     ))
   )
 }

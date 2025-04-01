@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { TrackerName } from "@prisma/client/edge";
 
-import { getAllArchivedTrackersForCreator, getAllTrackersByCreator, getAllTrackersForParticipant } from "@/server/actions/tracker/actions";
+import { getAllArchivedTrackersForCreator, getAllTrackersByCreator, getAllTrackersAsParticipant } from "@/server/actions/tracker/actions";
 
 import { auth } from "@/lib/auth";
 
@@ -39,7 +39,7 @@ export default async function Schwimmen() {
 
 const trackerName: TrackerName = "SCHWIMMEN"
 
-export async function TrackerWrapper() {
+async function TrackerWrapper() {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -58,6 +58,7 @@ export async function TrackerWrapper() {
             trackerName={trackerName}
             userId={session.user.id}
             queryFunc={getAllTrackersByCreator}
+            queryFuncName="getAllTrackersByCreator"
           />
         </Suspense>
       </TabsContent>
@@ -67,7 +68,8 @@ export async function TrackerWrapper() {
           <TrackerListing
             trackerName={trackerName}
             userId={session.user.id}
-            queryFunc={getAllTrackersForParticipant}
+            queryFunc={getAllTrackersAsParticipant}
+            queryFuncName="getAllTrackersAsParticipant"
           />
         </Suspense>
       </TabsContent>
@@ -78,6 +80,7 @@ export async function TrackerWrapper() {
             trackerName={trackerName}
             userId={session.user.id}
             queryFunc={getAllArchivedTrackersForCreator}
+            queryFuncName="getAllArchivedTrackersForCreator"
           />
         </Suspense>
       </TabsContent>

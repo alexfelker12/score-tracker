@@ -23,6 +23,7 @@ export default async function TrackerSessionPage({
 
   //* check for data validity or errors
   if (error) return <ErrorMessage error={error} />;
+  //TODO: resolve error after new db schema/app logic
   if (!data || !data.playerData) return <InvalidTrackerMessage />;
 
   //* validate json data on participants schema

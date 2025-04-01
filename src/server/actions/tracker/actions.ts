@@ -2,7 +2,9 @@
 
 import { tryCatch } from "@/server/helpers/try-catch"
 import { caching, prisma } from "@/server/prisma"
-import { Prisma, Tracker, TrackerName } from "@prisma/client/edge"
+import { Prisma, TrackerName } from "@prisma/client/edge"
+import { z } from "zod"
+import { participantsSchemaBase } from "@/schema/participants"
 
 
 
@@ -11,7 +13,7 @@ import { Prisma, Tracker, TrackerName } from "@prisma/client/edge"
 async function findTrackersByCreator(trackerName: TrackerName, userId: string) {
   const queryArgs: Prisma.TrackerFindManyArgs = {
     where: {
-      id: userId,
+      creatorId: userId,
       name: trackerName,
       archived: false
     },
@@ -62,7 +64,7 @@ async function findTrackersForParticipant(trackerName: TrackerName, userId: stri
 export type FindTrackersForParticipantReturn = Prisma.PromiseReturnType<typeof findTrackersForParticipant>
 export type FindTrackersForParticipantArgs = Parameters<typeof findTrackersForParticipant>
 
-export async function getAllTrackersForParticipant(...args: FindTrackersForParticipantArgs) {
+export async function getAllTrackersAsParticipant(...args: FindTrackersForParticipantArgs) {
   const { data, error } = await tryCatch<FindTrackersForParticipantReturn>(
     findTrackersForParticipant(...args)
   )
@@ -128,30 +130,28 @@ export async function getTrackerById(...args: FindTrackerByIdArgs) {
 
 //*** POST
 //* create tracker
-async function createSingleTracker(
+async function createSingleTracker(params: {
   trackerName: TrackerName,
   displayName: string,
-  userId: string,
-  players: {
-    guest: boolean
-    idOrName: string
-  }[]
-) {
+  creatorId: string,
+  players: z.infer<typeof participantsSchemaBase.shape.players>
+}) {
+  const { trackerName, displayName, creatorId, players } = params
   const createArgs: Prisma.TrackerCreateArgs = {
     data: {
       name: trackerName,
       displayName,
       creator: {
         connect: {
-          id: userId
+          id: creatorId
         }
       },
       players: {
         createMany: {
           data: players.map((player) => (player.guest ? {
-            name: player.idOrName,
+            name: player.name,
           } : {
-            playerId: player.idOrName
+            playerId: player.user.id
           }))
         }
       }

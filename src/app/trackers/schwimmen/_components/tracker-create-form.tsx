@@ -6,43 +6,27 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form"
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { getQueryClient } from "@/lib/get-query-client"
-import { participantsSchemaBase, zPlayerName } from "@/schema/participants"
-import { createTracker } from "@/server/actions/trackerActions"
-import { Prisma, TrackerName } from "@prisma/client/edge"
-import { useMutation } from "@tanstack/react-query"
-import { ClipboardPlusIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { Separator } from "@/components/ui/separator"
 import { useSession } from "@/lib/auth-client"
-import { getAllTrackersByCreator } from "@/server/actions/tracker/actions"
+import { getQueryClient } from "@/lib/get-query-client"
+import { cn } from "@/lib/utils"
+import { participantsSchemaBase } from "@/schema/participants"
+import { createTracker } from "@/server/actions/tracker/actions"
+import { getOtherUsers } from "@/server/actions/user/actions"
+import { TrackerName } from "@prisma/client/edge"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { ClipboardPlusIcon, Loader2Icon, PlusIcon, SaveIcon, Trash2Icon, UserIcon, XIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { User } from "prisma/generated/zod"
+import { toast } from "sonner"
 
-
-// const MIN_PLAYERS = 2
-// const MAX_PLAYERS = 11
-
-const HANDLEDKEYDOWNKEYS = ["Enter", "Backspace", "Delete"]
-
+//* types
 export type TrackerGameFormType = {
   minPlayers: number
   maxPlayers: number
@@ -50,6 +34,15 @@ export type TrackerGameFormType = {
   onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
 }
 
+type TrackerParticipant = z.infer<typeof participantsSchemaBase.shape.players>[0]
+
+export type AddPlayerDialogType = {
+  userId: string
+  saveFunc: (participant: TrackerParticipant) => void
+  canAddField: boolean
+}
+
+//* main
 export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: TrackerGameFormType) => {
   const { data: session } = useSession()
 
@@ -63,6 +56,7 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
   const form = useForm<z.infer<typeof participantsSchema>>({
     resolver: zodResolver(participantsSchema),
     defaultValues: {
+      displayName: "",
       players: []
     },
   })
@@ -76,9 +70,6 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
     }
   });
 
-  //* refs, for manual focus handling
-  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([])
-
   //* router for redirect after create
   const router = useRouter()
 
@@ -88,64 +79,6 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
   //* form logic
   const canAddfield = form.getValues("players").length < maxPlayers
   const canDelField = form.getValues("players").length > minPlayers
-  const isLastField = (index: number) => fields.length === index + 1
-  const isFirstField = (index: number) => !index //? simple truthy check
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, fieldIndex: number) => {
-    if (!HANDLEDKEYDOWNKEYS.includes(e.key)) return
-
-    const fieldValue = form.getValues(`players.${fieldIndex}.name`)
-    const isInValid = !zPlayerName.safeParse(fieldValue).success
-
-    switch (e.key) {
-      case "Enter":
-        //* only handle enter, if not on last field and fields can be added
-        if (isLastField(fieldIndex) && !canAddfield) return
-        e.preventDefault()
-
-        //* if field is invalid, stop handling
-        if (isInValid) return
-
-        //* else check if on last field and can add field, add field if so
-        if (isLastField(fieldIndex) && canAddfield) {
-          append({ name: "" })
-          setTimeout(() => {
-            inputRefs.current[fieldIndex + 1]?.focus()
-          }, 0)
-        } else {
-          //* if not, set focus to next element
-          // form.setFocus(`players.${fieldIndex + 1}.name`)
-          setTimeout(() => {
-            inputRefs.current[fieldIndex + 1]?.focus()
-          }, 0)
-        }
-        break;
-
-      case "Backspace":
-        //* only handle back, if not on first field or field is empty and can be deleted
-        if (isFirstField(fieldIndex) || fieldValue) return
-        e.preventDefault()
-
-        //* only remove field, if fields can be deleted
-        if (canDelField) { remove(fieldIndex) }
-
-        //* always focus previous field
-        // form.setFocus(`players.${fieldIndex - 1}.name`)
-        setTimeout(() => {
-          inputRefs.current[fieldIndex - 1]?.focus()
-        }, 0)
-        break;
-
-      // //? currently on hold
-      // case "Delete":
-      //   //* only handle del, if 
-      //   // 1. input is not empty     and
-      //   // 2. fields can be deleted 
-      //   if (!fieldValue && !canDelField) return
-      //   remove(fieldIndex)
-      //   break;
-    }
-  }
 
   //* POST mutation: tracker
   const { mutate, isPending } = useMutation({
@@ -162,11 +95,6 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
           }
         })
 
-        // console.log(data.data?.createdAt.getTime())
-        // console.log(new Date().getTime())
-        // console.log(data.data?.createdAt.toISOString())
-        // console.log(new Date().toISOString())
-
         //* invalidate query to refetch latest data
         await qc.invalidateQueries({ queryKey: ["trackers", trackerName] })
       }
@@ -174,33 +102,23 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
   })
 
   // form on submit
-  async function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
-    const participants = values.players as Prisma.JsonArray
-    await mutate({
-      name: "SCHWIMMEN",
-      guestPlayerData: participants,
-      creator: {
-        connect: {
-          id: session?.user.id
-        }
-      },
+  function defaultOnSubmit(values: z.infer<typeof participantsSchemaBase>) {
+    const { players, displayName } = values
+
+    if (session) mutate({
+      displayName,
+      trackerName,
+      players,
+      creatorId: session.user.id,
     })
   }
 
-  // // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  // onClick={() => {
-  //   if (canAddfield) {
-  //     append({ name: "" })
-  //     setTimeout(() => {
-  //       // after append focus last field
-  //       inputRefs.current[inputRefs.current.length - 1]?.focus()
-  //     }, 0)
-  //   }
-  // }}
+  const handleSave = (participant: TrackerParticipant) => {
+    if (canAddfield) append(participant)
+  }
 
-  return (
+  if (session) return (
     <Form {...form}>
-      {/* onSubmit ??= defaultOnSubmit */}
       <form onSubmit={form.handleSubmit(defaultOnSubmit)} className="flex flex-col gap-4 sm:gap-0">
         <div className="flex flex-wrap gap-2">
 
@@ -208,7 +126,7 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
             name="displayName"
             render={({ field }) => (
               <FormItem className="mb-4 w-full">
-                <FormLabel>Name</FormLabel>
+                <FormLabel className="text-base data-[error=true]:text-destructive">Name</FormLabel>
                 <FormControl>
                   {/* <Test /> */}
                   <Input
@@ -225,78 +143,38 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
           />
 
           <div className="flex flex-col gap-2 w-full">
-            <h3 className="text-base">Participants</h3>
-            {fields.map((field, index) => (
-              <FormField
-                key={field.id}
-                control={form.control}
-                name={`players.${index}.name`}
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormControl>
-                      <div className="flex space-x-2">
-                        {/* <Test /> */}
-                        <Input
-                          id={field.name === "players.0.name" ? "firstPlayer" : undefined}
-                          className="px-2 h-8"
-                          autoComplete="off"
-                          placeholder={`Player ${index + 1}`}
-                          // {...field}
-                          //* pass own ref
-                          ref={(el) => { inputRefs.current[index] = el }}
-                          //* filter out ref from form
-                          {...Object.fromEntries(Object.entries(field).filter(([key]) => key !== "ref"))} // Removes `ref`
-                          onKeyDown={(e) => { handleInputKeyDown(e, index) }}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={!canDelField}
-                          // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-                          onClick={() => { if (canDelField) remove(index) }}
-                          className="transition-opacity size-8"
-                        ><Trash2Icon className="size-5" /></Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-destructive" />
-                  </FormItem>
-                )}
-              />
-            ))}
+            <h3 className="font-medium text-base">Participants (at least {minPlayers})</h3>
+            <div className="gap-2 grid sm:grid-cols-2">
+              {fields.map((participant, index) => (
+                <div
+                  key={participant.id}
+                  className="relative flex justify-between outline-hidden bg-background shadow-sm px-2 py-1.5 border rounded-lg text-sm cursor-default select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <ParticipantCardDetails
+                      participant={participant}
+                      user={!participant.guest ? participant.user : undefined}
+                    />
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={!canDelField}
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={!canAddfield}
-                className="justify-start !pl-2 w-auto h-8 text-muted-foreground"
-              >
-                <PlusIcon className="size-5" /> Add player
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add a player</DialogTitle>
-                <DialogDescription>
-                  Either add an existing user to your tracker or create a guest player
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex">
-                
-                {/* TODO: add listing of players to add to a tracker */}
-
-                {/* TODO: add input field for guest player */}
-
-              </div>
-              <DialogFooter>
-                <Button type="submit">Save changes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
+          <AddPlayerDialog
+            userId={session.user.id}
+            saveFunc={handleSave}
+            canAddField={canAddfield}
+          />
 
         </div>
 
@@ -317,5 +195,183 @@ export const TrackerGameForm = ({ minPlayers, maxPlayers, trackerName }: Tracker
 
       </form>
     </Form>
+  );
+}
+
+export const AddPlayerDialog = ({ userId, saveFunc, canAddField }: AddPlayerDialogType) => {
+  const [participant, setParticipant] = React.useState<TrackerParticipant>()
+  const [guest, setGuest] = React.useState<string>("")
+
+  //* GET users by username
+  const { data, isFetching } = useQuery({
+    queryKey: ["users", userId],
+    queryFn: () => getOtherUsers(userId),
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          className="justify-start !pl-2 w-auto h-8 text-muted-foreground"
+          disabled={!canAddField}
+        >
+          <PlusIcon className="size-5" /> Add player
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add a player</DialogTitle>
+          <DialogDescription>
+            Either add an existing user to your tracker or create a guest player
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-6">
+
+          {/* existing user */}
+          <Command
+            className="flex-1 shadow-md border rounded-lg md:min-w-[450px] transition-shadow">
+            <CommandInput
+              placeholder="Search for a player..."
+              disabled={!!participant}
+            />
+            <CommandList className="[&>div]:space-y-1 p-1">
+              {data && data.data && data.data.map((user) => (
+                <CommandItem key={user.id}
+                  value={user.displayUsername || user.name}
+                  onSelect={() =>
+                    //* check if participant is selected, if same toggle else select new
+                    setParticipant(!participant || !participant.guest && participant.user.id !== user.id
+                      ? {
+                        guest: false,
+                        user
+                      }
+                      //* if toggled, check if guest player name was inputed else set undefined
+                      : !!guest
+                        ? {
+                          guest: true,
+                          name: guest
+                        }
+                        : undefined
+                    )
+                  }
+                  className={cn(
+                    "data-[selected=true]:bg-background hover:bg-accent!",
+                    participant && !participant.guest && participant.user.id === user.id
+                    && "border-primary ring-ring/50 ring-[1.5px]"
+                  )}
+                >
+                  <ParticipantCardDetails
+                    participant={participant}
+                    user={user}
+                  />
+                </CommandItem>
+              ))}
+
+              {isFetching &&
+                <CommandItem className="justify-center py-3.5">
+                  <Loader2Icon className="text-primary animate-spin size-5" />
+                </CommandItem>
+              }
+
+              <CommandEmpty className="flex justify-center py-3.5 text-muted-foreground text-sm">
+                No results found
+              </CommandEmpty>
+            </CommandList>
+          </Command>
+
+          {/* separator */}
+          <div className='relative'>
+            <Separator />
+            <span className='top-1/2 left-1/2 absolute bg-background px-2 text-muted-foreground text-sm leading-none -translate-x-1/2 -translate-y-1/2'>or</span>
+          </div>
+
+          {/* guest player */}
+          <div className="shrink-0">
+            <Input
+              placeholder="Guest player name"
+              disabled={participant && !participant.guest}
+              value={guest}
+              onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+                //* only change guest name if no participant was selected
+                setGuest(e.target.value)
+                setParticipant({
+                  guest: true,
+                  name: e.target.value,
+                })
+              }}
+              className={cn(
+                "transition-opacity",
+                participant && participant.guest && "border-primary ring-ring/50 ring-1"
+              )}
+            />
+          </div>
+
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+              onClick={() => {
+                //* unset participant
+                setParticipant(undefined)
+                setGuest("")
+              }}
+            >
+              <XIcon /> Cancel
+            </Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button
+              disabled={!participant && !guest}
+              // e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+              onClick={() => {
+                if (!participant) return;
+
+                //* execute passed function
+                saveFunc(participant)
+
+                //* unset participant afterwards
+                setParticipant(undefined)
+                setGuest("")
+              }}
+              className="transition-opacity"
+            >
+              <SaveIcon /> Save
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog >
+  );
+}
+
+type ParticipantCardDetailsProps = {
+  participant: TrackerParticipant | undefined
+  user: User | undefined
+}
+const ParticipantCardDetails = ({ participant, user }: ParticipantCardDetailsProps) => {
+  return (
+    <>
+      <Avatar className="size-9">
+        <AvatarImage src={user && user.image || undefined}></AvatarImage>
+        <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col gap-1">
+        {user
+          ? <>
+            <span className="font-medium text-sm leading-none">{user.displayUsername || user.name}</span>
+            <span className="text-muted-foreground text-xs leading-none">{user.email}</span>
+          </>
+          : <>
+            <span className="font-medium text-sm leading-none">{participant && participant.guest && participant.name}</span>
+            <span className="text-muted-foreground text-xs italic leading-none">Guest</span>
+          </>}
+      </div>
+    </>
   );
 }

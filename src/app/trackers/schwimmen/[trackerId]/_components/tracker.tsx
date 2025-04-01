@@ -152,7 +152,7 @@ export const Tracker = ({ trackerData, trackerId }: TrackerType) => {
           ))
           :
           trackerData.map((player, idx) => (
-            <ParticipantCard.loading key={`${player.name}-${idx}`} size={trackerSession.session.cardSize} />
+            <ParticipantCard.loading key={`loading-${idx}`} size={trackerSession.session.cardSize} />
           ))
         }
       </div>

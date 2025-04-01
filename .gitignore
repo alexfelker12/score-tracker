@@ -44,8 +44,9 @@ next-env.d.ts
 #  test
 **/test*.*
 
-# prisma migration lock
+# prisma
 prisma/*/migration_lock.toml
+# prisma/generated/zod/index.ts
 
 # test/onhold components/pages
 src/app/trackers/schwimmen/\[trackerId\]/page-with-rq.tsx

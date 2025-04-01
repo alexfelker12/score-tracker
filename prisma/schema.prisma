@@ -4,6 +4,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator zod {
+  provider = "npx zod-prisma-types"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -89,11 +93,11 @@ enum TrackerName {
 
 model Tracker {
   id          String      @id @default(cuid())
-  createdAt   DateTime    @default(now())
   creatorId   String
   name        TrackerName
-  displayName String?
+  displayName String
   archived    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
 
   creator User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   players TrackerPlayer[]
@@ -115,12 +119,12 @@ model TrackerPlayer {
 
 model Game {
   id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
   trackerId   String
   completedAt DateTime?
   winnerId    String?
   firstAtZero String?
   lastTwo     Json?
+  createdAt   DateTime  @default(now())
 
   tracker Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
   rounds  Round[]
@@ -128,9 +132,9 @@ model Game {
 
 model Round {
   id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
   gameId      String
   roundNumber Int
+  createdAt   DateTime @default(now())
 
   game   Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
   states RoundPlayerState[]
