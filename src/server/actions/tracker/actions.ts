@@ -11,19 +11,30 @@ import { participantsSchemaBase } from "@/schema/participants"
 //*** GET
 //* trackers by creator
 async function findTrackersByCreator(trackerName: TrackerName, userId: string) {
-  const queryArgs: Prisma.TrackerFindManyArgs = {
+  const res = await prisma.tracker.findMany({
     where: {
       creatorId: userId,
       name: trackerName,
       archived: false
     },
+    include: {
+      creator: {
+        select: {
+          displayUsername: true,
+          name: true
+        }
+      },
+      _count: {
+        select: {
+          players: true
+        }
+      }
+    },
     orderBy: {
       createdAt: "desc"
-    },
-    ...caching
-  }
-
-  return await prisma.tracker.findMany(queryArgs)
+    }
+  })
+  return res
 }
 export type FindTrackersByCreatorReturn = Prisma.PromiseReturnType<typeof findTrackersByCreator>
 export type FindTrackersByCreatorArgs = Parameters<typeof findTrackersByCreator>
@@ -40,7 +51,7 @@ export async function getAllTrackersByCreator(...args: FindTrackersByCreatorArgs
 
 //* all trackers where player is participant and not creator
 async function findTrackersForParticipant(trackerName: TrackerName, userId: string) {
-  const queryArgs: Prisma.TrackerFindManyArgs = {
+  const res = await prisma.tracker.findMany({
     where: {
       name: trackerName,
       archived: false,
@@ -53,13 +64,24 @@ async function findTrackersForParticipant(trackerName: TrackerName, userId: stri
         }
       }
     },
+    include: {
+      creator: {
+        select: {
+          displayUsername: true,
+          name: true
+        }
+      },
+      _count: {
+        select: {
+          players: true
+        }
+      }
+    },
     orderBy: {
       createdAt: "desc"
-    },
-    ...caching
-  }
-
-  return await prisma.tracker.findMany(queryArgs)
+    }
+  })
+  return res
 }
 export type FindTrackersForParticipantReturn = Prisma.PromiseReturnType<typeof findTrackersForParticipant>
 export type FindTrackersForParticipantArgs = Parameters<typeof findTrackersForParticipant>
@@ -76,19 +98,30 @@ export async function getAllTrackersAsParticipant(...args: FindTrackersForPartic
 
 //* archived trackers
 async function findArchivedTrackersForCreator(trackerName: TrackerName, userId: string) {
-  const queryArgs: Prisma.TrackerFindManyArgs = {
+  const res = await prisma.tracker.findMany({
     where: {
       name: trackerName,
       archived: true,
       creatorId: userId
     },
+    include: {
+      creator: {
+        select: {
+          displayUsername: true,
+          name: true
+        }
+      },
+      _count: {
+        select: {
+          players: true
+        }
+      }
+    },
     orderBy: {
       createdAt: "desc"
-    },
-    ...caching
-  }
-
-  return await prisma.tracker.findMany(queryArgs)
+    }
+  })
+  return res
 }
 export type FindArchivedTrackersForCreatorReturn = Prisma.PromiseReturnType<typeof findArchivedTrackersForCreator>
 export type FindArchivedTrackersForCreatorArgs = Parameters<typeof findArchivedTrackersForCreator>

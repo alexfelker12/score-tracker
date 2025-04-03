@@ -104,6 +104,7 @@ model Tracker {
   games   Game[]
 
   @@index([creatorId, name])
+  @@unique([creatorId, displayName])
 }
 
 model TrackerPlayer {

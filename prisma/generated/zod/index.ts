@@ -891,11 +891,21 @@ export const TrackerOrderByWithRelationInputSchema: z.ZodType<Prisma.TrackerOrde
   games: z.lazy(() => GameOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
-export const TrackerWhereUniqueInputSchema: z.ZodType<Prisma.TrackerWhereUniqueInput> = z.object({
-  id: z.string().cuid()
-})
+export const TrackerWhereUniqueInputSchema: z.ZodType<Prisma.TrackerWhereUniqueInput> = z.union([
+  z.object({
+    id: z.string().cuid(),
+    creatorId_displayName: z.lazy(() => TrackerCreatorIdDisplayNameCompoundUniqueInputSchema)
+  }),
+  z.object({
+    id: z.string().cuid(),
+  }),
+  z.object({
+    creatorId_displayName: z.lazy(() => TrackerCreatorIdDisplayNameCompoundUniqueInputSchema),
+  }),
+])
 .and(z.object({
   id: z.string().cuid().optional(),
+  creatorId_displayName: z.lazy(() => TrackerCreatorIdDisplayNameCompoundUniqueInputSchema).optional(),
   AND: z.union([ z.lazy(() => TrackerWhereInputSchema),z.lazy(() => TrackerWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => TrackerWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => TrackerWhereInputSchema),z.lazy(() => TrackerWhereInputSchema).array() ]).optional(),
@@ -2170,6 +2180,11 @@ export const GameListRelationFilterSchema: z.ZodType<Prisma.GameListRelationFilt
 
 export const GameOrderByRelationAggregateInputSchema: z.ZodType<Prisma.GameOrderByRelationAggregateInput> = z.object({
   _count: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const TrackerCreatorIdDisplayNameCompoundUniqueInputSchema: z.ZodType<Prisma.TrackerCreatorIdDisplayNameCompoundUniqueInput> = z.object({
+  creatorId: z.string(),
+  displayName: z.string()
 }).strict();
 
 export const TrackerCountOrderByAggregateInputSchema: z.ZodType<Prisma.TrackerCountOrderByAggregateInput> = z.object({

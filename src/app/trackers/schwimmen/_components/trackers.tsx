@@ -5,18 +5,13 @@ import Link from "next/link";
 import React from "react";
 
 //* packages
-import { Tracker } from "@prisma/client/edge";
 import { useMutationState, useQuery } from "@tanstack/react-query";
-
-//* actions
 
 //* lib
 import { timeElapsed } from "@/lib/utils";
 
 //* hooks
 import { useDeleteTracker, UseHandleDeleteFunc } from "@/hooks/use-delete-tracker";
-
-//* schema
 
 //* icons
 import { ArrowRightIcon } from "lucide-react";
@@ -27,6 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { FindArchivedTrackersForCreatorReturn, FindTrackersByCreatorReturn, FindTrackersForParticipantReturn } from "@/server/actions/tracker/actions";
 import { queryFuncMap, TrackerListingParams } from "./tracker-listing";
 
 
@@ -39,8 +35,6 @@ export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: Trac
     refetchOnMount: false,
     refetchOnReconnect: false
   })
-
-  console.log(queryFuncName, data)
 
   //* DELETE mutation: tracker
   const { deleteTracker, isDeletePending } = useDeleteTracker()
@@ -58,14 +52,13 @@ export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: Trac
   if (isPending) return <TrackerCardsLoading />
 
   //* listing
-  if (data && data) return (
+  if (data && data.data) return (
     <Command className="shadow-md border w-full">
       <CommandInput placeholder="Search trackers..." />
-      <CommandList>
-        <CommandEmpty>No trackers found</CommandEmpty>
-        {/* <CommandGroup heading="Suggestions"> */}
+      <CommandList className="[&>div]:gap-1 [&>div]:grid md:[&>div]:grid-cols-2 p-1">
         {/* optimistic load */}
         {(isCreatePending && isFetching) && <TrackerCardsLoading length={1} />}
+
         {/* tracker cards */}
         {data.data.map((tracker) => (
           <CommandItem
@@ -76,56 +69,69 @@ export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: Trac
             <TrackerCard
               deleteTracker={deleteTracker}
               isPending={isDeletePending}
-              {...tracker}
+              userId={userId}
+              tracker={tracker}
             />
           </CommandItem>
         ))}
-        {/* </CommandGroup> */}
+
+        <CommandEmpty className="md:col-span-2">No trackers found</CommandEmpty>
       </CommandList>
     </Command>
   )
 }
 
-export type TrackerCardParams = Tracker & {
+export type TrackerCardParams = {
   deleteTracker: UseHandleDeleteFunc
   isPending: boolean
+  userId: string
+  tracker: FindTrackersByCreatorReturn[0]
+  | FindTrackersForParticipantReturn[0]
+  | FindArchivedTrackersForCreatorReturn[0]
 }
-//TODO adjust TrackerCard to new db schema/app logic
-export const TrackerCard = ({ id, name, createdAt, isPending }: TrackerCardParams) => {
+export const TrackerCard = ({
+  isPending,
+  tracker,
+  userId
+}: TrackerCardParams) => {
   return (
-    <Card className="justify-between gap-4 py-4 w-full h-full transition-all">
-      <CardHeader className="flex-row justify-between items-start gap-4 px-4">
+    <Card className="flex-row justify-between gap-2 p-3 w-full h-full transition-all">
+      <CardHeader className="flex-col justify-between items-start p-0">
+        {/* tracker name */}
+        <CardTitle className="text-lg leading-none">{tracker.displayName}</CardTitle>
 
-        {/* tracker name & time elapsed since now */}
-        <div className="flex flex-col gap-1.5">
-          <CardTitle className="text-lg leading-none">{name}</CardTitle>
-          {/* amount of players in this tracker */}
-          <CardDescription className="leading-none">
-            <span className="text-muted-foreground text-sm">See tracker details in the tracker directly</span>
-          </CardDescription>
-        </div>
+        <CardDescription className="flex flex-col">
+          {/* amount players participating */}
+          {/* less than 2 players shouldn't be possible but in case user deletes all other players from existing tracker */}
+          <span>{tracker._count.players} player{tracker._count.players > 1 && "s"}</span>
 
-        {/* time since creation */}
-        <span className="text-muted-foreground text-sm leading-none">
-          <TimeElapsed createdAt={createdAt} />
-        </span>
+          <div className="flex gap-2">
+            {/* creator */}
+            <span>created by {tracker.creatorId === userId
+              ? "you"
+              : tracker.creator.displayUsername
+            }</span>
 
+            <div role="presentation" aria-hidden="true">-</div>
+
+            {/* time since creation */}
+            <TimeElapsed createdAt={tracker.createdAt} />
+          </div>
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex justify-between items-center px-4">
-        {/* link to tracker */}
-        <div className="flex flex-col items-center gap-2">
-          <Button
-            variant="outline"
-            className="group"
-            disabled={isPending}
-            asChild
-          >
-            <Link href={`/trackers/schwimmen/${id}`}>
-              Go to tracker <ArrowRightIcon className="transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
-        </div>
 
+      <CardContent className="flex justify-between items-center p-0">
+        {/* link to tracker */}
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={isPending}
+          asChild
+        >
+          <Link href={`/trackers/schwimmen/${tracker.id}`}>
+            <ArrowRightIcon />
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   )
@@ -138,7 +144,7 @@ export type TrackerCardsLoadingParams = {
 export const TrackerCardsLoading = ({ length = 2 }: TrackerCardsLoadingParams) => {
   return (
     Array.from({ length }).map((_, idx) => (
-      <Skeleton key={`tracker-${idx}`} className="rounded-xl h-[124px]"></Skeleton>
+      <Skeleton key={`tracker-${idx}`} className="rounded-xl h-[90px]"></Skeleton>
     ))
   )
 }
