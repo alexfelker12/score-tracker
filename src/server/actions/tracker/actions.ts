@@ -1,17 +1,17 @@
 "use server"
 
+import { participantsSchemaBase } from "@/schema/participants"
 import { tryCatch } from "@/server/helpers/try-catch"
-import { caching, prisma } from "@/server/prisma"
+import { prisma } from "@/server/prisma"
 import { Prisma, TrackerName } from "@prisma/client/edge"
 import { z } from "zod"
-import { participantsSchemaBase } from "@/schema/participants"
 
 
 
 //*** GET
 //* trackers by creator
 async function findTrackersByCreator(trackerName: TrackerName, userId: string) {
-  const res = await prisma.tracker.findMany({
+  return await prisma.tracker.findMany({
     where: {
       creatorId: userId,
       name: trackerName,
@@ -34,7 +34,6 @@ async function findTrackersByCreator(trackerName: TrackerName, userId: string) {
       createdAt: "desc"
     }
   })
-  return res
 }
 export type FindTrackersByCreatorReturn = Prisma.PromiseReturnType<typeof findTrackersByCreator>
 export type FindTrackersByCreatorArgs = Parameters<typeof findTrackersByCreator>
@@ -51,7 +50,7 @@ export async function getAllTrackersByCreator(...args: FindTrackersByCreatorArgs
 
 //* all trackers where player is participant and not creator
 async function findTrackersForParticipant(trackerName: TrackerName, userId: string) {
-  const res = await prisma.tracker.findMany({
+  return await prisma.tracker.findMany({
     where: {
       name: trackerName,
       archived: false,
@@ -81,7 +80,6 @@ async function findTrackersForParticipant(trackerName: TrackerName, userId: stri
       createdAt: "desc"
     }
   })
-  return res
 }
 export type FindTrackersForParticipantReturn = Prisma.PromiseReturnType<typeof findTrackersForParticipant>
 export type FindTrackersForParticipantArgs = Parameters<typeof findTrackersForParticipant>
@@ -98,7 +96,7 @@ export async function getAllTrackersAsParticipant(...args: FindTrackersForPartic
 
 //* archived trackers
 async function findArchivedTrackersForCreator(trackerName: TrackerName, userId: string) {
-  const res = await prisma.tracker.findMany({
+  return await prisma.tracker.findMany({
     where: {
       name: trackerName,
       archived: true,
@@ -121,7 +119,6 @@ async function findArchivedTrackersForCreator(trackerName: TrackerName, userId: 
       createdAt: "desc"
     }
   })
-  return res
 }
 export type FindArchivedTrackersForCreatorReturn = Prisma.PromiseReturnType<typeof findArchivedTrackersForCreator>
 export type FindArchivedTrackersForCreatorArgs = Parameters<typeof findArchivedTrackersForCreator>
@@ -138,14 +135,15 @@ export async function getAllArchivedTrackersForCreator(...args: FindArchivedTrac
 
 //* single tracker
 async function findTrackerById(trackerId: string) {
-  const queryArgs: Prisma.TrackerFindUniqueArgs = {
+  return await prisma.tracker.findUnique({
     where: {
       id: trackerId
     },
-    ...caching
-  }
-
-  return await prisma.tracker.findUnique(queryArgs)
+    include: {
+      players: true,
+      games: true
+    }
+  })
 }
 export type FindTrackerByIdReturn = Prisma.PromiseReturnType<typeof findTrackerById>
 export type FindTrackerByIdArgs = Parameters<typeof findTrackerById>
@@ -170,7 +168,8 @@ async function createSingleTracker(params: {
   players: z.infer<typeof participantsSchemaBase.shape.players>
 }) {
   const { trackerName, displayName, creatorId, players } = params
-  const createArgs: Prisma.TrackerCreateArgs = {
+
+  return await prisma.tracker.create({
     data: {
       name: trackerName,
       displayName,
@@ -184,14 +183,13 @@ async function createSingleTracker(params: {
           data: players.map((player) => (player.guest ? {
             name: player.name,
           } : {
-            playerId: player.user.id
+            playerId: player.user.id,
+            name: player.user.displayUsername || player.user.name
           }))
         }
       }
     }
-  }
-
-  return await prisma.tracker.create(createArgs)
+  })
 }
 export type CreateSingleTrackerReturn = Prisma.PromiseReturnType<typeof createSingleTracker>
 export type CreateSingleTrackerArgs = Parameters<typeof createSingleTracker>

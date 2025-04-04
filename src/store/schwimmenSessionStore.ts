@@ -10,7 +10,7 @@ export type Player = {
   lifes: number
 }
 
-type SchwimmenSessionState = {
+type SchwimmenGameState = {
   session: {
     players: Player[]
     playerSwimming: number
@@ -18,7 +18,7 @@ type SchwimmenSessionState = {
   }
 }
 
-type SchwimmenSessionActions = {
+type SchwimmenGameActions = {
   init: (playerData: z.infer<typeof participantsSchemaBase.shape.players>) => void
   subtractLifes: (playerIds: number[]) => void
   getSwimmingPlayer: () => Player | undefined
@@ -27,9 +27,9 @@ type SchwimmenSessionActions = {
   setCardSize: (size: number) => void
 }
 
-export type SchwimmenSessionStore = SchwimmenSessionState & SchwimmenSessionActions
+export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
 
-export const useSchwimmenSessionStore = create<SchwimmenSessionStore>()(
+export const useSchwimmenGameStore = create<SchwimmenGameStore>()(
   persist(
     (set, get) => ({
       session: {

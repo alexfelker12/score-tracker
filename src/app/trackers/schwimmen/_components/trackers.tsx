@@ -128,7 +128,7 @@ export const TrackerCard = ({
           disabled={isPending}
           asChild
         >
-          <Link href={`/trackers/schwimmen/${tracker.id}`}>
+          <Link href={`/trackers/schwimmen/${tracker.id}-${encodeURIComponent(tracker.displayName)}`}>
             <ArrowRightIcon />
           </Link>
         </Button>

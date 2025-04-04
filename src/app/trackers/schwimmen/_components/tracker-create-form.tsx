@@ -91,8 +91,8 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
     mutationKey: ['tracker-create', trackerName],
     mutationFn: createTracker,
     onSettled: async (data, error) => {
-      if (!error && data) {
-        const redirectUrl = `/trackers/schwimmen/${data.data?.id}`
+      if (!error && data && data.data) {
+        const redirectUrl = `/trackers/schwimmen/${data.data.id}-${encodeURIComponent(data.data.displayName)}`
 
         toast.success("Tracker was created successfully", {
           action: {
@@ -165,7 +165,7 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
                     />
                   </div>
 
-                  {!participant.guest && participant.user.id !== session.user.id
+                  {participant.guest || !participant.guest && participant.user.id !== session.user.id
                     ? <Button
                       variant="ghost"
                       size="icon"
@@ -228,7 +228,6 @@ export const AddPlayerDialog = ({ userId, saveFunc, canAddField, userPlayers, gu
 
   const guestInputDisabled = participant && !participant.guest
   const isExistingGuest = participant && participant.guest && guestPlayers.includes(guest)
-  console.log(isExistingGuest)
 
   return (
     <Dialog>

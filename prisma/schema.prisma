@@ -103,8 +103,8 @@ model Tracker {
   players TrackerPlayer[]
   games   Game[]
 
-  @@index([creatorId, name])
   @@unique([creatorId, displayName])
+  @@index([creatorId, name])
 }
 
 model TrackerPlayer {
@@ -113,9 +113,9 @@ model TrackerPlayer {
   playerId  String?
   name      String?
 
-  tracker          Tracker            @relation(fields: [trackerId], references: [id], onDelete: Cascade)
-  player           User?              @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  RoundPlayerState RoundPlayerState[]
+  tracker    Tracker            @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  player     User?              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  roundState RoundPlayerState[]
 }
 
 model Game {

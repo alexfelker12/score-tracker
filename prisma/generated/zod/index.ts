@@ -390,7 +390,7 @@ export const TrackerSelectSchema: z.ZodType<Prisma.TrackerSelect> = z.object({
 export const TrackerPlayerIncludeSchema: z.ZodType<Prisma.TrackerPlayerInclude> = z.object({
   tracker: z.union([z.boolean(),z.lazy(() => TrackerArgsSchema)]).optional(),
   player: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
-  RoundPlayerState: z.union([z.boolean(),z.lazy(() => RoundPlayerStateFindManyArgsSchema)]).optional(),
+  roundState: z.union([z.boolean(),z.lazy(() => RoundPlayerStateFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => TrackerPlayerCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -404,7 +404,7 @@ export const TrackerPlayerCountOutputTypeArgsSchema: z.ZodType<Prisma.TrackerPla
 }).strict();
 
 export const TrackerPlayerCountOutputTypeSelectSchema: z.ZodType<Prisma.TrackerPlayerCountOutputTypeSelect> = z.object({
-  RoundPlayerState: z.boolean().optional(),
+  roundState: z.boolean().optional(),
 }).strict();
 
 export const TrackerPlayerSelectSchema: z.ZodType<Prisma.TrackerPlayerSelect> = z.object({
@@ -414,7 +414,7 @@ export const TrackerPlayerSelectSchema: z.ZodType<Prisma.TrackerPlayerSelect> = 
   name: z.boolean().optional(),
   tracker: z.union([z.boolean(),z.lazy(() => TrackerArgsSchema)]).optional(),
   player: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
-  RoundPlayerState: z.union([z.boolean(),z.lazy(() => RoundPlayerStateFindManyArgsSchema)]).optional(),
+  roundState: z.union([z.boolean(),z.lazy(() => RoundPlayerStateFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => TrackerPlayerCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -953,7 +953,7 @@ export const TrackerPlayerWhereInputSchema: z.ZodType<Prisma.TrackerPlayerWhereI
   name: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   tracker: z.union([ z.lazy(() => TrackerScalarRelationFilterSchema),z.lazy(() => TrackerWhereInputSchema) ]).optional(),
   player: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateListRelationFilterSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateListRelationFilterSchema).optional()
 }).strict();
 
 export const TrackerPlayerOrderByWithRelationInputSchema: z.ZodType<Prisma.TrackerPlayerOrderByWithRelationInput> = z.object({
@@ -963,7 +963,7 @@ export const TrackerPlayerOrderByWithRelationInputSchema: z.ZodType<Prisma.Track
   name: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   tracker: z.lazy(() => TrackerOrderByWithRelationInputSchema).optional(),
   player: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateOrderByRelationAggregateInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerWhereUniqueInputSchema: z.ZodType<Prisma.TrackerPlayerWhereUniqueInput> = z.object({
@@ -979,7 +979,7 @@ export const TrackerPlayerWhereUniqueInputSchema: z.ZodType<Prisma.TrackerPlayer
   name: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   tracker: z.union([ z.lazy(() => TrackerScalarRelationFilterSchema),z.lazy(() => TrackerWhereInputSchema) ]).optional(),
   player: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateListRelationFilterSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateListRelationFilterSchema).optional()
 }).strict());
 
 export const TrackerPlayerOrderByWithAggregationInputSchema: z.ZodType<Prisma.TrackerPlayerOrderByWithAggregationInput> = z.object({
@@ -1624,7 +1624,7 @@ export const TrackerPlayerCreateInputSchema: z.ZodType<Prisma.TrackerPlayerCreat
   name: z.string().optional().nullable(),
   tracker: z.lazy(() => TrackerCreateNestedOneWithoutPlayersInputSchema),
   player: z.lazy(() => UserCreateNestedOneWithoutPlayerInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedCreateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedCreateInput> = z.object({
@@ -1632,7 +1632,7 @@ export const TrackerPlayerUncheckedCreateInputSchema: z.ZodType<Prisma.TrackerPl
   trackerId: z.string(),
   playerId: z.string().optional().nullable(),
   name: z.string().optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUpdateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateInput> = z.object({
@@ -1640,7 +1640,7 @@ export const TrackerPlayerUpdateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdat
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tracker: z.lazy(() => TrackerUpdateOneRequiredWithoutPlayersNestedInputSchema).optional(),
   player: z.lazy(() => UserUpdateOneWithoutPlayerNestedInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedUpdateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateInput> = z.object({
@@ -1648,7 +1648,7 @@ export const TrackerPlayerUncheckedUpdateInputSchema: z.ZodType<Prisma.TrackerPl
   trackerId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   playerId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerCreateManyInputSchema: z.ZodType<Prisma.TrackerPlayerCreateManyInput> = z.object({
@@ -1799,7 +1799,7 @@ export const RoundPlayerStateCreateInputSchema: z.ZodType<Prisma.RoundPlayerStat
   id: z.string().cuid().optional(),
   lifes: z.number().int(),
   round: z.lazy(() => RoundCreateNestedOneWithoutStatesInputSchema),
-  player: z.lazy(() => TrackerPlayerCreateNestedOneWithoutRoundPlayerStateInputSchema)
+  player: z.lazy(() => TrackerPlayerCreateNestedOneWithoutRoundStateInputSchema)
 }).strict();
 
 export const RoundPlayerStateUncheckedCreateInputSchema: z.ZodType<Prisma.RoundPlayerStateUncheckedCreateInput> = z.object({
@@ -1813,7 +1813,7 @@ export const RoundPlayerStateUpdateInputSchema: z.ZodType<Prisma.RoundPlayerStat
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   lifes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   round: z.lazy(() => RoundUpdateOneRequiredWithoutStatesNestedInputSchema).optional(),
-  player: z.lazy(() => TrackerPlayerUpdateOneRequiredWithoutRoundPlayerStateNestedInputSchema).optional()
+  player: z.lazy(() => TrackerPlayerUpdateOneRequiredWithoutRoundStateNestedInputSchema).optional()
 }).strict();
 
 export const RoundPlayerStateUncheckedUpdateInputSchema: z.ZodType<Prisma.RoundPlayerStateUncheckedUpdateInput> = z.object({
@@ -2961,9 +2961,9 @@ export const RoundCreateNestedOneWithoutStatesInputSchema: z.ZodType<Prisma.Roun
   connect: z.lazy(() => RoundWhereUniqueInputSchema).optional()
 }).strict();
 
-export const TrackerPlayerCreateNestedOneWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateNestedOneWithoutRoundPlayerStateInput> = z.object({
-  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => TrackerPlayerCreateOrConnectWithoutRoundPlayerStateInputSchema).optional(),
+export const TrackerPlayerCreateNestedOneWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateNestedOneWithoutRoundStateInput> = z.object({
+  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundStateInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => TrackerPlayerCreateOrConnectWithoutRoundStateInputSchema).optional(),
   connect: z.lazy(() => TrackerPlayerWhereUniqueInputSchema).optional()
 }).strict();
 
@@ -2975,12 +2975,12 @@ export const RoundUpdateOneRequiredWithoutStatesNestedInputSchema: z.ZodType<Pri
   update: z.union([ z.lazy(() => RoundUpdateToOneWithWhereWithoutStatesInputSchema),z.lazy(() => RoundUpdateWithoutStatesInputSchema),z.lazy(() => RoundUncheckedUpdateWithoutStatesInputSchema) ]).optional(),
 }).strict();
 
-export const TrackerPlayerUpdateOneRequiredWithoutRoundPlayerStateNestedInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateOneRequiredWithoutRoundPlayerStateNestedInput> = z.object({
-  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => TrackerPlayerCreateOrConnectWithoutRoundPlayerStateInputSchema).optional(),
-  upsert: z.lazy(() => TrackerPlayerUpsertWithoutRoundPlayerStateInputSchema).optional(),
+export const TrackerPlayerUpdateOneRequiredWithoutRoundStateNestedInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateOneRequiredWithoutRoundStateNestedInput> = z.object({
+  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundStateInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => TrackerPlayerCreateOrConnectWithoutRoundStateInputSchema).optional(),
+  upsert: z.lazy(() => TrackerPlayerUpsertWithoutRoundStateInputSchema).optional(),
   connect: z.lazy(() => TrackerPlayerWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => TrackerPlayerUpdateToOneWithWhereWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUpdateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundPlayerStateInputSchema) ]).optional(),
+  update: z.union([ z.lazy(() => TrackerPlayerUpdateToOneWithWhereWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUpdateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundStateInputSchema) ]).optional(),
 }).strict();
 
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
@@ -3295,14 +3295,14 @@ export const TrackerPlayerCreateWithoutPlayerInputSchema: z.ZodType<Prisma.Track
   id: z.string().cuid().optional(),
   name: z.string().optional().nullable(),
   tracker: z.lazy(() => TrackerCreateNestedOneWithoutPlayersInputSchema),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedCreateWithoutPlayerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedCreateWithoutPlayerInput> = z.object({
   id: z.string().cuid().optional(),
   trackerId: z.string(),
   name: z.string().optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerCreateOrConnectWithoutPlayerInputSchema: z.ZodType<Prisma.TrackerPlayerCreateOrConnectWithoutPlayerInput> = z.object({
@@ -3625,14 +3625,14 @@ export const TrackerPlayerCreateWithoutTrackerInputSchema: z.ZodType<Prisma.Trac
   id: z.string().cuid().optional(),
   name: z.string().optional().nullable(),
   player: z.lazy(() => UserCreateNestedOneWithoutPlayerInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedCreateWithoutTrackerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedCreateWithoutTrackerInput> = z.object({
   id: z.string().cuid().optional(),
   playerId: z.string().optional().nullable(),
   name: z.string().optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedCreateNestedManyWithoutPlayerInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerCreateOrConnectWithoutTrackerInputSchema: z.ZodType<Prisma.TrackerPlayerCreateOrConnectWithoutTrackerInput> = z.object({
@@ -4075,7 +4075,7 @@ export const GameCreateOrConnectWithoutRoundsInputSchema: z.ZodType<Prisma.GameC
 export const RoundPlayerStateCreateWithoutRoundInputSchema: z.ZodType<Prisma.RoundPlayerStateCreateWithoutRoundInput> = z.object({
   id: z.string().cuid().optional(),
   lifes: z.number().int(),
-  player: z.lazy(() => TrackerPlayerCreateNestedOneWithoutRoundPlayerStateInputSchema)
+  player: z.lazy(() => TrackerPlayerCreateNestedOneWithoutRoundStateInputSchema)
 }).strict();
 
 export const RoundPlayerStateUncheckedCreateWithoutRoundInputSchema: z.ZodType<Prisma.RoundPlayerStateUncheckedCreateWithoutRoundInput> = z.object({
@@ -4160,23 +4160,23 @@ export const RoundCreateOrConnectWithoutStatesInputSchema: z.ZodType<Prisma.Roun
   create: z.union([ z.lazy(() => RoundCreateWithoutStatesInputSchema),z.lazy(() => RoundUncheckedCreateWithoutStatesInputSchema) ]),
 }).strict();
 
-export const TrackerPlayerCreateWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerCreateWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateWithoutRoundStateInput> = z.object({
   id: z.string().cuid().optional(),
   name: z.string().optional().nullable(),
   tracker: z.lazy(() => TrackerCreateNestedOneWithoutPlayersInputSchema),
   player: z.lazy(() => UserCreateNestedOneWithoutPlayerInputSchema).optional()
 }).strict();
 
-export const TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerUncheckedCreateWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedCreateWithoutRoundStateInput> = z.object({
   id: z.string().cuid().optional(),
   trackerId: z.string(),
   playerId: z.string().optional().nullable(),
   name: z.string().optional().nullable()
 }).strict();
 
-export const TrackerPlayerCreateOrConnectWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateOrConnectWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerCreateOrConnectWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerCreateOrConnectWithoutRoundStateInput> = z.object({
   where: z.lazy(() => TrackerPlayerWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInputSchema) ]),
+  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundStateInputSchema) ]),
 }).strict();
 
 export const RoundUpsertWithoutStatesInputSchema: z.ZodType<Prisma.RoundUpsertWithoutStatesInput> = z.object({
@@ -4204,25 +4204,25 @@ export const RoundUncheckedUpdateWithoutStatesInputSchema: z.ZodType<Prisma.Roun
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const TrackerPlayerUpsertWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpsertWithoutRoundPlayerStateInput> = z.object({
-  update: z.union([ z.lazy(() => TrackerPlayerUpdateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundPlayerStateInputSchema) ]),
-  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundPlayerStateInputSchema) ]),
+export const TrackerPlayerUpsertWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpsertWithoutRoundStateInput> = z.object({
+  update: z.union([ z.lazy(() => TrackerPlayerUpdateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundStateInputSchema) ]),
+  create: z.union([ z.lazy(() => TrackerPlayerCreateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedCreateWithoutRoundStateInputSchema) ]),
   where: z.lazy(() => TrackerPlayerWhereInputSchema).optional()
 }).strict();
 
-export const TrackerPlayerUpdateToOneWithWhereWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateToOneWithWhereWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerUpdateToOneWithWhereWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateToOneWithWhereWithoutRoundStateInput> = z.object({
   where: z.lazy(() => TrackerPlayerWhereInputSchema).optional(),
-  data: z.union([ z.lazy(() => TrackerPlayerUpdateWithoutRoundPlayerStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundPlayerStateInputSchema) ]),
+  data: z.union([ z.lazy(() => TrackerPlayerUpdateWithoutRoundStateInputSchema),z.lazy(() => TrackerPlayerUncheckedUpdateWithoutRoundStateInputSchema) ]),
 }).strict();
 
-export const TrackerPlayerUpdateWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerUpdateWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerUpdateWithoutRoundStateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tracker: z.lazy(() => TrackerUpdateOneRequiredWithoutPlayersNestedInputSchema).optional(),
   player: z.lazy(() => UserUpdateOneWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
-export const TrackerPlayerUncheckedUpdateWithoutRoundPlayerStateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateWithoutRoundPlayerStateInput> = z.object({
+export const TrackerPlayerUncheckedUpdateWithoutRoundStateInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateWithoutRoundStateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   trackerId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   playerId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -4375,14 +4375,14 @@ export const TrackerPlayerUpdateWithoutPlayerInputSchema: z.ZodType<Prisma.Track
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tracker: z.lazy(() => TrackerUpdateOneRequiredWithoutPlayersNestedInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedUpdateWithoutPlayerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateWithoutPlayerInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   trackerId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedUpdateManyWithoutPlayerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateManyWithoutPlayerInput> = z.object({
@@ -4410,14 +4410,14 @@ export const TrackerPlayerUpdateWithoutTrackerInputSchema: z.ZodType<Prisma.Trac
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   player: z.lazy(() => UserUpdateOneWithoutPlayerNestedInputSchema).optional(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedUpdateWithoutTrackerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateWithoutTrackerInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   playerId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  RoundPlayerState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
+  roundState: z.lazy(() => RoundPlayerStateUncheckedUpdateManyWithoutPlayerNestedInputSchema).optional()
 }).strict();
 
 export const TrackerPlayerUncheckedUpdateManyWithoutTrackerInputSchema: z.ZodType<Prisma.TrackerPlayerUncheckedUpdateManyWithoutTrackerInput> = z.object({
@@ -4514,7 +4514,7 @@ export const RoundPlayerStateCreateManyRoundInputSchema: z.ZodType<Prisma.RoundP
 export const RoundPlayerStateUpdateWithoutRoundInputSchema: z.ZodType<Prisma.RoundPlayerStateUpdateWithoutRoundInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   lifes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  player: z.lazy(() => TrackerPlayerUpdateOneRequiredWithoutRoundPlayerStateNestedInputSchema).optional()
+  player: z.lazy(() => TrackerPlayerUpdateOneRequiredWithoutRoundStateNestedInputSchema).optional()
 }).strict();
 
 export const RoundPlayerStateUncheckedUpdateWithoutRoundInputSchema: z.ZodType<Prisma.RoundPlayerStateUncheckedUpdateWithoutRoundInput> = z.object({

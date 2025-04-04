@@ -1,11 +1,6 @@
-import Link from "next/link";
-
-import { getTrackerById } from "@/server/actions/trackerActions";
-
-import { participantsSchemaBase } from "@/schema/participants";
-
 import { Breadcrumbs, BreadcrumbType } from "@/components/breadcrumbs";
-import { Tracker } from "./_components/tracker";
+import { TrackerDetailsWrap } from "./_components/tracker-details-wrap";
+import { limitCharacters } from "@/lib/utils";
 
 
 export default async function TrackerSessionPage({
@@ -15,42 +10,19 @@ export default async function TrackerSessionPage({
 }) {
   const { trackerId } = await params
 
+  const trackerIdSplits = trackerId.split("-", 2);
+  const actualId = trackerIdSplits[0]
+  const displayName = decodeURIComponent(trackerIdSplits[1])
+  const navTrailName = limitCharacters(displayName, 11) || "Tracker"
+
   const dynNavTrail: BreadcrumbType = {
-    name: `${trackerId.slice(0, 5)}...`
+    name: navTrailName
   }
-
-  const { data, error } = await getTrackerById(trackerId)
-
-  //* check for data validity or errors
-  if (error) return <ErrorMessage error={error} />;
-  //TODO: resolve error after new db schema/app logic
-  if (!data || !data.playerData) return <InvalidTrackerMessage />;
-
-  //* validate json data on participants schema
-  const { success, data: parsedData } = participantsSchemaBase.shape.players.safeParse(data.playerData);
-  if (!success) return <InvalidTrackerMessage />;
 
   return (
     <main className="flex flex-col gap-6">
       <Breadcrumbs lastTrail={dynNavTrail} />
-      <Tracker trackerData={parsedData} trackerId={trackerId} />
+      <TrackerDetailsWrap trackerId={actualId} />
     </main>
   );
 }
-
-const ErrorMessage = ({ error }: { error: unknown }) => (
-  <main>
-    <p>
-      There was an error loading this tracker: {JSON.stringify(error)}
-    </p>
-  </main>
-)
-
-const InvalidTrackerMessage = () => (
-  <main>
-    <p>
-      This tracker is invalid. Create a new one{" "}
-      <Link href="/trackers/schwimmen" className="text-primary">here</Link>.
-    </p>
-  </main>
-)
