@@ -1,4 +1,4 @@
-import { UserSchema } from "prisma/generated/zod"
+import { UserSchema } from "prisma/zod/modelSchema/UserSchema"
 import { z } from "zod"
 
 // export const participantsSchemaBase = z.object({

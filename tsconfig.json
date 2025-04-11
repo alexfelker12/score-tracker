@@ -5,6 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "strictNullChecks": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -23,6 +24,6 @@
       "prisma/*": ["./prisma/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "./src/app/trackers/schwimmen/[trackerId]/__old", "./src/store"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "prisma/json_types/types.ts"],
+  "exclude": ["node_modules"]
 }

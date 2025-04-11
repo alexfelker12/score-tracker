@@ -140,8 +140,13 @@ async function findTrackerById(trackerId: string) {
       id: trackerId
     },
     include: {
-      players: true,
-      games: true
+      players: {
+        include: {
+          player: true
+        }
+      },
+      games: true,
+      creator: true
     }
   })
 }

@@ -2,10 +2,25 @@
 
 generator client {
   provider = "prisma-client-js"
+  // output = "./prisma" -> needed after prisma v7
 }
 
+// run command: pnpm dlx prisma generate --generator client --generator json
+generator json {
+  provider = "npx prisma-json-types-generator"
+}
+
+// run command: pnpm dlx prisma generate --generator client --generator zod
 generator zod {
-  provider = "npx zod-prisma-types"
+  provider                  = "npx zod-prisma-types"
+  output                    = "./zod"
+  useMultipleFiles          = true
+  writeBarrelFiles          = false
+  createInputTypes          = false
+  addIncludeType            = false
+  addSelectType             = false
+  addInputTypeValidation    = false
+  createRelationValuesTypes = true
 }
 
 datasource db {
@@ -26,10 +41,11 @@ model User {
   username        String?
   displayUsername String?
 
-  sessions Session[]
-  accounts Account[]
-  creator  Tracker[]
-  player   TrackerPlayer[]
+  sessions        Session[]
+  accounts        Account[]
+  creator         Tracker[]
+  trackerPlayer   TrackerPlayer[]
+  gameParticipant GameParticipant[]
 
   @@unique([email])
   @@unique([username])
@@ -86,69 +102,94 @@ model Verification {
 //* ----------------------
 
 //* Tracker tables
-
-enum TrackerName {
+enum TrackerType {
   SCHWIMMEN
+  DURAK
 }
 
 model Tracker {
   id          String      @id @default(cuid())
-  creatorId   String
-  name        TrackerName
+  type        TrackerType
   displayName String
   archived    Boolean     @default(false)
+  updatedAt   DateTime    @updatedAt
   createdAt   DateTime    @default(now())
 
-  creator User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
   players TrackerPlayer[]
   games   Game[]
 
   @@unique([creatorId, displayName])
-  @@index([creatorId, name])
+  @@index([creatorId, type])
 }
 
 model TrackerPlayer {
-  id        String  @id @default(cuid())
-  trackerId String
-  playerId  String?
-  name      String?
+  id          String @id @default(cuid())
+  displayName String
 
-  tracker    Tracker            @relation(fields: [trackerId], references: [id], onDelete: Cascade)
-  player     User?              @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  roundState RoundPlayerState[]
+  trackerId String
+  tracker   Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+
+  playerId String?
+  player   User?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@unique([trackerId, playerId])
+}
+
+//* Game tables
+enum GameStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
 model Game {
-  id          String    @id @default(cuid())
-  trackerId   String
-  completedAt DateTime?
-  winnerId    String?
-  firstAtZero String?
-  lastTwo     Json?
-  createdAt   DateTime  @default(now())
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    GameStatus @default(ACTIVE)
 
-  tracker Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
-  rounds  Round[]
+  trackerId String
+  tracker   Tracker @relation(fields: [trackerId], references: [id], onDelete: Restrict)
+
+  gameData GameData?
+
+  participants GameParticipant[]
+  roundData    RoundData[]
+
+  @@index([trackerId])
 }
 
-model Round {
-  id          String   @id @default(cuid())
-  gameId      String
-  roundNumber Int
-  createdAt   DateTime @default(now())
+model GameData {
+  /// ![PrismaJson.GameData]
+  data Json
 
-  game   Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  states RoundPlayerState[]
-
-  @@unique([gameId, roundNumber]) // Ensures unique round numbers per game
+  gameId String @unique
+  game   Game   @relation(fields: [gameId], references: [id])
 }
 
-model RoundPlayerState {
-  id       String @id @default(cuid())
-  roundId  String
-  playerId String
-  lifes    Int
+model RoundData {
+  /// ![PrismaJson.RoundData]
+  data  Json
+  round Int
 
-  round  Round         @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  player TrackerPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, round])
+}
+
+model GameParticipant {
+  id          String @id @default(cuid())
+  displayName String
+
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([gameId, userId])
 }

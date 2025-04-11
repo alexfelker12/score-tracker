@@ -26,7 +26,6 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
   if (data.error) return <ErrorMessage error={data.error} />
   if (!data.data) return <InvalidTrackerMessage />
 
-  console.log(data.data.players)
 
   return (
     <div>

@@ -1,18 +1,18 @@
 "use server"
 
 import { caching, prisma } from "@/server/prisma"
-import { Prisma, TrackerName } from "@prisma/client/edge"
+import { Prisma, TrackerType } from "@prisma/client/edge"
 
 
 
 //* GET all trackers created today
-async function findTodaysTrackers(trackerName: TrackerName) {
+async function findTodaysTrackers(trackerType: TrackerType) {
   const midnight = new Date()
   midnight.setHours(0, 0, 0, 0)
 
   const queryArgs: Prisma.TrackerFindManyArgs = {
     where: {
-      name: trackerName,
+      type: trackerType,
       createdAt: {
         gte: midnight.toISOString()
       }
@@ -36,13 +36,13 @@ export async function getAllTodaysTrackers(args: FindTodaysTrackersArgs[0]) {
 }
 
 //* GET all trackers created in the past
-async function findPastTrackers(trackerName: TrackerName) {
+async function findPastTrackers(trackerType: TrackerType) {
   const midnight = new Date()
   midnight.setHours(0, 0, 0, 0)
 
   const queryArgs: Prisma.TrackerFindManyArgs = {
     where: {
-      name: trackerName,
+      type: trackerType,
       createdAt: {
         lt: midnight.toISOString()
       }
@@ -67,10 +67,10 @@ export async function getAllPastTrackers(args: FindPastTrackersArgs[0]) {
 
 
 //* GET all trackers 
-async function findTrackers(trackerName: TrackerName) {
+async function findTrackers(trackerType: TrackerType) {
   const queryArgs: Prisma.TrackerFindManyArgs = {
     where: {
-      name: trackerName,
+      type: trackerType,
     },
     orderBy: {
       createdAt: "desc"
