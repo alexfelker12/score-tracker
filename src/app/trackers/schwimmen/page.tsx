@@ -1,7 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { Suspense } from "react";
 
-import { TrackerName } from "@prisma/client/edge";
+import { TrackerType } from "@prisma/client/edge";
 import { getCookie } from 'cookies-next/server';
 
 import { getAllArchivedTrackersForCreator, getAllTrackersAsParticipant, getAllTrackersByCreator } from "@/server/actions/tracker/actions";
@@ -11,11 +11,11 @@ import { auth } from "@/lib/auth";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { TrackerGameForm } from "./_components/tracker-create-form";
+import { TrackerForm } from "./_components/tracker-create-form";
 import { TrackerListing } from "./_components/tracker-listing";
 import { TrackerCardsLoading } from "./_components/trackers";
 
+import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { TrackerTabTrigger } from "./_components/tracker-tab-triggers";
 
 export default async function Schwimmen() {
@@ -31,7 +31,7 @@ export default async function Schwimmen() {
         <h2 className="font-bold text-2xl">Create tracker for `Schwimmen`</h2>
 
         {/* create tracker form */}
-        {session && <TrackerGameForm session={session} minPlayers={2} maxPlayers={9} trackerName="SCHWIMMEN" />}
+        {session && <TrackerForm session={session} minPlayers={2} maxPlayers={9} trackerType="SCHWIMMEN" />}
       </div>
 
       <div className="space-y-4">
@@ -44,7 +44,7 @@ export default async function Schwimmen() {
   );
 }
 
-const trackerName: TrackerName = "SCHWIMMEN"
+const trackerType: TrackerType = "SCHWIMMEN"
 async function TrackerWrapper() {
   const session = await auth.api.getSession({
     headers: await headers()
@@ -62,7 +62,7 @@ async function TrackerWrapper() {
         <Suspense fallback={<Loading />}>
           {/* tracker created by user */}
           <TrackerListing
-            trackerName={trackerName}
+            trackerType={trackerType}
             userId={session.user.id}
             queryFunc={getAllTrackersByCreator}
             queryFuncName="getAllTrackersByCreator"
@@ -73,7 +73,7 @@ async function TrackerWrapper() {
         <Suspense fallback={<Loading />}>
           {/* tracker, where user is participating */}
           <TrackerListing
-            trackerName={trackerName}
+            trackerType={trackerType}
             userId={session.user.id}
             queryFunc={getAllTrackersAsParticipant}
             queryFuncName="getAllTrackersAsParticipant"
@@ -84,7 +84,7 @@ async function TrackerWrapper() {
         <Suspense fallback={<Loading />}>
           {/* tracker archived by user */}
           <TrackerListing
-            trackerName={trackerName}
+            trackerType={trackerType}
             userId={session.user.id}
             queryFunc={getAllArchivedTrackersForCreator}
             queryFuncName="getAllArchivedTrackersForCreator"
@@ -98,8 +98,13 @@ async function TrackerWrapper() {
 const Loading = () => {
   return (
     <div>
-      <Skeleton className="w-full h-9" />
-      <TrackerCardsLoading />
+      {/* <Skeleton className="w-full h-9" /> */}
+      <Command className="shadow-md border w-full">
+        <CommandInput placeholder="Search trackers..." disabled />
+        <CommandList className="[&>div]:gap-1 [&>div]:grid md:[&>div]:grid-cols-2 p-1">
+          <TrackerCardsLoading />
+        </CommandList>
+      </Command>
     </div>
   );
 }

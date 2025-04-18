@@ -157,7 +157,7 @@ model Game {
   gameData GameData?
 
   participants GameParticipant[]
-  roundData    RoundData[]
+  rounds    GameRound[]
 
   @@index([trackerId])
 }
@@ -170,7 +170,7 @@ model GameData {
   game   Game   @relation(fields: [gameId], references: [id])
 }
 
-model RoundData {
+model GameRound {
   /// ![PrismaJson.RoundData]
   data  Json
   round Int
@@ -179,6 +179,7 @@ model RoundData {
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@id([gameId, round])
+  @@unique([gameId, round])
 }
 
 model GameParticipant {

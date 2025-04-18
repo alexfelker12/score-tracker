@@ -8,6 +8,7 @@ import { getTrackerById } from "@/server/actions/tracker/actions";
 
 import { Loader2Icon } from "lucide-react";
 
+import { CreateGameForm } from "./create-game-form";
 import { TrackerDetailsWrapProps } from "./tracker-details-wrap";
 
 
@@ -26,32 +27,48 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
   if (data.error) return <ErrorMessage error={data.error} />
   if (!data.data) return <InvalidTrackerMessage />
 
-
   return (
-    <div>
+    <div className="space-y-4">
+
       <p>
         Name: {data.data.displayName}
       </p>
+
       <div>
         <h3>Player:</h3>
         {data.data.players.map((player) => {
           return (
-            <div key={player.id} className="flex gap-2"><span>-</span><span>{player.name}</span></div>
+            <div key={player.id} className="flex gap-2"><span>-</span><span>{player.displayName}</span></div>
           )
         })}
       </div>
+
       <div>
         <h3>Games:</h3>
         {data.data.games.length > 0
-        ? data.data.games.map((game) => {
-          return (
-            <div key={game.id} className="flex gap-2"><span>-</span><span>{game.id}</span></div>
-          )
-        })
-        :
-        <span className="italic">No games played yet</span>
-      }
+          ? data.data.games.map((game) => {
+            return (
+              <div
+                key={game.id}
+                className="flex gap-2"
+              >
+                <span>-</span>
+                <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>{game.id} - {game.status}</Link>
+              </div>
+            )
+          })
+          :
+          <span className="italic">No games played yet</span>
+        }
       </div>
+
+      <CreateGameForm
+        minPlayers={2}
+        maxPlayers={9}
+        trackerId={trackerId}
+        players={data.data.players}
+      />
+
     </div>
   );
 }

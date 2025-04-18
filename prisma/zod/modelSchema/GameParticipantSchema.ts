@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { UserWithRelationsSchema } from './UserSchema'
-import type { UserWithRelations } from './UserSchema'
 import { GameWithRelationsSchema } from './GameSchema'
 import type { GameWithRelations } from './GameSchema'
+import { UserWithRelationsSchema } from './UserSchema'
+import type { UserWithRelations } from './UserSchema'
 
 /////////////////////////////////////////
 // GAME PARTICIPANT SCHEMA
@@ -11,8 +11,8 @@ import type { GameWithRelations } from './GameSchema'
 export const GameParticipantSchema = z.object({
   id: z.string().cuid(),
   displayName: z.string(),
-  userId: z.string().nullable(),
   gameId: z.string(),
+  userId: z.string().nullable(),
 })
 
 export type GameParticipant = z.infer<typeof GameParticipantSchema>
@@ -22,15 +22,15 @@ export type GameParticipant = z.infer<typeof GameParticipantSchema>
 /////////////////////////////////////////
 
 export type GameParticipantRelations = {
-  user?: UserWithRelations | null;
   game: GameWithRelations;
+  user?: UserWithRelations | null;
 };
 
 export type GameParticipantWithRelations = z.infer<typeof GameParticipantSchema> & GameParticipantRelations
 
 export const GameParticipantWithRelationsSchema: z.ZodType<GameParticipantWithRelations> = GameParticipantSchema.merge(z.object({
-  user: z.lazy(() => UserWithRelationsSchema).nullable(),
   game: z.lazy(() => GameWithRelationsSchema),
+  user: z.lazy(() => UserWithRelationsSchema).nullable(),
 }))
 
 export default GameParticipantSchema;

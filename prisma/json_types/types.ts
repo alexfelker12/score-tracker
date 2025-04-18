@@ -12,6 +12,7 @@ export type SchwimmenRound = {
     id: string
     lifes: number
   }[]
+  playerSwimming: string | undefined
   nukeBy?: string
 }
 

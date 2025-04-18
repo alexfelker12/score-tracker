@@ -27,11 +27,11 @@ import { queryFuncMap, TrackerListingParams } from "./tracker-listing";
 
 
 export type TrackersProps = TrackerListingParams
-export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: TrackersProps) => {
+export const Trackers = ({ trackerType, userId, queryFunc, queryFuncName }: TrackersProps) => {
   //* GET data by query function
   const { data, isFetching, isPending } = useQuery({
-    queryKey: ["trackers", trackerName, userId, queryFuncMap[queryFuncName]],
-    queryFn: () => queryFunc(trackerName, userId),
+    queryKey: ["trackers", trackerType, userId, queryFuncMap[queryFuncName]],
+    queryFn: () => queryFunc(trackerType, userId),
     refetchOnMount: false,
     refetchOnReconnect: false
   })
@@ -41,7 +41,7 @@ export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: Trac
 
   //* get status of create mutation to display loading skeleton for new tracker
   const isCreatePending = useMutationState({
-    filters: { mutationKey: ['tracker-create', trackerName], status: 'pending' },
+    filters: { mutationKey: ['tracker-create', trackerType], status: 'pending' },
     select: (mutation) => mutation.state.status === 'pending',
   })[0];
 
@@ -75,7 +75,8 @@ export const Trackers = ({ trackerName, userId, queryFunc, queryFuncName }: Trac
           </CommandItem>
         ))}
 
-        <CommandEmpty className="md:col-span-2">No trackers found</CommandEmpty>
+        {/* {data.data.length === 0 && } */}
+        <CommandEmpty className="flex justify-center items-center md:col-span-2 h-10">No trackers found</CommandEmpty>
       </CommandList>
     </Command>
   )

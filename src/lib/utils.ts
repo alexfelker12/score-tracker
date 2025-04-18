@@ -131,7 +131,7 @@ export const limitCharacters = (longString: string | undefined, charLimit: numbe
   if (typeof longString === "undefined") return undefined
 
   const shortenedString = longString.length > charLimit
-    ? `${longString.slice(0, charLimit + 1).trim()}...`
+    ? `${longString.slice(0, charLimit).trim()}...`
     : longString
 
   return shortenedString

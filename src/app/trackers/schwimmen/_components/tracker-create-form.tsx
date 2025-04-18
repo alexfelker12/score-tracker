@@ -20,19 +20,19 @@ import { cn } from "@/lib/utils"
 import { participantsSchemaBase } from "@/schema/participants"
 import { createTracker } from "@/server/actions/tracker/actions"
 import { getOtherUsers } from "@/server/actions/user/actions"
-import { TrackerName } from "@prisma/client/edge"
+import { TrackerType } from "@prisma/client/edge"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ClipboardPlusIcon, Loader2Icon, PlusIcon, SaveIcon, Trash2Icon, UserIcon, XIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { User } from "prisma/generated/zod"
 import { toast } from "sonner"
+import { User } from "prisma/zod/modelSchema/UserSchema"
 
 //* types
-export type TrackerGameFormType = {
+export type TrackerFormType = {
   session: typeof auth.$Infer.Session
   minPlayers: number
   maxPlayers: number
-  trackerName: TrackerName
+  trackerType: TrackerType
   onSubmit?: (values: z.infer<typeof participantsSchemaBase>) => Promise<void>
 }
 
@@ -47,13 +47,13 @@ export type AddPlayerDialogType = {
 }
 
 //* main
-export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }: TrackerGameFormType) => {
+export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: TrackerFormType) => {
 
   //* Memoized schema with dynamic min/max
   const participantsSchema = React.useMemo(() => {
     return participantsSchemaBase.extend({
       players: participantsSchemaBase.shape.players.min(minPlayers).max(maxPlayers),
-    });
+    })
   }, [minPlayers, maxPlayers]);
 
   const form = useForm<z.infer<typeof participantsSchema>>({
@@ -74,7 +74,7 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
       minLength: minPlayers,
       maxLength: maxPlayers
     }
-  });
+  })
 
   //* router for redirect after create
   const router = useRouter()
@@ -88,7 +88,7 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
 
   //* POST mutation: tracker
   const { mutate, isPending } = useMutation({
-    mutationKey: ['tracker-create', trackerName],
+    mutationKey: ['tracker-create', trackerType],
     mutationFn: createTracker,
     onSettled: async (data, error) => {
       if (!error && data && data.data) {
@@ -104,7 +104,7 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
         form.reset()
 
         //* invalidate query to refetch latest data
-        await qc.invalidateQueries({ queryKey: ["trackers", trackerName] })
+        await qc.invalidateQueries({ queryKey: ["trackers", trackerType] })
       }
     },
   })
@@ -115,7 +115,7 @@ export const TrackerGameForm = ({ session, minPlayers, maxPlayers, trackerName }
 
     if (session) mutate({
       displayName,
-      trackerName,
+      trackerType,
       players,
       creatorId: session.user.id,
     })
