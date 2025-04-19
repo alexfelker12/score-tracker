@@ -19,6 +19,7 @@ import { RoundHistory } from "./round-history";
 import { Settings } from "./settings";
 import { Actions } from "./actions";
 import { PlayerList } from "./player-list";
+import { ConflictDialog } from "./conflict-dialog";
 
 export type GameParams = {
   game: NonNullable<FindGameByIdReturn>
@@ -29,11 +30,11 @@ export const Game = (params: GameParams) => {
   //* hooks here
   const { init, ready, currentRoundNumber, getPlayer, gameData, rounds, getCurrentRound } = useSchwimmenGameStore()
 
+
   React.useEffect(() => {
     init({
       ready: true,
       game: game,
-      gameId: game.id,
       players: game.participants,
       gameData: game.gameData?.data.type === "SCHWIMMEN" ? game.gameData.data : {
         type: "SCHWIMMEN",
@@ -51,7 +52,7 @@ export const Game = (params: GameParams) => {
   // TODO: build new schwimmen overlay
   if (!ready) return <LoadingGame />
 
-  console.log("rounds:", rounds)
+  // console.log("rounds:", rounds)
 
   return (
     <div className="space-y-4">
@@ -81,6 +82,8 @@ export const Game = (params: GameParams) => {
       <section>
         Player swimming: {(getPlayer(getCurrentRound().data.playerSwimming || "") || { displayName: "no one yet" }).displayName}
       </section>
+
+      <ConflictDialog />
     </div>
   );
 }

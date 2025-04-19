@@ -4,27 +4,14 @@ import { Button } from "@/components/ui/button";
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 import { RedoIcon, UndoIcon } from "lucide-react";
 
-/**
- ** head buttons:
- ** section 1 (left):
- * - go back one round (disable when no presceding round)
- * - go forward one round (disable when no following round)
-*/
 
-// TODO Prio 3: go trough rounds backwards and forewards
-
-export type RoundHistoryParams = {
-
-}
-export const RoundHistory = (params: RoundHistoryParams) => {
-  const { } = params
-
+export const RoundHistory = () => {
   //* hooks here
-  const { isAction, currentRoundNumber, setCurrentRoundNumber, rounds, getLastRound } = useSchwimmenGameStore()
+  const { isAction, currentRoundNumber, setCurrentRoundNumber, getLatestRound } = useSchwimmenGameStore()
 
   //* checks
   const isFirstRound = currentRoundNumber === 0
-  const isLastRound = getLastRound().round === currentRoundNumber
+  const isLastRound = getLatestRound().round === currentRoundNumber
 
   const handleClick = (historyDir: "undo" | "redo") => {
     switch (historyDir) {

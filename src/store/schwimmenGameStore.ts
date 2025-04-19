@@ -13,9 +13,8 @@ type Round = Omit<GameRound, "data"> & { data: SchwimmenRound }
 
 type SchwimmenGameState = {
   ready: boolean
-  game: Game | null
-  gameId: string,
-  gameData: SchwimmenGame
+  game: Game
+  gameData: SchwimmenGame | null
   rounds: Round[]
   players: GameParticipant[]
   action: ActionStatus
@@ -34,10 +33,17 @@ type SchwimmenGameActions = {
 
   getRound: (roundNumber: number) => Round
   getCurrentRound: () => Round
-  getLastRound: () => Round
+  getLatestRound: () => Round
   setCurrentRoundNumber: (roundNumber: number) => void
   addRound: (data: Round["data"]) => void
   subtractLifeOf: (playerId: string) => Round["data"] | undefined
+  checkNukeConflict: (playerId: string) => GameParticipant[] | undefined
+  detonateNuke: (playerId: string, survivorId: string) => Round["data"] | undefined
+
+  // TODO:
+  checkWinCondition?: () => void
+  setStaticGameData?: () => void
+  finishGame?: () => void
 }
 
 export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
@@ -45,46 +51,40 @@ export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
 export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   //* state
   ready: false,
-  game: null,
-  gameId: "",
-  //TODO continue
-  gameData: {
-    type: "SCHWIMMEN",
-    swimming: "",
-    winner: "",
-    winByNuke: false
-  },
+  //* type cast: game.tsx only gets rendered when there is a game, therefore game will always be set on init 
+  game: {} as Game,
+  gameData: null,
   rounds: [],
   players: [],
   action: ActionStatus.ISIDLE,
   currentRoundNumber: 0,
 
-  //* actions
   init: (params) => set({ ...params }),
 
+  //* players
   getPlayer: (id) => get().players.find((player) => id === player.id),
 
-  // 
+  //* actions
   setAction: (action) => set({ action }),
   isAction: (action) => get().action === action,
 
-  // rounds
+  //* rounds
   // at the end "!" because we know they exist
   getRound: (roundNumber) => get().rounds.find((round) => round.round === roundNumber)!,
   getCurrentRound: () => get().getRound(get().currentRoundNumber),
-  getLastRound: () => get().rounds.reduce((prev, current) => (prev && prev.round > current.round) ? prev : current),
+  getLatestRound: () => get().rounds.reduce((prev, current) => (prev && prev.round > current.round) ? prev : current),
   setCurrentRoundNumber: (roundNumber) => set({ currentRoundNumber: roundNumber || 0 }),
   addRound: (data) => set((state) => {
     const prevRounds = state.rounds.filter((round) => round.round <= state.currentRoundNumber)
-    const newRound: Round = {
-      gameId: state.gameId,
-      round: state.currentRoundNumber + 1,
-      data
-    }
+
     return {
       rounds: [
         ...prevRounds,
-        newRound
+        {
+          gameId: state.game.id,
+          round: state.currentRoundNumber + 1,
+          data
+        }
       ],
       currentRoundNumber: state.currentRoundNumber + 1
     }
@@ -115,6 +115,60 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
       } else {
         newRoundState.playerSwimming = player.id
         return player
+      }
+    })
+
+    return newRoundState
+  },
+  checkNukeConflict: (playerId) => {
+    const thisRound = get().getCurrentRound()
+    const players = get().players
+
+    //* conflict can only happen, if no player is swimming
+    if (!thisRound.data.playerSwimming) {
+      const playersThisRound = thisRound.data.players
+
+      //* filter out players who are not the detonator and have one life
+      const playersWithOneLife = playersThisRound.filter((player) => player.id !== playerId && player.lifes <= 1).map((player) => player.id)
+
+      //* if there are at least 2 players return those player per id matching else undefined
+      if (playersWithOneLife.length >= 2) {
+        return players.filter((affectedPlayer) => playersWithOneLife.includes(affectedPlayer.id))
+      } else {
+        return undefined
+      }
+    }
+
+    return undefined
+  },
+  detonateNuke: (playerId, survivorId) => {
+    const thisRound = get().getCurrentRound()
+    const playersThisRound = thisRound.data.players
+    const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
+
+    const newRoundState: SchwimmenRound = {
+      type: "SCHWIMMEN",
+      playerSwimming: thisRound.data.playerSwimming,
+      players: [],
+      nukeBy: playerId
+    }
+
+    //* continue only if player is not dead yet
+    if (getPlayerFromRound.lifes <= 0) return;
+
+    newRoundState.players = playersThisRound.map((player) => {
+      if (player.id === playerId) return player;
+
+      if (player.id === survivorId) {
+        //* set survivor as swimming before returning as is
+        newRoundState.playerSwimming = survivorId
+        return player
+      }
+
+      //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
+      return {
+        id: player.id,
+        lifes: player.lifes - 1
       }
     })
 

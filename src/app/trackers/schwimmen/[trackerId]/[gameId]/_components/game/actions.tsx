@@ -5,27 +5,10 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 import { HeartCrackIcon, BombIcon, XIcon } from "lucide-react";
 import React from "react";
 
-/**
- ** section 2 (right):
- * - subtract life button:
- * - detonate nuke button:
- *   - after click, visual indication for players to be clickable
- *   - display "x"-icon
- *   - after click on player do action
-*/
 
-// TODO Prio 2: subtract life and detonate nuke (core actions)
-
-export type ActionsParams = {
-
-}
-
-export const Actions = (params: ActionsParams) => {
-  const { } = params
-
+export const Actions = () => {
   //* hooks here
-  const isAction = useSchwimmenGameStore((state) => state.isAction)
-  const setAction = useSchwimmenGameStore((state) => state.setAction)
+  const { isAction, setAction } = useSchwimmenGameStore()
 
   return (
     <>
