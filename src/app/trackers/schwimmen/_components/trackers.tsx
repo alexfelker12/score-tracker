@@ -151,8 +151,8 @@ export const TrackerCardsLoading = ({ length = 2 }: TrackerCardsLoadingParams) =
 }
 
 
-const TimeElapsed = ({ createdAt }: { createdAt: Date }) => {
-  const [elapsed, setElapsed] = React.useState<string>("");
+export const TimeElapsed = ({ createdAt }: { createdAt: Date }) => {
+  const [elapsed, setElapsed] = React.useState<string>("")
   const [isReady, setIsReady] = React.useState(false)
 
   React.useEffect(() => {
@@ -168,7 +168,7 @@ const TimeElapsed = ({ createdAt }: { createdAt: Date }) => {
     //? idea: modulo operation to find amount of minutes (without seconds) passed to get seconds to next minute and set interval from there one
     //! on hold
 
-    const minuteInterval = setInterval(updateElapsed, 60000); //* 60_000 = 1 minute
+    const minuteInterval = setInterval(updateElapsed, 60000)//* 60_000 = 1 minute
 
     return () => {
       clearInterval(minuteInterval)

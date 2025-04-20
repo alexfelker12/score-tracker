@@ -8,7 +8,7 @@ import { GameRound } from "@prisma/client";
 import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
-import { FindGameByIdReturn } from "@/server/actions/game/actions";
+import { FindGameByIdReturn, updateGameStatus } from "@/server/actions/game/actions";
 
 //* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
@@ -20,28 +20,37 @@ import { Settings } from "./settings";
 import { Actions } from "./actions";
 import { PlayerList } from "./player-list";
 import { ConflictDialog } from "./conflict-dialog";
+import { FinishedGameDialog } from "./finished-game-dialog";
+import { useMutation } from "@tanstack/react-query";
+import { getQueryClient } from "@/lib/get-query-client";
 
 export type GameParams = {
   game: NonNullable<FindGameByIdReturn>
+  trackerId: string
 }
 export const Game = (params: GameParams) => {
-  const { game } = params
+  const { game, trackerId } = params
 
   //* hooks here
-  const { init, ready, currentRoundNumber, getPlayer, gameData, rounds, getCurrentRound } = useSchwimmenGameStore()
-
+  const {
+    ready,
+    currentRoundNumber,
+    game: thisGame,
+    gameData,
+    rounds,
+    init,
+    getPlayer,
+    getCurrentRound,
+    checkWinCondition,
+    finishGame
+  } = useSchwimmenGameStore()
 
   React.useEffect(() => {
     init({
       ready: true,
       game: game,
       players: game.participants,
-      gameData: game.gameData?.data.type === "SCHWIMMEN" ? game.gameData.data : {
-        type: "SCHWIMMEN",
-        swimming: "",
-        winner: "",
-        winByNuke: false
-      },
+      gameData: game.gameData?.data.type === "SCHWIMMEN" ? game.gameData.data : gameData,
       rounds: game.rounds.filter((round): round is Omit<GameRound, "data"> & { data: SchwimmenRound } => round.data.type === "SCHWIMMEN"),
       action: ActionStatus.ISIDLE,
       //* default latest round
@@ -49,13 +58,36 @@ export const Game = (params: GameParams) => {
     })
   }, [useSchwimmenGameStore])
 
-  // TODO: build new schwimmen overlay
+  React.useEffect(() => {
+    if (ready && thisGame.status === "ACTIVE") {
+      if (!checkWinCondition("latest")) return; 
+      
+      //* update game status to "COMPLETED"
+      updateStatus({ gameId: game.id, newStatus: "COMPLETED" }, {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
+          finishGame()
+        }
+      })
+    }
+  }, [ready, rounds])
+
+  const qc = getQueryClient()
+
+  //* PUT game status
+  const { mutate: updateStatus, isPending: isStatusUpdatePending } = useMutation({
+    mutationFn: updateGameStatus,
+  })
+
   if (!ready) return <LoadingGame />
 
-  // console.log("rounds:", rounds)
+  // console.log(thisGame, !checkWinCondition("latest"))
 
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
+      {/* show unclosable "game is finished dialog" to indicate, that game cannot be further modified/played */}
+      {thisGame.status !== "ACTIVE" && <FinishedGameDialog />}
+
       <section className="flex justify-between items-center gap-4">
 
         {/* settings & history */}

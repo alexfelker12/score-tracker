@@ -2,7 +2,7 @@
 
 import { tryCatch } from "@/server/helpers/try-catch"
 import { prisma } from "@/server/prisma"
-import { Prisma } from "@prisma/client"
+import { Game, Prisma } from "@prisma/client"
 
 
 //*** GET
@@ -113,6 +113,39 @@ export type CreateGameArgs = Parameters<typeof createGameWithParticipants>
 export async function createGame(...args: CreateGameArgs) {
   const { data, error } = await tryCatch<CreateGameReturn>(
     createGameWithParticipants(...args)
+  )
+  if (error) {
+    console.log(error)
+    return { error }
+  }
+  return { data }
+}
+
+
+//*** POST
+//* create game
+async function updateGameStatusById(params: {
+  gameId: string
+  newStatus: Game["status"]
+}) {
+  const { gameId, newStatus } = params
+
+  return await prisma.game.update({
+    where: {
+      id: gameId,
+      status: "ACTIVE"
+    },
+    data: {
+      status: newStatus
+    }
+  })
+}
+export type UpdateGameStatusReturn = Prisma.PromiseReturnType<typeof updateGameStatusById>
+export type UpdateGameStatusArgs = Parameters<typeof updateGameStatusById>
+
+export async function updateGameStatus(...args: UpdateGameStatusArgs) {
+  const { data, error } = await tryCatch<UpdateGameStatusReturn>(
+    updateGameStatusById(...args)
   )
   if (error) {
     console.log(error)

@@ -37,13 +37,15 @@ type SchwimmenGameActions = {
   setCurrentRoundNumber: (roundNumber: number) => void
   addRound: (data: Round["data"]) => void
   subtractLifeOf: (playerId: string) => Round["data"] | undefined
+  detonateNuke: (playerId: string, survivorId?: string) => Round["data"] | undefined
+
   checkNukeConflict: (playerId: string) => GameParticipant[] | undefined
-  detonateNuke: (playerId: string, survivorId: string) => Round["data"] | undefined
+  checkWinCondition: (type?: "latest") => GameParticipant | undefined
+
+  finishGame: () => void
 
   // TODO:
-  checkWinCondition?: () => void
   setStaticGameData?: () => void
-  finishGame?: () => void
 }
 
 export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
@@ -120,6 +122,41 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
     return newRoundState
   },
+  detonateNuke: (playerId, survivorId) => {
+    const thisRound = get().getCurrentRound()
+    const playersThisRound = thisRound.data.players
+    const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
+
+    const newRoundState: SchwimmenRound = {
+      type: "SCHWIMMEN",
+      playerSwimming: thisRound.data.playerSwimming,
+      players: [],
+      nukeBy: playerId
+    }
+
+    //* continue only if player is not dead yet
+    if (getPlayerFromRound.lifes <= 0) return;
+
+    newRoundState.players = playersThisRound.map((player) => {
+      if (player.id === playerId) return player;
+
+      if (survivorId && player.id === survivorId) {
+        //* set survivor as swimming before returning as is
+        newRoundState.playerSwimming = survivorId
+        return player
+      }
+
+      //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
+      return {
+        id: player.id,
+        lifes: player.lifes - 1
+      }
+    })
+
+    return newRoundState
+  },
+
+  //* checks
   checkNukeConflict: (playerId) => {
     const thisRound = get().getCurrentRound()
     const players = get().players
@@ -141,37 +178,20 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
     return undefined
   },
-  detonateNuke: (playerId, survivorId) => {
-    const thisRound = get().getCurrentRound()
-    const playersThisRound = thisRound.data.players
-    const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
+  checkWinCondition: (type) => {
+    const currentRound = type === "latest" ? get().getCurrentRound() : get().getLatestRound()
+    const playersAlive = currentRound.data.players.filter((player) => player.lifes > 0)
 
-    const newRoundState: SchwimmenRound = {
-      type: "SCHWIMMEN",
-      playerSwimming: thisRound.data.playerSwimming,
-      players: [],
-      nukeBy: playerId
+    if (playersAlive.length > 1) return;
+
+    return get().getPlayer(playersAlive[0].id)
+  },
+
+  finishGame: () => set((state) => ({
+    game: {
+      ...state.game,
+      status: "COMPLETED"
     }
+  })),
 
-    //* continue only if player is not dead yet
-    if (getPlayerFromRound.lifes <= 0) return;
-
-    newRoundState.players = playersThisRound.map((player) => {
-      if (player.id === playerId) return player;
-
-      if (player.id === survivorId) {
-        //* set survivor as swimming before returning as is
-        newRoundState.playerSwimming = survivorId
-        return player
-      }
-
-      //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
-      return {
-        id: player.id,
-        lifes: player.lifes - 1
-      }
-    })
-
-    return newRoundState
-  }
 }))

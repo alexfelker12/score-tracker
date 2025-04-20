@@ -5,11 +5,11 @@ import { Game } from "./game/game";
 
 
 export type GameWrapParams = {
-  // trackerId: string
+  trackerId: string
   gameId: string
 }
 export const GameWrap = async (gameParams: GameWrapParams) => {
-  const { gameId } = gameParams
+  const { gameId, trackerId } = gameParams
   // const qc = getQueryClient()
   // await qc.prefetchQuery({
   //   queryKey: ["trackers", trackerId, gameId],

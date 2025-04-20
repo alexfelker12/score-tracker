@@ -148,6 +148,7 @@ async function findTrackerById(trackerId: string) {
       games: {
         select: {
           id: true,
+          createdAt: true,
           tracker: {
             select: {
               id: true,
@@ -155,6 +156,9 @@ async function findTrackerById(trackerId: string) {
             }
           },
           status: true
+        },
+        orderBy: {
+          createdAt: "desc"
         }
       },
       creator: true

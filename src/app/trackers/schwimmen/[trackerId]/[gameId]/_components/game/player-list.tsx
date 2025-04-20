@@ -2,6 +2,7 @@
 
 import { useConfirmation } from "@/hooks/use-confirmation";
 import { createLatestRoundForGame, deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
+import { tryCatch } from "@/server/helpers/try-catch";
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 import { useMutation } from "@tanstack/react-query";
 import { SchwimmenRound } from "prisma/json_types/types";
@@ -15,7 +16,7 @@ import { SchwimmenRound } from "prisma/json_types/types";
 
 export const PlayerList = () => {
   //* hooks here
-  const { action, setAction, getRound, getPlayer, currentRoundNumber, subtractLifeOf, addRound, game, getLatestRound, players, checkNukeConflict, detonateNuke } = useSchwimmenGameStore()
+  const { action, setAction, getRound, getPlayer, currentRoundNumber, subtractLifeOf, addRound, game, getLatestRound, players, checkNukeConflict, detonateNuke, checkWinCondition } = useSchwimmenGameStore()
   const current = getRound(currentRoundNumber)
 
   const { showConfirmation } = useConfirmation()
@@ -81,24 +82,30 @@ export const PlayerList = () => {
         //* returns players in case of conflict, else undefined
         const affectedPlayers = checkNukeConflict(playerId)
 
-        console.log(affectedPlayers)
-
         if (affectedPlayers) {
-          try {
-            const survivingPlayer = await showConfirmation(affectedPlayers);
-            const newRoundData = detonateNuke(playerId, survivingPlayer.id)
+          //* get surviving player from conflict dialog, in case of error, log and set back to idle
+          const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
+          if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
-            if (newRoundData) handleNewRound(newRoundData)
-          } catch (error) {
-            console.error("Error during confirmation:", error)
-          }
+          //* do action
+          const newRoundData = detonateNuke(playerId, survivingPlayer.id)
+          if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
+
+          handleNewRound(newRoundData)
+        } else {
+          //* if no conflict, just pass playerId
+          const newRoundData = detonateNuke(playerId)
+          if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
+
+          handleNewRound(newRoundData)
         }
-
-        setAction(ActionStatus.ISIDLE)
         break
 
       case ActionStatus.ISIDLE:
       // basically do nothing
+
+      //* after every action check if win condition is met (only one player alive)
+      checkWinCondition()
     }
   }
 

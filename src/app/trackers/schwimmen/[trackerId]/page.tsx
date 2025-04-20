@@ -3,7 +3,7 @@ import { TrackerDetailsWrap } from "./_components/tracker-details-wrap";
 import { limitCharacters } from "@/lib/utils";
 
 
-export default async function TrackerSessionPage({
+export default async function TrackerPage({
   params,
 }: {
   params: Promise<{ trackerId: string }>

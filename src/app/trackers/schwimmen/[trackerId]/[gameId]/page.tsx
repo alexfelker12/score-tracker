@@ -5,7 +5,7 @@ import { GameWrap, LoadingGame } from "./_components/game-wrap";
 import { Suspense } from "react";
 
 
-export default async function TrackerSessionPage({
+export default async function GamePage({
   params,
 }: {
   params: Promise<{ trackerId: string, gameId: string }>
@@ -45,7 +45,7 @@ export default async function TrackerSessionPage({
       <Breadcrumbs navTrail={navTrail} />
 
       <Suspense fallback={<LoadingGame />}>
-        <GameWrap gameId={gameId} />
+        <GameWrap gameId={gameId} trackerId={trackerId} />
       </Suspense>
     </main>
   );

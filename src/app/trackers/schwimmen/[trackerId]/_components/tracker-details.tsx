@@ -8,6 +8,7 @@ import { getTrackerById } from "@/server/actions/tracker/actions";
 
 import { Loader2Icon } from "lucide-react";
 
+import { TimeElapsed } from "../../_components/trackers";
 import { CreateGameForm } from "./create-game-form";
 import { TrackerDetailsWrapProps } from "./tracker-details-wrap";
 
@@ -30,12 +31,12 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
   return (
     <div className="space-y-4">
 
-      <p>
-        Name: {data.data.displayName}
+      <p className="font-semibold text-xl">
+        {data.data.displayName}
       </p>
 
       <div>
-        <h3>Player:</h3>
+        <h3>Players:</h3>
         {data.data.players.map((player) => {
           return (
             <div key={player.id} className="flex gap-2"><span>-</span><span>{player.displayName}</span></div>
@@ -50,10 +51,11 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
             return (
               <div
                 key={game.id}
-                className="flex gap-2"
+                className="flex flex-wrap gap-x-2 mb-2"
               >
                 <span>-</span>
                 <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>{game.id} - {game.status}</Link>
+                <span className="ml-[calc(6.41px+.5rem)] text-muted-foreground text-sm"><TimeElapsed createdAt={game.createdAt} /></span>
               </div>
             )
           })
