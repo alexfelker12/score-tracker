@@ -46,6 +46,7 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
 
       <div>
         <h3>Games:</h3>
+        {/* display games as tabs, each tab has games based on status */}
         {data.data.games.length > 0
           ? data.data.games.map((game) => {
             return (

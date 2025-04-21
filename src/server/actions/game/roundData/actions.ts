@@ -19,6 +19,7 @@ async function createRoundForGame(params: {
     data: {
       game: {
         connect: {
+          status: "ACTIVE",
           id: gameId
         }
       },
@@ -54,6 +55,9 @@ async function deleteRounds(params: {
       gameId,
       round: {
         gt: roundNumber
+      },
+      game: {
+        status: "ACTIVE"
       }
     }
   })

@@ -56,23 +56,31 @@ export const PlayerList = () => {
     //* if current round is not the latest round first delete rounds greater than current round
     if (getLatestRound().round > currentRoundNumber) {
       deleteRoundsFrom({ gameId: game.id, roundNumber: currentRoundNumber }, {
-        onSuccess: () => {
-          createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
-            onSettled: () => {
-              addRound(newRoundData)
-              setAction(ActionStatus.ISIDLE)
-            }
-          })
-        },
-        onError: () => {
-          setAction(ActionStatus.ISIDLE)
+        onSettled: (data) => {
+          //* only successful for unfinished games
+          if (data && data.data) {
+            createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
+              onSettled: (data) => {
+                //* only successful for unfinished games
+                if (data && data.data) {
+                  addRound(newRoundData)
+                }
+                setAction(ActionStatus.ISIDLE)
+              }
+            })
+          } else {
+            setAction(ActionStatus.ISIDLE)
+          }
         }
       })
     } else {
       //* else no rounds have to be deleted and latest round can simply be created
       createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
-        onSettled: () => {
-          addRound(newRoundData)
+        onSettled: (data) => {
+          //* only successful for unfinished games
+          if (data && data.data) {
+            addRound(newRoundData)
+          }
           setAction(ActionStatus.ISIDLE)
         }
       })

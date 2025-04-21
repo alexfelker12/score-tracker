@@ -20,8 +20,6 @@ type SchwimmenGameState = {
   currentRoundNumber: number
 }
 
-// TODO: actions to set round data and a "finish game" action to set [general] game data
-// ? TODO: actions to "go back" (ctrl+z) and "go forward" (ctrl+shift+z) ...
 type SchwimmenGameActions = {
   init: (gameState: SchwimmenGameState) => void
 

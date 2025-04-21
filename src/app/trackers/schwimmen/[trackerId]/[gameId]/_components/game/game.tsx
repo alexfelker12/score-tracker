@@ -60,6 +60,7 @@ export const Game = (params: GameParams) => {
 
   //* on game finish, update game status
   React.useEffect(() => {
+    console.log(ready && thisGame.status === "ACTIVE")
     if (ready && thisGame.status === "ACTIVE") {
       const winningPlayer = checkWinCondition("latest")
       const lastRound = getLatestRound()
