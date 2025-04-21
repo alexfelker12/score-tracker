@@ -110,7 +110,7 @@ export const TrackerCard = ({
             {/* creator */}
             <span>created by {tracker.creatorId === userId
               ? "you"
-              : tracker.creator.displayUsername
+              : tracker.creator && (tracker.creator.displayUsername || tracker.creator.name)
             }</span>
 
             <div role="presentation" aria-hidden="true">-</div>

@@ -27,7 +27,7 @@ export const GameWrap = async (gameParams: GameWrapParams) => {
     // <HydrationBoundary
     //   state={dehydrate(qc)}
     // >
-    <Game game={game} />
+    <Game game={game} trackerId={trackerId} />
     // </HydrationBoundary>
   );
 }

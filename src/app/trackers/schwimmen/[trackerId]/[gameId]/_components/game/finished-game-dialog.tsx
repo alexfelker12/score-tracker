@@ -1,12 +1,11 @@
 "use client"
 
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+// import { useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 
 export const FinishedGameDialog = () => {
-  const { game, checkWinCondition } = useSchwimmenGameStore()
+  // const { game, checkWinCondition } = useSchwimmenGameStore()
 
-  const winningPlayer = checkWinCondition("latest")
+  // const winningPlayer = checkWinCondition("latest")
 
   // TODO: build own "dialog" (or rather overlay), because radix-ui's dialog sets everything to aria-hidden="true" and can't be used in this case
 

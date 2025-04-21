@@ -18,7 +18,7 @@ export const TrackerSchema = z.object({
   archived: z.boolean(),
   updatedAt: z.coerce.date(),
   createdAt: z.coerce.date(),
-  creatorId: z.string(),
+  creatorId: z.string().nullable(),
 })
 
 export type Tracker = z.infer<typeof TrackerSchema>
@@ -28,7 +28,7 @@ export type Tracker = z.infer<typeof TrackerSchema>
 /////////////////////////////////////////
 
 export type TrackerRelations = {
-  creator: UserWithRelations;
+  creator?: UserWithRelations | null;
   players: TrackerPlayerWithRelations[];
   games: GameWithRelations[];
 };
@@ -36,7 +36,7 @@ export type TrackerRelations = {
 export type TrackerWithRelations = z.infer<typeof TrackerSchema> & TrackerRelations
 
 export const TrackerWithRelationsSchema: z.ZodType<TrackerWithRelations> = TrackerSchema.merge(z.object({
-  creator: z.lazy(() => UserWithRelationsSchema),
+  creator: z.lazy(() => UserWithRelationsSchema).nullable(),
   players: z.lazy(() => TrackerPlayerWithRelationsSchema).array(),
   games: z.lazy(() => GameWithRelationsSchema).array(),
 }))

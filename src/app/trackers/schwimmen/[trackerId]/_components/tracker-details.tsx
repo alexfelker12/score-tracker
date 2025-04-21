@@ -10,7 +10,7 @@ import { Loader2Icon } from "lucide-react";
 
 import { TimeElapsed } from "../../_components/trackers";
 import { CreateGameForm } from "./create-game-form";
-import { TrackerDetailsWrapProps } from "./tracker-details-wrap";
+import { TrackerDetailsWrapProps } from "../page";
 
 
 export type TrackerDetailsProps = TrackerDetailsWrapProps & {}

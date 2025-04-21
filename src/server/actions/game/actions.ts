@@ -15,7 +15,6 @@ async function findGameById(gameId: string) {
     include: {
       tracker: true,
       participants: true,
-      gameData: true,
       rounds: true
     }
   })
@@ -69,14 +68,10 @@ async function createGameWithParticipants(params: {
         }
       },
       gameData: {
-        create: {
-          data: {
-            type: "SCHWIMMEN",
-            swimming: "",
-            winner: "",
-            winByNuke: false
-          }
-        }
+        type: "SCHWIMMEN",
+        swimming: "",
+        winner: "",
+        winByNuke: false
       }
     },
     include: {
@@ -124,11 +119,12 @@ export async function createGame(...args: CreateGameArgs) {
 
 //*** POST
 //* create game
-async function updateGameStatusById(params: {
+async function updateGameById(params: {
   gameId: string
   newStatus: Game["status"]
+  gameData: Game["gameData"]
 }) {
-  const { gameId, newStatus } = params
+  const { gameId, newStatus, gameData } = params
 
   return await prisma.game.update({
     where: {
@@ -136,16 +132,17 @@ async function updateGameStatusById(params: {
       status: "ACTIVE"
     },
     data: {
-      status: newStatus
+      status: newStatus,
+      gameData
     }
   })
 }
-export type UpdateGameStatusReturn = Prisma.PromiseReturnType<typeof updateGameStatusById>
-export type UpdateGameStatusArgs = Parameters<typeof updateGameStatusById>
+export type UpdateGameStatusReturn = Prisma.PromiseReturnType<typeof updateGameById>
+export type UpdateGameStatusArgs = Parameters<typeof updateGameById>
 
-export async function updateGameStatus(...args: UpdateGameStatusArgs) {
+export async function updateGameStatusAndData(...args: UpdateGameStatusArgs) {
   const { data, error } = await tryCatch<UpdateGameStatusReturn>(
-    updateGameStatusById(...args)
+    updateGameById(...args)
   )
   if (error) {
     console.log(error)

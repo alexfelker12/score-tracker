@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { auth } from "@/lib/auth"
 import { getQueryClient } from "@/lib/get-query-client"
-import { cn } from "@/lib/utils"
+import { cn, isUniqueKey } from "@/lib/utils"
 import { participantsSchemaBase } from "@/schema/participants"
 import { createTracker } from "@/server/actions/tracker/actions"
 import { getOtherUsers } from "@/server/actions/user/actions"
@@ -90,8 +90,10 @@ export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: Tr
   const { mutate, isPending } = useMutation({
     mutationKey: ['tracker-create', trackerType],
     mutationFn: createTracker,
-    onSettled: async (data, error) => {
-      if (!error && data && data.data) {
+    onSettled: async (data) => {
+      if (!data) return;
+
+      if (data.data) {
         const redirectUrl = `/trackers/schwimmen/${data.data.id}-${encodeURIComponent(data.data.displayName)}`
 
         toast.success("Tracker was created successfully", {
@@ -105,6 +107,20 @@ export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: Tr
 
         //* invalidate query to refetch latest data
         await qc.invalidateQueries({ queryKey: ["trackers", trackerType] })
+      } else if (data.error) {
+        if (data.error.code === "P2002" && data.error.meta) {
+          const errorMessage = isUniqueKey(data.error.meta.target as string[], ["trackerId", "displayName"])
+            ? "Participant names must be unique"
+            : "There are duplicate unique values"
+
+          toast.error("Tracker could not be created", {
+            description: errorMessage
+          })
+
+          form.setError("root", {
+            message: errorMessage
+          })
+        }
       }
     },
   })
@@ -122,7 +138,10 @@ export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: Tr
   }
 
   const handleSave = (participant: TrackerParticipant) => {
-    if (canAddfield) append(participant)
+    if (!canAddfield) return;
+    
+    form.clearErrors("root")
+    append(participant)
   }
 
   return (
@@ -170,7 +189,10 @@ export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: Tr
                       variant="ghost"
                       size="icon"
                       disabled={!canDelField}
-                      onClick={() => remove(index)}
+                      onClick={() => {
+                        remove(index)
+                        form.clearErrors("root")
+                      }}
                     ><Trash2Icon /></Button>
                     : <div className="place-items-center grid size-9">
                       <span className="text-muted-foreground text-sm italic">you</span>
@@ -192,6 +214,10 @@ export const TrackerForm = ({ session, minPlayers, maxPlayers, trackerType }: Tr
           }
 
         </div>
+
+        <p className="text-destructive">
+          {form.formState.errors.root && form.formState.errors.root.message}
+        </p>
 
         <div className="flex justify-end">
           <Button

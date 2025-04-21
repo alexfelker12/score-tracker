@@ -19,11 +19,10 @@ import { Button } from "@/components/ui/button";
 
 // TODO Prio 4: settings
 
-export type SettingsParams = {
-
-}
-export const Settings = (params: SettingsParams) => {
-  const { } = params
+// export type SettingsParams = {}
+// params: SettingsParams
+export const Settings = () => {
+  // const { } = params
 
   //* hooks here
   const isAction = useSchwimmenGameStore((state) => state.isAction)

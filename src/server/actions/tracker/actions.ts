@@ -219,7 +219,16 @@ export async function createTracker(...args: CreateSingleTrackerArgs) {
     createSingleTracker(...args)
   )
 
-  if (error) return { error }
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    //* unique constraint failed
+
+    const prismaError = {
+      meta: error.meta,
+      code: error.code
+    }
+
+    return { error: prismaError }
+  }
 
   return { data }
 }

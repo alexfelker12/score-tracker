@@ -115,8 +115,8 @@ model Tracker {
   updatedAt   DateTime    @updatedAt
   createdAt   DateTime    @default(now())
 
-  creatorId String
-  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String?
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
 
   players TrackerPlayer[]
   games   Game[]
@@ -133,9 +133,10 @@ model TrackerPlayer {
   tracker   Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
 
   playerId String?
-  player   User?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  player   User?   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([trackerId, playerId])
+  @@unique([trackerId, displayName])
 }
 
 //* Game tables
@@ -154,20 +155,13 @@ model Game {
   trackerId String
   tracker   Tracker @relation(fields: [trackerId], references: [id], onDelete: Restrict)
 
-  gameData GameData?
+  /// ![PrismaJson.GameData]
+  gameData Json
 
   participants GameParticipant[]
   rounds    GameRound[]
 
   @@index([trackerId])
-}
-
-model GameData {
-  /// ![PrismaJson.GameData]
-  data Json
-
-  gameId String @unique
-  game   Game   @relation(fields: [gameId], references: [id])
 }
 
 model GameRound {

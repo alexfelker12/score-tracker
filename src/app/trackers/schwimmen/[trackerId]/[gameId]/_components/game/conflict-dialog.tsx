@@ -1,7 +1,7 @@
 "use client"
 
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useConfirmation } from "@/hooks/use-confirmation";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export const ConflictDialog = () => {
   const { isConfirmationOpen, confirmationData, handleConfirm } = useConfirmation();

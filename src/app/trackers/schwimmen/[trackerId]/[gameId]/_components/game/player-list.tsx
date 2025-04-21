@@ -16,18 +16,33 @@ import { SchwimmenRound } from "prisma/json_types/types";
 
 export const PlayerList = () => {
   //* hooks here
-  const { action, setAction, getRound, getPlayer, currentRoundNumber, subtractLifeOf, addRound, game, getLatestRound, players, checkNukeConflict, detonateNuke, checkWinCondition } = useSchwimmenGameStore()
+  const {
+    action,
+    game,
+    currentRoundNumber,
+    setAction,
+    getRound,
+    getPlayer,
+    subtractLifeOf,
+    addRound,
+    getLatestRound,
+    checkNukeConflict,
+    detonateNuke,
+    checkWinCondition
+  } = useSchwimmenGameStore()
   const current = getRound(currentRoundNumber)
 
   const { showConfirmation } = useConfirmation()
 
   //* mutations for actions
   //* POST round
-  const { mutate: createLatestRound, isPending: isLatestRoundPending } = useMutation({
+  // , isPending: isLatestRoundPending
+  const { mutate: createLatestRound } = useMutation({
     mutationFn: createLatestRoundForGame,
   })
   //* DELETE rounds
-  const { mutate: deleteRoundsFrom, isPending: isDeleteRoundsPending } = useMutation({
+  // , isPending: isDeleteRoundsPending
+  const { mutate: deleteRoundsFrom } = useMutation({
     mutationFn: deleteRoundsFromRoundNumber,
   })
 
@@ -102,10 +117,10 @@ export const PlayerList = () => {
         break
 
       case ActionStatus.ISIDLE:
-      // basically do nothing
+        // basically do nothing
 
-      //* after every action check if win condition is met (only one player alive)
-      checkWinCondition()
+        //* after every action check if win condition is met (only one player alive)
+        checkWinCondition()
     }
   }
 

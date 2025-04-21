@@ -8,21 +8,21 @@ import { GameRound } from "@prisma/client";
 import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
-import { FindGameByIdReturn, updateGameStatus } from "@/server/actions/game/actions";
+import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/game/actions";
 
 //* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 
 //* local
+import { getQueryClient } from "@/lib/get-query-client";
+import { useMutation } from "@tanstack/react-query";
 import { LoadingGame } from "../game-wrap";
-import { RoundHistory } from "./round-history";
-import { Settings } from "./settings";
 import { Actions } from "./actions";
-import { PlayerList } from "./player-list";
 import { ConflictDialog } from "./conflict-dialog";
 import { FinishedGameDialog } from "./finished-game-dialog";
-import { useMutation } from "@tanstack/react-query";
-import { getQueryClient } from "@/lib/get-query-client";
+import { PlayerList } from "./player-list";
+import { RoundHistory } from "./round-history";
+import { Settings } from "./settings";
 
 export type GameParams = {
   game: NonNullable<FindGameByIdReturn>
@@ -36,21 +36,21 @@ export const Game = (params: GameParams) => {
     ready,
     currentRoundNumber,
     game: thisGame,
-    gameData,
     rounds,
     init,
     getPlayer,
     getCurrentRound,
     checkWinCondition,
-    finishGame
+    finishGame,
+    getLatestRound
   } = useSchwimmenGameStore()
 
+  //* initialize game
   React.useEffect(() => {
     init({
       ready: true,
       game: game,
       players: game.participants,
-      gameData: game.gameData?.data.type === "SCHWIMMEN" ? game.gameData.data : gameData,
       rounds: game.rounds.filter((round): round is Omit<GameRound, "data"> & { data: SchwimmenRound } => round.data.type === "SCHWIMMEN"),
       action: ActionStatus.ISIDLE,
       //* default latest round
@@ -58,12 +58,25 @@ export const Game = (params: GameParams) => {
     })
   }, [useSchwimmenGameStore])
 
+  //* on game finish, update game status
   React.useEffect(() => {
     if (ready && thisGame.status === "ACTIVE") {
-      if (!checkWinCondition("latest")) return; 
-      
+      const winningPlayer = checkWinCondition("latest")
+      const lastRound = getLatestRound()
+
+      if (!winningPlayer) return;
+
       //* update game status to "COMPLETED"
-      updateStatus({ gameId: game.id, newStatus: "COMPLETED" }, {
+      updateGame({
+        gameId: game.id,
+        newStatus: "COMPLETED",
+        gameData: {
+          type: "SCHWIMMEN",
+          swimming: lastRound.data.playerSwimming!,
+          winByNuke: !!lastRound.data.nukeBy,
+          winner: winningPlayer.id
+        }
+      }, {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
           finishGame()
@@ -75,8 +88,9 @@ export const Game = (params: GameParams) => {
   const qc = getQueryClient()
 
   //* PUT game status
-  const { mutate: updateStatus, isPending: isStatusUpdatePending } = useMutation({
-    mutationFn: updateGameStatus,
+  // isPending: isStatusUpdatePending
+  const { mutate: updateGame } = useMutation({
+    mutationFn: updateGameStatusAndData,
   })
 
   if (!ready) return <LoadingGame />

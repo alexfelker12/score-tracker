@@ -1,5 +1,5 @@
 import { Game, GameParticipant, GameRound } from "@prisma/client"
-import { SchwimmenGame, SchwimmenRound } from "prisma/json_types/types"
+import { SchwimmenRound } from "prisma/json_types/types"
 import { create } from "zustand"
 
 export enum ActionStatus {
@@ -14,7 +14,6 @@ type Round = Omit<GameRound, "data"> & { data: SchwimmenRound }
 type SchwimmenGameState = {
   ready: boolean
   game: Game
-  gameData: SchwimmenGame | null
   rounds: Round[]
   players: GameParticipant[]
   action: ActionStatus
@@ -43,9 +42,6 @@ type SchwimmenGameActions = {
   checkWinCondition: (type?: "latest") => GameParticipant | undefined
 
   finishGame: () => void
-
-  // TODO:
-  setStaticGameData?: () => void
 }
 
 export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
@@ -55,7 +51,6 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   ready: false,
   //* type cast: game.tsx only gets rendered when there is a game, therefore game will always be set on init 
   game: {} as Game,
-  gameData: null,
   rounds: [],
   players: [],
   action: ActionStatus.ISIDLE,
@@ -182,11 +177,12 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     const currentRound = type === "latest" ? get().getCurrentRound() : get().getLatestRound()
     const playersAlive = currentRound.data.players.filter((player) => player.lifes > 0)
 
-    if (playersAlive.length > 1) return;
+    if (playersAlive.length !== 1) return;
 
     return get().getPlayer(playersAlive[0].id)
   },
 
+  //* post finish
   finishGame: () => set((state) => ({
     game: {
       ...state.game,

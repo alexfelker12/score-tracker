@@ -1,9 +1,8 @@
 import { z } from 'zod';
+import { JsonValueSchema } from '../inputTypeSchemas/JsonValueSchema'
 import { GameStatusSchema } from '../inputTypeSchemas/GameStatusSchema'
 import { TrackerWithRelationsSchema } from './TrackerSchema'
 import type { TrackerWithRelations } from './TrackerSchema'
-import { GameDataWithRelationsSchema } from './GameDataSchema'
-import type { GameDataWithRelations } from './GameDataSchema'
 import { GameParticipantWithRelationsSchema } from './GameParticipantSchema'
 import type { GameParticipantWithRelations } from './GameParticipantSchema'
 import { GameRoundWithRelationsSchema } from './GameRoundSchema'
@@ -19,6 +18,10 @@ export const GameSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   trackerId: z.string(),
+  /**
+   * ![PrismaJson.GameData]
+   */
+  gameData: JsonValueSchema,
 })
 
 export type Game = z.infer<typeof GameSchema>
@@ -29,7 +32,6 @@ export type Game = z.infer<typeof GameSchema>
 
 export type GameRelations = {
   tracker: TrackerWithRelations;
-  gameData?: GameDataWithRelations | null;
   participants: GameParticipantWithRelations[];
   rounds: GameRoundWithRelations[];
 };
@@ -38,7 +40,6 @@ export type GameWithRelations = z.infer<typeof GameSchema> & GameRelations
 
 export const GameWithRelationsSchema: z.ZodType<GameWithRelations> = GameSchema.merge(z.object({
   tracker: z.lazy(() => TrackerWithRelationsSchema),
-  gameData: z.lazy(() => GameDataWithRelationsSchema).nullable(),
   participants: z.lazy(() => GameParticipantWithRelationsSchema).array(),
   rounds: z.lazy(() => GameRoundWithRelationsSchema).array(),
 }))

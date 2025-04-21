@@ -136,3 +136,10 @@ export const limitCharacters = (longString: string | undefined, charLimit: numbe
 
   return shortenedString
 }
+
+export const isUniqueKey = (arr1: string[], arr2: string[]) => {
+  if (arr1.length !== 2 || arr2.length !== 2) return false;
+
+  return (arr1[0] === arr2[0] && arr1[1] === arr2[1]) ||
+    (arr1[0] === arr2[1] && arr1[1] === arr2[0]);
+}
