@@ -117,12 +117,12 @@ export async function createGame(...args: CreateGameArgs) {
 }
 
 
-//*** POST
-//* create game
+//*** PUT
+//* update game status
 async function updateGameById(params: {
   gameId: string
   newStatus: Game["status"]
-  gameData: Game["gameData"]
+  gameData?: Game["gameData"]
 }) {
   const { gameId, newStatus, gameData } = params
 

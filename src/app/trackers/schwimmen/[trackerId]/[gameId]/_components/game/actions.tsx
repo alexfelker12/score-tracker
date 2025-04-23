@@ -1,14 +1,21 @@
 "use client"
 
-import { Button } from "@/components/ui/button";
-import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
-import { HeartCrackIcon, BombIcon, XIcon } from "lucide-react";
+//* next/react
 import React from "react";
+
+//* stores
+import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+
+//* icons
+import { HeartCrackIcon, BombIcon, XIcon } from "lucide-react";
+
+//* components
+import { Button } from "@/components/ui/button";
 
 
 export const Actions = () => {
   //* hooks here
-  const { isAction, setAction } = useSchwimmenGameStore()
+  const { isAction, setAction, game } = useSchwimmenGameStore()
 
   return (
     <>
@@ -16,7 +23,7 @@ export const Actions = () => {
       <Button
         size="icon"
         variant="outline"
-        disabled={isAction(ActionStatus.ISNUKE)}
+        disabled={isAction(ActionStatus.ISNUKE) || game.status !== "ACTIVE"}
         onClick={() => {
           if (isAction(ActionStatus.ISSUBTRACT)) {
             setAction(ActionStatus.ISIDLE)
@@ -32,7 +39,7 @@ export const Actions = () => {
       <Button
         size="icon"
         variant="outline"
-        disabled={isAction(ActionStatus.ISSUBTRACT)}
+        disabled={isAction(ActionStatus.ISSUBTRACT) || game.status !== "ACTIVE"}
         onClick={() => {
           if (isAction(ActionStatus.ISNUKE)) {
             setAction(ActionStatus.ISIDLE)

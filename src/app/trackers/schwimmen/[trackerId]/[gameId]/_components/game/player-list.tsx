@@ -1,18 +1,19 @@
 "use client"
 
-import { useConfirmation } from "@/hooks/use-confirmation";
+//* packages
+import { SchwimmenRound } from "prisma/json_types/types";
+import { useMutation } from "@tanstack/react-query";
+
+//* server
 import { createLatestRoundForGame, deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
 import { tryCatch } from "@/server/helpers/try-catch";
+
+//* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
-import { useMutation } from "@tanstack/react-query";
-import { SchwimmenRound } from "prisma/json_types/types";
 
-/**
- ** main section:
- * listing of players with their current life and indication of the swimming player and dead players (hidden when adjusted in settings)
-*/
+//* hooks
+import { useConfirmation } from "@/hooks/use-confirmation";
 
-// TODO Prio 1: list player states and execute functions based on current action
 
 export const PlayerList = () => {
   //* hooks here
@@ -20,6 +21,7 @@ export const PlayerList = () => {
     action,
     game,
     currentRoundNumber,
+    meta,
     setAction,
     getRound,
     getPlayer,
@@ -147,6 +149,8 @@ export const PlayerList = () => {
           </p>
         )
       })}
+      <p>{meta.hideDead ? "hide" : "show"}</p>
+      <p>{meta.uiSize}</p>
     </div>
   );
 }

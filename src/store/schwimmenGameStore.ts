@@ -1,4 +1,4 @@
-import { Game, GameParticipant, GameRound } from "@prisma/client"
+import { Game, GameParticipant, GameRound, Prisma } from "@prisma/client"
 import { SchwimmenRound } from "prisma/json_types/types"
 import { create } from "zustand"
 
@@ -18,6 +18,10 @@ type SchwimmenGameState = {
   players: GameParticipant[]
   action: ActionStatus
   currentRoundNumber: number
+  meta: {
+    hideDead: boolean
+    uiSize: number[]
+  }
 }
 
 type SchwimmenGameActions = {
@@ -32,6 +36,7 @@ type SchwimmenGameActions = {
   getCurrentRound: () => Round
   getLatestRound: () => Round
   setCurrentRoundNumber: (roundNumber: number) => void
+  resetRounds: () => void
   addRound: (data: Round["data"]) => void
   subtractLifeOf: (playerId: string) => Round["data"] | undefined
   detonateNuke: (playerId: string, survivorId?: string) => Round["data"] | undefined
@@ -39,7 +44,10 @@ type SchwimmenGameActions = {
   checkNukeConflict: (playerId: string) => GameParticipant[] | undefined
   checkWinCondition: (type?: "latest") => GameParticipant | undefined
 
-  finishGame: () => void
+  finishGame: (newStatus: Exclude<Game["status"], "ACTIVE">) => void
+
+  setHideDead: (hide: boolean) => void
+  setUiSize: (size: number[]) => void
 }
 
 export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
@@ -53,6 +61,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   players: [],
   action: ActionStatus.ISIDLE,
   currentRoundNumber: 0,
+  meta: { hideDead: false, uiSize: [3] },
 
   init: (params) => set({ ...params }),
 
@@ -69,22 +78,37 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   getCurrentRound: () => get().getRound(get().currentRoundNumber),
   getLatestRound: () => get().rounds.reduce((prev, current) => (prev && prev.round > current.round) ? prev : current),
   setCurrentRoundNumber: (roundNumber) => set({ currentRoundNumber: roundNumber || 0 }),
-  addRound: (data) => set((state) => {
-    const prevRounds = state.rounds.filter((round) => round.round <= state.currentRoundNumber)
+  resetRounds: () => {
+    if (get().game.status !== "ACTIVE") return;
+    set((state) => {
+      const initialRound = state.rounds.filter((round) => round.round <= 0)
+      return {
+        rounds: [
+          ...initialRound
+        ]
+      }
+    })
+  },
+  addRound: (data) => {
+    if (get().game.status !== "ACTIVE") return;
+    set((state) => {
+      const prevRounds = state.rounds.filter((round) => round.round <= state.currentRoundNumber)
 
-    return {
-      rounds: [
-        ...prevRounds,
-        {
-          gameId: state.game.id,
-          round: state.currentRoundNumber + 1,
-          data
-        }
-      ],
-      currentRoundNumber: state.currentRoundNumber + 1
-    }
-  }),
+      return {
+        rounds: [
+          ...prevRounds,
+          {
+            gameId: state.game.id,
+            round: state.currentRoundNumber + 1,
+            data
+          }
+        ],
+        currentRoundNumber: state.currentRoundNumber + 1
+      }
+    })
+  },
   subtractLifeOf: (playerId) => {
+    if (get().game.status !== "ACTIVE") return;
     const thisRound = get().getCurrentRound()
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
@@ -116,6 +140,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     return newRoundState
   },
   detonateNuke: (playerId, survivorId) => {
+    if (get().game.status !== "ACTIVE") return;
     const thisRound = get().getCurrentRound()
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
@@ -181,11 +206,24 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   },
 
   //* post finish
-  finishGame: () => set((state) => ({
+  finishGame: (newStatus) => set((state) => ({
     game: {
       ...state.game,
-      status: "COMPLETED"
+      status: newStatus
     }
   })),
 
+  //* meta actions
+  setHideDead: (hide) => set((state) => ({
+    meta: {
+      ...state.meta,
+      hideDead: hide
+    }
+  })),
+  setUiSize: (size) => set((state) => ({
+    meta: {
+      ...state.meta,
+      uiSize: size
+    }
+  }))
 }))

@@ -6,6 +6,7 @@ import React from "react";
 //* packages
 import { GameRound } from "@prisma/client";
 import { SchwimmenRound } from "prisma/json_types/types";
+import { useMutation } from "@tanstack/react-query";
 
 //* server
 import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/game/actions";
@@ -13,9 +14,10 @@ import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/ga
 //* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 
-//* local
+//* lib
 import { getQueryClient } from "@/lib/get-query-client";
-import { useMutation } from "@tanstack/react-query";
+
+//* local
 import { LoadingGame } from "../game-wrap";
 import { Actions } from "./actions";
 import { ConflictDialog } from "./conflict-dialog";
@@ -54,13 +56,15 @@ export const Game = (params: GameParams) => {
       rounds: game.rounds.filter((round): round is Omit<GameRound, "data"> & { data: SchwimmenRound } => round.data.type === "SCHWIMMEN"),
       action: ActionStatus.ISIDLE,
       //* default latest round
-      currentRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round
+      currentRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round,
+      meta: { hideDead: false, uiSize: [3] }
     })
   }, [useSchwimmenGameStore])
 
   //* on game finish, update game status
   React.useEffect(() => {
     console.log(ready && thisGame.status === "ACTIVE")
+    console.log(thisGame.status)
     if (ready && thisGame.status === "ACTIVE") {
       const winningPlayer = checkWinCondition("latest")
       const lastRound = getLatestRound()
@@ -80,7 +84,7 @@ export const Game = (params: GameParams) => {
       }, {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
-          finishGame()
+          finishGame("COMPLETED")
         }
       })
     }
@@ -96,21 +100,17 @@ export const Game = (params: GameParams) => {
 
   if (!ready) return <LoadingGame />
 
-  // console.log(thisGame, !checkWinCondition("latest"))
-
   return (
     <div className="relative space-y-4">
-      {/* show unclosable "game is finished dialog" to indicate, that game cannot be further modified/played */}
+      {/* show "game is finished dialog" to indicate, that game cannot be further modified/played */}
       {thisGame.status !== "ACTIVE" && <FinishedGameDialog />}
 
-      <section className="flex justify-between items-center gap-4">
+      <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
 
         {/* settings & history */}
         <div className="flex gap-x-4">
           <Settings />
-          <div className="space-x-2">
-            <RoundHistory />
-          </div>
+          <RoundHistory />
         </div>
 
         <span>Round: {currentRoundNumber}</span>
@@ -122,7 +122,7 @@ export const Game = (params: GameParams) => {
 
       </section>
 
-      <section>
+      <section aria-description="Player list">
         <PlayerList />
       </section>
 

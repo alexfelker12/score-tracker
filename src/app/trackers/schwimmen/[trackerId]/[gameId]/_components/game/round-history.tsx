@@ -1,8 +1,13 @@
 "use client"
 
-import { Button } from "@/components/ui/button";
+//* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+
+//* components
 import { RedoIcon, UndoIcon } from "lucide-react";
+
+//* icons
+import { Button } from "@/components/ui/button";
 
 
 export const RoundHistory = () => {
@@ -27,7 +32,7 @@ export const RoundHistory = () => {
   }
 
   return (
-    <>
+    <div className="space-x-2">
       <Button
         size="icon"
         variant="outline"
@@ -44,6 +49,6 @@ export const RoundHistory = () => {
       >
         <RedoIcon className="size-5" />
       </Button>
-    </>
+    </div>
   );
 }
