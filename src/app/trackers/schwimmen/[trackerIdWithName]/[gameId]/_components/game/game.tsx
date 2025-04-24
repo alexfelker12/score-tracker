@@ -25,26 +25,22 @@ import { FinishedGameDialog } from "./finished-game-dialog";
 import { PlayerList } from "./player-list";
 import { RoundHistory } from "./round-history";
 import { Settings } from "./settings";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 export type GameParams = {
   game: NonNullable<FindGameByIdReturn>
   trackerId: string
+  trackerPath: string
 }
 export const Game = (params: GameParams) => {
-  const { game, trackerId } = params
+  const { game, trackerId, trackerPath } = params
+
+  console.log(trackerId)
 
   //* hooks here
   const {
-    ready,
-    currentRoundNumber,
-    game: thisGame,
-    rounds,
-    init,
-    getPlayer,
-    getCurrentRound,
-    checkWinCondition,
-    finishGame,
-    getLatestRound
+    ready, currentRoundNumber, game: thisGame, rounds,
+    init, getPlayer, getCurrentRound, checkWinCondition, finishGame, getLatestRound
   } = useSchwimmenGameStore()
 
   //* initialize game
@@ -57,7 +53,6 @@ export const Game = (params: GameParams) => {
       action: ActionStatus.ISIDLE,
       //* default latest round
       currentRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round,
-      meta: { hideDead: false, uiSize: [3] }
     })
   }, [useSchwimmenGameStore])
 
@@ -65,7 +60,7 @@ export const Game = (params: GameParams) => {
   React.useEffect(() => {
     console.log(ready && thisGame.status === "ACTIVE")
     console.log(thisGame.status)
-    if (ready && thisGame.status === "ACTIVE") {
+    if (ready && thisGame.status === "ACTIVE" && game.status === "ACTIVE") {
       const winningPlayer = checkWinCondition("latest")
       const lastRound = getLatestRound()
 
@@ -103,7 +98,7 @@ export const Game = (params: GameParams) => {
   return (
     <div className="relative space-y-4">
       {/* show "game is finished dialog" to indicate, that game cannot be further modified/played */}
-      {thisGame.status !== "ACTIVE" && <FinishedGameDialog />}
+      {thisGame.status !== "ACTIVE" && <FinishedGameDialog trackerPath={trackerPath} />}
 
       <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
 

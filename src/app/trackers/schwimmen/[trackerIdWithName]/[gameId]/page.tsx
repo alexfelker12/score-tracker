@@ -8,11 +8,12 @@ import { Suspense } from "react";
 export default async function GamePage({
   params,
 }: {
-  params: Promise<{ trackerId: string, gameId: string }>
+  params: Promise<{ trackerIdWithName: string, gameId: string }>
 }) {
-  const { trackerId, gameId } = await params
+  const { trackerIdWithName, gameId } = await params
 
-  const trackerIdSplits = trackerId.split("-", 2);
+  const trackerIdSplits = trackerIdWithName.split("-", 2);
+  const trackerId = trackerIdSplits[0]
   const trackerName = decodeURIComponent(trackerIdSplits[1])
   const trackerNameShort = limitCharacters(trackerName, 15) || "Tracker"
   const gameIdShort = limitCharacters(gameId, 5) || "Game"
@@ -33,7 +34,7 @@ export default async function GamePage({
     },
     {
       name: trackerNameShort,
-      href: `/trackers/schwimmen/${trackerId}`
+      href: `/trackers/schwimmen/${trackerIdWithName}`
     },
     {
       name: gameIdShort
@@ -45,7 +46,7 @@ export default async function GamePage({
       <Breadcrumbs navTrail={navTrail} />
 
       <Suspense fallback={<LoadingGame />}>
-        <GameWrap gameId={gameId} trackerId={trackerId} />
+        <GameWrap gameId={gameId} trackerId={trackerId} trackerPath={trackerIdWithName} />
       </Suspense>
     </main>
   );

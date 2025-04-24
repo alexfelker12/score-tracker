@@ -18,10 +18,6 @@ type SchwimmenGameState = {
   players: GameParticipant[]
   action: ActionStatus
   currentRoundNumber: number
-  meta: {
-    hideDead: boolean
-    uiSize: number[]
-  }
 }
 
 type SchwimmenGameActions = {
@@ -45,9 +41,6 @@ type SchwimmenGameActions = {
   checkWinCondition: (type?: "latest") => GameParticipant | undefined
 
   finishGame: (newStatus: Exclude<Game["status"], "ACTIVE">) => void
-
-  setHideDead: (hide: boolean) => void
-  setUiSize: (size: number[]) => void
 }
 
 export type SchwimmenGameStore = SchwimmenGameState & SchwimmenGameActions
@@ -61,7 +54,6 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   players: [],
   action: ActionStatus.ISIDLE,
   currentRoundNumber: 0,
-  meta: { hideDead: false, uiSize: [3] },
 
   init: (params) => set({ ...params }),
 
@@ -212,18 +204,4 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
       status: newStatus
     }
   })),
-
-  //* meta actions
-  setHideDead: (hide) => set((state) => ({
-    meta: {
-      ...state.meta,
-      hideDead: hide
-    }
-  })),
-  setUiSize: (size) => set((state) => ({
-    meta: {
-      ...state.meta,
-      uiSize: size
-    }
-  }))
 }))

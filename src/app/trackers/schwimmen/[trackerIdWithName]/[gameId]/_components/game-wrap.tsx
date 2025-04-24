@@ -7,9 +7,10 @@ import { Game } from "./game/game";
 export type GameWrapParams = {
   trackerId: string
   gameId: string
+  trackerPath: string
 }
 export const GameWrap = async (gameParams: GameWrapParams) => {
-  const { gameId, trackerId } = gameParams
+  const { gameId, trackerId, trackerPath } = gameParams
   // const qc = getQueryClient()
   // await qc.prefetchQuery({
   //   queryKey: ["trackers", trackerId, gameId],
@@ -27,7 +28,7 @@ export const GameWrap = async (gameParams: GameWrapParams) => {
     // <HydrationBoundary
     //   state={dehydrate(qc)}
     // >
-    <Game game={game} trackerId={trackerId} />
+    <Game game={game} trackerId={trackerId} trackerPath={trackerPath} />
     // </HydrationBoundary>
   );
 }

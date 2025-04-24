@@ -13,12 +13,12 @@ import { TrackerDetails } from "./_components/tracker-details";
 export default async function TrackerPage({
   params,
 }: {
-  params: Promise<{ trackerId: string }>
+  params: Promise<{ trackerIdWithName: string }>
 }) {
-  const { trackerId } = await params
+  const { trackerIdWithName } = await params
 
-  const trackerIdSplits = trackerId.split("-", 2);
-  const actualId = trackerIdSplits[0]
+  const trackerIdSplits = trackerIdWithName.split("-", 2);
+  const trackerId = trackerIdSplits[0]
   const displayName = decodeURIComponent(trackerIdSplits[1])
   const navTrailName = limitCharacters(displayName, 11) || "Tracker"
 
@@ -37,7 +37,7 @@ export default async function TrackerPage({
   return (
     <main className="flex flex-col gap-6">
       <Breadcrumbs lastTrail={dynNavTrail} />
-      <TrackerDetailsWrap trackerId={actualId} />
+      <TrackerDetailsWrap trackerId={trackerId} />
     </main>
   );
 }

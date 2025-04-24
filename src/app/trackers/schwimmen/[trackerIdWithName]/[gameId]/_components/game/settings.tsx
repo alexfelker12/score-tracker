@@ -15,15 +15,15 @@ import { CheckIcon, Loader2Icon, SettingsIcon, XIcon } from "lucide-react";
 
 //* components
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Toggle } from "@/components/ui/toggle";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { useMutation } from "@tanstack/react-query";
-import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
-import React from "react";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
+import { useMutation } from "@tanstack/react-query";
+import React from "react";
+import { updateGameStatusAndData } from "@/server/actions/game/actions";
 
 /**
  ** head buttons:
@@ -43,33 +43,31 @@ export const Settings = () => {
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false)
   const [resetOpen, setResetOpen] = React.useState<boolean>(false)
   const [cancelOpen, setCancelOpen] = React.useState<boolean>(false)
-
-  const {
-    game,
-    meta,
-    isAction,
-    setHideDead,
-    setUiSize,
-    getLatestRound,
-    setCurrentRoundNumber,
-    resetRounds
-  } = useSchwimmenGameStore()
-
-  const isFirstRound = getLatestRound().round === 0
+  // stores
+  const { game, isAction, getLatestRound, setCurrentRoundNumber, resetRounds, finishGame } = useSchwimmenGameStore()
+  const { meta, setHideDead, setUiSize } = useSchwimmenMetaStore()
 
   //* DELETE reset game - delete every round from round 0
-  const { mutate: deleteRoundsFrom, isPending: isResetPending } = useMutation({
-    mutationFn: deleteRoundsFromRoundNumber,
-  })
+  const { mutate: deleteRoundsFrom, isPending: isResetPending } = useMutation({ mutationFn: deleteRoundsFromRoundNumber })
+  //* PUT game status - cancel game if active
+  const { mutate: updateGame, isPending: isCancelPending } = useMutation({ mutationFn: updateGameStatusAndData })
+
+  //* checks
+  const isFirstRound = getLatestRound().round === 0
+  const isResetOpenOrPending = isResetPending || resetOpen
+  const isCancelOpenOrPending = isCancelPending || cancelOpen
+  const isResetOrCancelOpenOrPending = isResetOpenOrPending || isCancelOpenOrPending
 
   const handleReset = () => {
-    if (isResetPending || isFirstRound || game.status !== "ACTIVE") return;
+    //* only do action when 
+    if (isCancelOpenOrPending || isFirstRound || game.status !== "ACTIVE") return;
 
     setResetOpen(false)
 
     deleteRoundsFrom({ gameId: game.id, roundNumber: 0 }, {
       onSettled: (data) => {
         if (data && data.data) {
+          //* when reset was successful sync with store and close settings
           setCurrentRoundNumber(0)
           resetRounds()
           setDialogOpen(false)
@@ -78,7 +76,22 @@ export const Settings = () => {
     })
   }
 
-  const handleCancel = () => { }
+  const handleCancel = () => {
+    if (isResetOpenOrPending || game.status !== "ACTIVE") return;
+
+    setCancelOpen(false)
+
+    updateGame({ gameId: game.id, newStatus: "CANCELLED" }, {
+      onSettled: (data) => {
+        if (data && data.data) {
+          //* when reset was successful sync with store and close settings
+          finishGame("CANCELLED")
+          setDialogOpen(false)
+        }
+      }
+    })
+  }
+
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -112,7 +125,11 @@ export const Settings = () => {
               <Switch
                 id="hide-dead" aria-describedby="hide-dead-desc" aria-labelledby="hide-dead-label"
                 checked={meta.hideDead}
-                onCheckedChange={(checked) => setHideDead(checked)}
+                onCheckedChange={(checked) => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setHideDead(checked)
+                }}
+                disabled={isResetOrCancelOpenOrPending}
               />
             </div>
           </div>
@@ -128,9 +145,13 @@ export const Settings = () => {
                 id="ui-sizer" aria-labelledby="ui-sizer-label"
                 min={1} max={5} step={1}
                 value={meta.uiSize}
-                onValueChange={(value) => setUiSize(value)}
-              // onPointerDown={() => console.log("pointer down")}
-              // onPointerUp={() => console.log("pointer up")}
+                onValueChange={(value) => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setUiSize(value)
+                }}
+                // onPointerDown={() => console.log("pointer down")}
+                // onPointerUp={() => console.log("pointer up")}
+                disabled={isResetOrCancelOpenOrPending}
               />
               <span className="text-muted-foreground text-xs leading-none">XL</span>
             </div>
@@ -142,25 +163,29 @@ export const Settings = () => {
               <h4 id="reset-game-label" className={cn("font-medium text-base", isFirstRound && "text-muted-foreground")}>Reset game</h4>
             </div>
             <div className="flex justify-between items-center gap-4 w-full">
-              <span id="reset-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]"><span className={cn("", isFirstRound ? "text-muted-foreground" : "text-destructive-foreground")}></span>
+              <span id="reset-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]">
+                <span className={cn("", isFirstRound ? "text-muted-foreground" : "text-destructive-foreground")}></span>
                 {isFirstRound
-                  ? "Reset not possible: there is no progress yet"
-                  : "Caution: Game progress will be lost after resetting the game!"
-                }</span>
+                  ? <span>Reset not possible: there is no progress yet</span>
+                  : <span><span className="text-destructive-foreground">Caution:</span> Game progress will be lost after resetting the game!</span>
+                }
+              </span>
               <Button
                 id="reset-game" aria-describedby="reset-game-desc" aria-labelledby="reset-game-label"
                 variant="secondary"
                 onClick={() => setResetOpen(!resetOpen)}
-                disabled={isResetPending || isFirstRound || game.status !== "ACTIVE"}
-              >{isResetPending ? <Loader2Icon className="text-primary animate-spin" /> : "Reset"}</Button>
+                disabled={(isResetOrCancelOpenOrPending && !resetOpen) || isFirstRound || game.status !== "ACTIVE"}
+              >
+                {isResetPending
+                  ? <Loader2Icon className="text-primary animate-spin" />
+                  : resetOpen ? <XIcon /> : "Reset"
+                }
+              </Button>
             </div>
             {resetOpen && <div className="mt-2 w-full">
               <div className="flex justify-between items-center">
                 <span>Are you sure?</span>
-                <div className="flex gap-3">
-                  <Button variant="secondary" onClick={() => setResetOpen(false)}><XIcon /></Button>
-                  <Button variant="destructive" onClick={handleReset}><CheckIcon /></Button>
-                </div>
+                <Button variant="destructive" onClick={handleReset}><CheckIcon /></Button>
               </div>
             </div>}
           </div>
@@ -174,10 +199,23 @@ export const Settings = () => {
               <span id="cancel-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]"><span className="text-destructive-foreground">Caution:</span> A canceled game cannot be played afterwards!</span>
               <Button
                 id="cancel-game" aria-describedby="cancel-game-desc" aria-labelledby="cancel-game-label"
-                variant="destructive"
-                onClick={() => console.log("cancel")}
-              >Cancel</Button>
+                variant={cancelOpen ? "secondary" : "destructive"}
+                onClick={() => setCancelOpen(!cancelOpen)}
+                className="transition-colors"
+                disabled={(isResetOrCancelOpenOrPending && !cancelOpen) || game.status !== "ACTIVE"}
+              >
+                {isCancelPending
+                  ? <Loader2Icon className="text-primary animate-spin" />
+                  : cancelOpen ? <XIcon /> : "Cancel"
+                }
+              </Button>
             </div>
+            {cancelOpen && <div className="mt-2 w-full">
+              <div className="flex justify-between items-center">
+                <span>Are you sure?</span>
+                <Button variant="destructive" onClick={handleCancel}><CheckIcon /></Button>
+              </div>
+            </div>}
           </div>
 
         </div>

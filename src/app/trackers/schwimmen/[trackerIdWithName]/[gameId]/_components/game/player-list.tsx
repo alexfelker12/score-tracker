@@ -13,25 +13,17 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 
 //* hooks
 import { useConfirmation } from "@/hooks/use-confirmation";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 
 export const PlayerList = () => {
   //* hooks here
   const {
-    action,
-    game,
-    currentRoundNumber,
-    meta,
-    setAction,
-    getRound,
-    getPlayer,
-    subtractLifeOf,
-    addRound,
-    getLatestRound,
-    checkNukeConflict,
-    detonateNuke,
-    checkWinCondition
+    action, game, currentRoundNumber,
+    setAction, getRound, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeConflict, detonateNuke, checkWinCondition
   } = useSchwimmenGameStore()
+  const { meta } = useSchwimmenMetaStore()
+
   const current = getRound(currentRoundNumber)
 
   const { showConfirmation } = useConfirmation()

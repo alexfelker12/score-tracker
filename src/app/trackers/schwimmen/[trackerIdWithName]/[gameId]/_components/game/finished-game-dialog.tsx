@@ -9,14 +9,17 @@ import { cn } from "@/lib/utils";
 //* components
 import { useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export const FinishedGameDialog = ({ className, ...params }: React.ComponentProps<"div">) => {
+export const FinishedGameDialog = ({ trackerPath, className, ...params }: React.ComponentProps<"div"> & { trackerPath: string }) => {
   const [open, setOpen] = React.useState<boolean>(true)
   const { game, checkWinCondition, getLatestRound } = useSchwimmenGameStore()
 
   if (game.status === "ACTIVE") return null;
 
   const winningPlayer = checkWinCondition("latest")
+  //* since the game starts with round 0, the first round will have the roundNumber 1 which equals the amount of rounds played
+  const amountRounds = getLatestRound().round
 
   return (
     <div
@@ -38,10 +41,12 @@ export const FinishedGameDialog = ({ className, ...params }: React.ComponentProp
           <>
             <div>
               <h3 className="text-xl">Game completed</h3>
-              <p className="text-muted-foreground text-sm">finished in {getLatestRound().round} rounds</p>
+              <p className="text-muted-foreground text-sm">finished in {amountRounds} rounds</p>
             </div>
 
             <p className="mt-2"><span className="text-primary">{winningPlayer.displayName}</span> won!</p>
+
+            {/* TODO: here a button, which creates another game with same participants */}
 
             <Button
               variant="inline"
@@ -52,7 +57,23 @@ export const FinishedGameDialog = ({ className, ...params }: React.ComponentProp
           : game.status === "CANCELLED" &&
           //* game is CANCELLED
           <>
+            <div>
+              <h3 className="text-xl">Game canceled!</h3>
+              <p className="text-muted-foreground text-sm">{amountRounds} rounds were played</p>
+            </div>
 
+            <p className="mt-2">This game cannot be continued or viewed</p>
+
+            <Button
+              variant="inline"
+              size="inline"
+              // onClick={() => setOpen(false)}
+              asChild
+            >
+              <Link href={`/trackers/schwimmen/${trackerPath}`}>
+                go back to tracker
+              </Link>
+            </Button>
           </>
         }
 
