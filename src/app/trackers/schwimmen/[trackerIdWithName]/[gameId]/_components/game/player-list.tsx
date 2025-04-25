@@ -1,8 +1,8 @@
 "use client"
 
 //* packages
-import { SchwimmenRound } from "prisma/json_types/types";
 import { useMutation } from "@tanstack/react-query";
+import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
 import { createLatestRoundForGame, deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
@@ -20,32 +20,27 @@ export const PlayerList = () => {
   //* hooks here
   const {
     action, game, currentRoundNumber,
-    setAction, getRound, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeConflict, detonateNuke, checkWinCondition
+    setAction, getRound, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
   } = useSchwimmenGameStore()
   const { meta } = useSchwimmenMetaStore()
-
-  const current = getRound(currentRoundNumber)
-
   const { showConfirmation } = useConfirmation()
 
+  //* current round
+  const current = getRound(currentRoundNumber)
+
   //* mutations for actions
-  //* POST round
-  // , isPending: isLatestRoundPending
+  //* POST round  // , isPending: isLatestRoundPending
   const { mutate: createLatestRound } = useMutation({
+    mutationKey: ["game", game.id, "create"],
     mutationFn: createLatestRoundForGame,
   })
-  //* DELETE rounds
-  // , isPending: isDeleteRoundsPending
+  //* DELETE rounds  // , isPending: isDeleteRoundsPending
   const { mutate: deleteRoundsFrom } = useMutation({
+    mutationKey: ["game", game.id, "delete"],
     mutationFn: deleteRoundsFromRoundNumber,
   })
 
-  // //* mutation state to display proper loading when doing mutation (from trackers)
-  // const isCreatePending = useMutationState({
-  //   filters: { mutationKey: ['tracker-create', trackerType], status: 'pending' },
-  //   select: (mutation) => mutation.state.status === 'pending',
-  // })[0];
-
+  //* round dependent action
   const handleNewRound = (newRoundData: SchwimmenRound) => {
     //* if current round is not the latest round first delete rounds greater than current round
     if (getLatestRound().round > currentRoundNumber) {
@@ -96,19 +91,31 @@ export const PlayerList = () => {
         break
 
       case ActionStatus.ISNUKE:
+        //* playerId is detonator
         //* returns players in case of conflict, else undefined
-        const affectedPlayers = checkNukeConflict(playerId)
+        const affectedPlayers = checkNukeForConflict(playerId)
 
         if (affectedPlayers) {
-          //* get surviving player from conflict dialog, in case of error, log and set back to idle
-          const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
-          if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
-          //* do action
-          const newRoundData = detonateNuke(playerId, survivingPlayer.id)
-          if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
+          //* case 1: 2 or more players would be swimming -> conflict
+          if (affectedPlayers.length >= 2) {
+            //* get surviving player from conflict dialog, in case of error, log and set back to idle
+            const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
+            if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
-          handleNewRound(newRoundData)
+            //* do action
+            const newRoundData = detonateNuke(playerId, survivingPlayer.id)
+            if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
+            handleNewRound(newRoundData)
+
+            //* case 2: only 1 player would be swimming -> NO conflict
+          } else if (affectedPlayers.length === 1) {
+            //* do action
+            const newRoundData = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
+            if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
+            handleNewRound(newRoundData)
+          }
+
         } else {
           //* if no conflict, just pass playerId
           const newRoundData = detonateNuke(playerId)
@@ -119,10 +126,10 @@ export const PlayerList = () => {
         break
 
       case ActionStatus.ISIDLE:
-        // basically do nothing
-
-        //* after every action check if win condition is met (only one player alive)
-        checkWinCondition()
+      // basically do nothing
+      //? what was this for and why is it in the idle case?
+      //* after every action check if win condition is met (only one player alive)
+      // checkWinCondition()
     }
   }
 
@@ -141,6 +148,7 @@ export const PlayerList = () => {
           </p>
         )
       })}
+      <p>{meta.isAdjustingSize ? "adjusting" : "idle"}</p>
       <p>{meta.hideDead ? "hide" : "show"}</p>
       <p>{meta.uiSize}</p>
     </div>

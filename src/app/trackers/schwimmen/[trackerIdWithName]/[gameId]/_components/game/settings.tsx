@@ -1,14 +1,21 @@
 "use client"
 
 //* next/react
+import React from "react";
+
 //* packages
+import { useMutation } from "@tanstack/react-query";
+
 //* server
+import { updateGameStatusAndData } from "@/server/actions/game/actions";
+import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
+
 //* lib
-//* local
-//* hooks
+import { cn } from "@/lib/utils";
 
 //* stores
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 //* icons
 import { CheckIcon, Loader2Icon, SettingsIcon, XIcon } from "lucide-react";
@@ -18,24 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
-import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
-import { useMutation } from "@tanstack/react-query";
-import React from "react";
-import { updateGameStatusAndData } from "@/server/actions/game/actions";
 
-/**
- ** head buttons:
- ** section 1 (left):
- * - options:
- *   - hide dead player (toggle)
- *   - card sizer (slider)
- *   - reset game (button)
- *   - cancel game (red button)
-*/
-
-// TODO Prio 4: settings
 
 // export type SettingsParams = {}, params: SettingsParams, const { } = params
 export const Settings = () => {
@@ -45,7 +35,7 @@ export const Settings = () => {
   const [cancelOpen, setCancelOpen] = React.useState<boolean>(false)
   // stores
   const { game, isAction, getLatestRound, setCurrentRoundNumber, resetRounds, finishGame } = useSchwimmenGameStore()
-  const { meta, setHideDead, setUiSize } = useSchwimmenMetaStore()
+  const { meta, setHideDead, setUiSize, setIsAdjustingSize } = useSchwimmenMetaStore()
 
   //* DELETE reset game - delete every round from round 0
   const { mutate: deleteRoundsFrom, isPending: isResetPending } = useMutation({ mutationFn: deleteRoundsFromRoundNumber })
@@ -58,6 +48,7 @@ export const Settings = () => {
   const isCancelOpenOrPending = isCancelPending || cancelOpen
   const isResetOrCancelOpenOrPending = isResetOpenOrPending || isCancelOpenOrPending
 
+  //* reset/cancel handler
   const handleReset = () => {
     //* only do action when 
     if (isCancelOpenOrPending || isFirstRound || game.status !== "ACTIVE") return;
@@ -92,7 +83,6 @@ export const Settings = () => {
     })
   }
 
-
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -104,8 +94,14 @@ export const Settings = () => {
           <SettingsIcon className="size-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="gap-6">
-        <DialogHeader>
+      <DialogContent
+        className={cn(
+          "gap-6 [&_.hide-on-adjust]:transition-opacity",
+          meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-transparent border-transparent"
+        )}
+        isAdjusting={meta.isAdjustingSize}
+      >
+        <DialogHeader className="hide-on-adjust">
           <DialogTitle>Game settings</DialogTitle>
           <DialogDescription>
             Adjust appearance and progress
@@ -116,7 +112,7 @@ export const Settings = () => {
         <div className="space-y-6">
 
           {/* option 1 - hide dead player */}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 hide-on-adjust">
             <div>
               <h4 id="hide-dead-label" className="font-medium text-base">Hide dead players</h4>
             </div>
@@ -135,30 +131,43 @@ export const Settings = () => {
           </div>
 
           {/* option 2 - ui sizing */}
-          <div className="flex flex-wrap gap-2">
-            <div className="w-full">
-              <h4 id="ui-sizer-label" className="font-medium text-base">Adjust game size</h4>
-            </div>
-            <div className="flex justify-between items-center gap-2 w-full">
-              <span className="text-muted-foreground text-xs leading-none">XS</span>
-              <Slider
-                id="ui-sizer" aria-labelledby="ui-sizer-label"
-                min={1} max={5} step={1}
-                value={meta.uiSize}
-                onValueChange={(value) => {
-                  if (isResetOrCancelOpenOrPending) return;
-                  setUiSize(value)
-                }}
-                // onPointerDown={() => console.log("pointer down")}
-                // onPointerUp={() => console.log("pointer up")}
-                disabled={isResetOrCancelOpenOrPending}
-              />
-              <span className="text-muted-foreground text-xs leading-none">XL</span>
+          <div>
+            <div className={cn(
+              "flex flex-wrap gap-3",
+              //* give a combination of extra width, negative margin and positive padding to statically create space around element 
+              "-m-2 p-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] rounded-lg transition-[opacity,_background-color]",
+              meta.isAdjustingSize && "bg-black/80 border -m-[0.5625rem] w-[calc(100%+1.125rem)] h-[calc(100%+1.125rem)]"
+            )}>
+              <div className="w-full">
+                <h4 id="ui-sizer-label" className="font-medium text-base leading-none">Adjust game size</h4>
+              </div>
+              <div className="flex justify-between items-center gap-2 w-full">
+                <span className="text-muted-foreground text-xs leading-none">XS</span>
+                <Slider
+                  id="ui-sizer" aria-labelledby="ui-sizer-label"
+                  min={1} max={5} step={1}
+                  value={meta.uiSize}
+                  onValueChange={(value) => {
+                    if (isResetOrCancelOpenOrPending) return;
+                    setUiSize(value)
+                  }}
+                  onPointerDown={() => {
+                    if (isResetOrCancelOpenOrPending) return;
+                    setIsAdjustingSize(true)
+                  }}
+                  onPointerUp={() => {
+                    if (isResetOrCancelOpenOrPending) return;
+                    setIsAdjustingSize(false)
+                  }}
+                  disabled={isResetOrCancelOpenOrPending}
+                />
+                <span className="text-muted-foreground text-xs leading-none">XL</span>
+              </div>
             </div>
           </div>
 
           {/* option 3 - reset game */}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 hide-on-adjust">
             <div>
               <h4 id="reset-game-label" className={cn("font-medium text-base", isFirstRound && "text-muted-foreground")}>Reset game</h4>
             </div>
@@ -191,7 +200,7 @@ export const Settings = () => {
           </div>
 
           {/* option 4 - cancel game */}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 hide-on-adjust">
             <div>
               <h4 id="cancel-game-label" className="font-medium text-base">Cancel game</h4>
             </div>

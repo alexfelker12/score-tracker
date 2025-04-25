@@ -35,8 +35,6 @@ export type GameParams = {
 export const Game = (params: GameParams) => {
   const { game, trackerId, trackerPath } = params
 
-  console.log(trackerId)
-
   //* hooks here
   const {
     ready, currentRoundNumber, game: thisGame, rounds,

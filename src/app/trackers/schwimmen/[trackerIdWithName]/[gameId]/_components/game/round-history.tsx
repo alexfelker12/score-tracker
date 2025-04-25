@@ -12,13 +12,18 @@ import { Button } from "@/components/ui/button";
 
 export const RoundHistory = () => {
   //* hooks here
-  const { isAction, currentRoundNumber, setCurrentRoundNumber, getLatestRound } = useSchwimmenGameStore()
+  const {
+    game, currentRoundNumber,
+    isAction, setCurrentRoundNumber, getLatestRound
+  } = useSchwimmenGameStore()
 
   //* checks
   const isFirstRound = currentRoundNumber === 0
   const isLastRound = getLatestRound().round === currentRoundNumber
 
   const handleClick = (historyDir: "undo" | "redo") => {
+    if (!isAction(ActionStatus.ISIDLE)) return;
+
     switch (historyDir) {
       case "undo":
         if (isFirstRound) return

@@ -5,12 +5,14 @@ type SchwimmenMetaState = {
   meta: {
     hideDead: boolean
     uiSize: number[]
+    isAdjustingSize: boolean
   }
 }
 
 type SchwimmenMetaActions = {
   setHideDead: (hide: boolean) => void
   setUiSize: (size: number[]) => void
+  setIsAdjustingSize: (isAdjusting: boolean) => void
 }
 
 export type SchwimmenMetaStore = SchwimmenMetaState & SchwimmenMetaActions
@@ -20,7 +22,8 @@ export const useSchwimmenMetaStore = create<SchwimmenMetaStore>()(
     (set) => ({
       meta: {
         hideDead: false,
-        uiSize: [3]
+        uiSize: [3],
+        isAdjustingSize: false
       },
       //* meta actions
       setHideDead: (hide) => set((state) => ({
@@ -34,7 +37,13 @@ export const useSchwimmenMetaStore = create<SchwimmenMetaStore>()(
           ...state.meta,
           uiSize: size
         }
-      }))
+      })),
+      setIsAdjustingSize: (isAdjusting) => set((state) => ({
+        meta: {
+          ...state.meta,
+          isAdjustingSize: isAdjusting
+        }
+      })),
     }),
     { name: "schwimmen-meta" }
   )

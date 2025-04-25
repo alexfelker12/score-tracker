@@ -37,7 +37,7 @@ type SchwimmenGameActions = {
   subtractLifeOf: (playerId: string) => Round["data"] | undefined
   detonateNuke: (playerId: string, survivorId?: string) => Round["data"] | undefined
 
-  checkNukeConflict: (playerId: string) => GameParticipant[] | undefined
+  checkNukeForConflict: (detonatorId: string) => GameParticipant[] | undefined
   checkWinCondition: (type?: "latest") => GameParticipant | undefined
 
   finishGame: (newStatus: Exclude<Game["status"], "ACTIVE">) => void
@@ -131,24 +131,24 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
     return newRoundState
   },
-  detonateNuke: (playerId, survivorId) => {
+  detonateNuke: (detonatorId, survivorId) => {
     if (get().game.status !== "ACTIVE") return;
     const thisRound = get().getCurrentRound()
     const playersThisRound = thisRound.data.players
-    const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
+    const getPlayerFromRound = playersThisRound.find((player) => player.id === detonatorId)!
 
     const newRoundState: SchwimmenRound = {
       type: "SCHWIMMEN",
       playerSwimming: thisRound.data.playerSwimming,
       players: [],
-      nukeBy: playerId
+      nukeBy: detonatorId
     }
 
     //* continue only if player is not dead yet
     if (getPlayerFromRound.lifes <= 0) return;
 
     newRoundState.players = playersThisRound.map((player) => {
-      if (player.id === playerId) return player;
+      if (player.id === detonatorId) return player;
 
       if (survivorId && player.id === survivorId) {
         //* set survivor as swimming before returning as is
@@ -167,7 +167,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   },
 
   //* checks
-  checkNukeConflict: (playerId) => {
+  checkNukeForConflict: (playerId) => {
     const thisRound = get().getCurrentRound()
     const players = get().players
 
@@ -179,7 +179,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
       const playersWithOneLife = playersThisRound.filter((player) => player.id !== playerId && player.lifes <= 1).map((player) => player.id)
 
       //* if there are at least 2 players return those player per id matching else undefined
-      if (playersWithOneLife.length >= 2) {
+      if (playersWithOneLife.length > 0) {
         return players.filter((affectedPlayer) => playersWithOneLife.includes(affectedPlayer.id))
       } else {
         return undefined
