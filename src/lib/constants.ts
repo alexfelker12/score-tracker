@@ -13,11 +13,11 @@ export const SCHWIMMENLOCALSTORAGEBASEKEY = "schwimmen-tracker-base"
 
 
 export const SCHWIMMEN_ICON_SIZE_MAP = [
-  "size-6",
-  "size-7",
-  "size-8",
-  "size-9",
-  "size-10",
+  "XS",
+  "SM",
+  "MD",
+  "LG",
+  "XL",
 ] as const
 
 export const SCHWIMMEN_TEXT_SIZE_MAP = [

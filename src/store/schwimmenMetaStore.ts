@@ -22,7 +22,7 @@ export const useSchwimmenMetaStore = create<SchwimmenMetaStore>()(
     (set) => ({
       meta: {
         hideDead: false,
-        uiSize: [3],
+        uiSize: [1],
         isAdjustingSize: false
       },
       //* meta actions

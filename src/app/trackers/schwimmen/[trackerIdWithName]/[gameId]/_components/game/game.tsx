@@ -5,8 +5,8 @@ import React from "react";
 
 //* packages
 import { GameRound } from "@prisma/client";
-import { SchwimmenRound } from "prisma/json_types/types";
 import { useMutation } from "@tanstack/react-query";
+import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
 import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/game/actions";
@@ -18,14 +18,15 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 import { getQueryClient } from "@/lib/get-query-client";
 
 //* local
-import { LoadingGame } from "../game-wrap";
 import { Actions } from "./actions";
 import { ConflictDialog } from "./conflict-dialog";
-import { FinishedGameDialog } from "./finished-game-dialog";
+import { FinishedGame } from "./finished-game";
 import { PlayerList } from "./player-list";
 import { RoundHistory } from "./round-history";
 import { Settings } from "./settings";
-import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
+
+import { Loader2Icon } from "lucide-react";
+
 
 export type GameParams = {
   game: NonNullable<FindGameByIdReturn>
@@ -37,7 +38,7 @@ export const Game = (params: GameParams) => {
 
   //* hooks here
   const {
-    ready, currentRoundNumber, game: thisGame, rounds,
+    ready, game: thisGame, rounds,
     init, getPlayer, getCurrentRound, checkWinCondition, finishGame, getLatestRound
   } = useSchwimmenGameStore()
 
@@ -56,10 +57,8 @@ export const Game = (params: GameParams) => {
 
   //* on game finish, update game status
   React.useEffect(() => {
-    console.log(ready && thisGame.status === "ACTIVE")
-    console.log(thisGame.status)
     if (ready && thisGame.status === "ACTIVE" && game.status === "ACTIVE") {
-      const winningPlayer = checkWinCondition("latest")
+      const winningPlayer = checkWinCondition()
       const lastRound = getLatestRound()
 
       if (!winningPlayer) return;
@@ -91,28 +90,24 @@ export const Game = (params: GameParams) => {
     mutationFn: updateGameStatusAndData,
   })
 
-  if (!ready) return <LoadingGame />
+  // TODO: create proper loading ui (skeletons, etc...). This is placeholder atm
+  if (!ready) return <div className="flex flex-1 justify-center items-center">
+    <Loader2Icon className="text-primary animate-spin size-8" />
+  </div>
 
   return (
-    <div className="relative space-y-4">
-      {/* show "game is finished dialog" to indicate, that game cannot be further modified/played */}
-      {thisGame.status !== "ACTIVE" && <FinishedGameDialog trackerPath={trackerPath} />}
-
+    <div className="relative flex flex-col gap-4">
       <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
-
         {/* settings & history */}
         <div className="flex gap-x-4">
           <Settings />
           <RoundHistory />
         </div>
 
-        <span>Round: {currentRoundNumber}</span>
-
         {/* actions */}
         <div className="space-x-2">
           <Actions />
         </div>
-
       </section>
 
       <section aria-description="Player list">
@@ -124,6 +119,8 @@ export const Game = (params: GameParams) => {
       </section>
 
       <ConflictDialog />
+
+      {(ready && thisGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
     </div>
   );
 }

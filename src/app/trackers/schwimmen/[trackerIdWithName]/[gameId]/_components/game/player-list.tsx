@@ -13,7 +13,6 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 
 //* hooks
 import { useConfirmation } from "@/hooks/use-confirmation";
-import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 
 export const PlayerList = () => {
@@ -22,7 +21,7 @@ export const PlayerList = () => {
     action, game, currentRoundNumber,
     setAction, getRound, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
   } = useSchwimmenGameStore()
-  const { meta } = useSchwimmenMetaStore()
+  // const { meta } = useSchwimmenMetaStore()
   const { showConfirmation } = useConfirmation()
 
   //* current round
@@ -148,9 +147,6 @@ export const PlayerList = () => {
           </p>
         )
       })}
-      <p>{meta.isAdjustingSize ? "adjusting" : "idle"}</p>
-      <p>{meta.hideDead ? "hide" : "show"}</p>
-      <p>{meta.uiSize}</p>
     </div>
   );
 }

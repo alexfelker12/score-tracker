@@ -8,14 +8,17 @@ import { RedoIcon, UndoIcon } from "lucide-react";
 
 //* icons
 import { Button } from "@/components/ui/button";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
+import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
 
 
 export const RoundHistory = () => {
   //* hooks here
   const {
-    game, currentRoundNumber,
+    currentRoundNumber,
     isAction, setCurrentRoundNumber, getLatestRound
   } = useSchwimmenGameStore()
+  const { meta } = useSchwimmenMetaStore()
 
   //* checks
   const isFirstRound = currentRoundNumber === 0
@@ -39,7 +42,7 @@ export const RoundHistory = () => {
   return (
     <div className="space-x-2">
       <Button
-        size="icon"
+        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
         variant="outline"
         disabled={!isAction(ActionStatus.ISIDLE) || isFirstRound}
         onClick={() => handleClick("undo")}
@@ -47,7 +50,7 @@ export const RoundHistory = () => {
         <UndoIcon className="size-5" />
       </Button>
       <Button
-        size="icon"
+        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
         variant="outline"
         disabled={!isAction(ActionStatus.ISIDLE) || isLastRound}
         onClick={() => handleClick("redo")}

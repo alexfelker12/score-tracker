@@ -41,7 +41,7 @@ type TrackerParticipant = z.infer<typeof participantsSchemaBase.shape.players>[0
 export type AddPlayerDialogType = {
   userId: string
   saveFunc: (participant: TrackerParticipant) => void
-  canAddField: boolean
+  canAddField?: boolean
   userPlayers: string[]
   guestPlayers: string[]
 }

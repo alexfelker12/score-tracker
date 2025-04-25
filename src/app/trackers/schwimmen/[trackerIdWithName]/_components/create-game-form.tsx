@@ -70,7 +70,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create a game</Button>
+        <Button className="self-end">Create a game</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col max-h-[95%]">
         <DialogHeader>

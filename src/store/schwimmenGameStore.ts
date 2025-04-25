@@ -1,4 +1,4 @@
-import { Game, GameParticipant, GameRound, Prisma } from "@prisma/client"
+import { Game, GameParticipant, GameRound } from "@prisma/client"
 import { SchwimmenRound } from "prisma/json_types/types"
 import { create } from "zustand"
 
@@ -38,7 +38,7 @@ type SchwimmenGameActions = {
   detonateNuke: (playerId: string, survivorId?: string) => Round["data"] | undefined
 
   checkNukeForConflict: (detonatorId: string) => GameParticipant[] | undefined
-  checkWinCondition: (type?: "latest") => GameParticipant | undefined
+  checkWinCondition: () => GameParticipant | undefined
 
   finishGame: (newStatus: Exclude<Game["status"], "ACTIVE">) => void
 }
@@ -188,9 +188,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
     return undefined
   },
-  checkWinCondition: (type) => {
-    const currentRound = type === "latest" ? get().getCurrentRound() : get().getLatestRound()
-    const playersAlive = currentRound.data.players.filter((player) => player.lifes > 0)
+  checkWinCondition: () => {
+    const playersAlive = get().getLatestRound().data.players.filter((player) => player.lifes > 0)
 
     if (playersAlive.length !== 1) return;
 

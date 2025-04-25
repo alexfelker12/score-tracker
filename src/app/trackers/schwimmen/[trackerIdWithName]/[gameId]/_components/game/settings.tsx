@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
 
 
 // export type SettingsParams = {}, params: SettingsParams, const { } = params
@@ -87,7 +88,7 @@ export const Settings = () => {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button
-          size="icon"
+          size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
           variant="outline"
           disabled={!isAction(ActionStatus.ISIDLE)}
         >
@@ -97,7 +98,7 @@ export const Settings = () => {
       <DialogContent
         className={cn(
           "gap-6 [&_.hide-on-adjust]:transition-opacity",
-          meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-transparent border-transparent"
+          meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-background/0 border-transparent"
         )}
         isAdjusting={meta.isAdjustingSize}
       >
@@ -112,7 +113,7 @@ export const Settings = () => {
         <div className="space-y-6">
 
           {/* option 1 - hide dead player */}
-          <div className="flex flex-wrap gap-1 hide-on-adjust">
+          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", isResetOrCancelOpenOrPending && "opacity-50")}>
             <div>
               <h4 id="hide-dead-label" className="font-medium text-base">Hide dead players</h4>
             </div>
@@ -131,45 +132,37 @@ export const Settings = () => {
           </div>
 
           {/* option 2 - ui sizing */}
-          <div>
-            <div className={cn(
-              "flex flex-wrap gap-3",
-              //* give a combination of extra width, negative margin and positive padding to statically create space around element 
-              "-m-2 p-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] rounded-lg transition-[opacity,_background-color]",
-              meta.isAdjustingSize && "bg-black/80 border -m-[0.5625rem] w-[calc(100%+1.125rem)] h-[calc(100%+1.125rem)]"
-            )}>
-              <div className="w-full">
-                <h4 id="ui-sizer-label" className="font-medium text-base leading-none">Adjust game size</h4>
-              </div>
-              <div className="flex justify-between items-center gap-2 w-full">
-                <span className="text-muted-foreground text-xs leading-none">XS</span>
-                <Slider
-                  id="ui-sizer" aria-labelledby="ui-sizer-label"
-                  min={1} max={5} step={1}
-                  value={meta.uiSize}
-                  onValueChange={(value) => {
-                    if (isResetOrCancelOpenOrPending) return;
-                    setUiSize(value)
-                  }}
-                  onPointerDown={() => {
-                    if (isResetOrCancelOpenOrPending) return;
-                    setIsAdjustingSize(true)
-                  }}
-                  onPointerUp={() => {
-                    if (isResetOrCancelOpenOrPending) return;
-                    setIsAdjustingSize(false)
-                  }}
-                  disabled={isResetOrCancelOpenOrPending}
-                />
-                <span className="text-muted-foreground text-xs leading-none">XL</span>
-              </div>
+          <div className={cn("flex flex-wrap gap-3", isResetOrCancelOpenOrPending && "opacity-50")}>
+            <div className="w-full hide-on-adjust">
+              <h4 id="ui-sizer-label" className="font-medium text-base leading-none">Adjust game size</h4>
+            </div>
+            <div className="flex justify-between items-center gap-2 w-full">
+              <span className="text-muted-foreground text-xs leading-none hide-on-adjust">XS</span>
+              <Slider id="ui-sizer" aria-labelledby="ui-sizer-label"
+                min={0} max={4} step={1}
+                value={meta.uiSize}
+                onValueChange={(value) => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setUiSize(value)
+                }}
+                onPointerDown={() => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setIsAdjustingSize(true)
+                }}
+                onPointerUp={() => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setIsAdjustingSize(false)
+                }}
+                disabled={isResetOrCancelOpenOrPending}
+              />
+              <span className="text-muted-foreground text-xs leading-none hide-on-adjust">XL</span>
             </div>
           </div>
 
           {/* option 3 - reset game */}
-          <div className="flex flex-wrap gap-1 hide-on-adjust">
+          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", (isFirstRound || isCancelOpenOrPending) && "opacity-50")}>
             <div>
-              <h4 id="reset-game-label" className={cn("font-medium text-base", isFirstRound && "text-muted-foreground")}>Reset game</h4>
+              <h4 id="reset-game-label" className="font-medium text-base">Reset game</h4>
             </div>
             <div className="flex justify-between items-center gap-4 w-full">
               <span id="reset-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]">
@@ -182,6 +175,7 @@ export const Settings = () => {
               <Button
                 id="reset-game" aria-describedby="reset-game-desc" aria-labelledby="reset-game-label"
                 variant="secondary"
+                size={isResetOpenOrPending ? "icon" : "default"}
                 onClick={() => setResetOpen(!resetOpen)}
                 disabled={(isResetOrCancelOpenOrPending && !resetOpen) || isFirstRound || game.status !== "ACTIVE"}
               >
@@ -194,21 +188,23 @@ export const Settings = () => {
             {resetOpen && <div className="mt-2 w-full">
               <div className="flex justify-between items-center">
                 <span>Are you sure?</span>
-                <Button variant="destructive" onClick={handleReset}><CheckIcon /></Button>
+                <Button variant="destructive" size="icon" onClick={handleReset}><CheckIcon /></Button>
+
               </div>
             </div>}
           </div>
 
           {/* option 4 - cancel game */}
-          <div className="flex flex-wrap gap-1 hide-on-adjust">
+          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", isResetOpenOrPending && "opacity-50")}>
             <div>
-              <h4 id="cancel-game-label" className="font-medium text-base">Cancel game</h4>
+              <h4 id="cancel-game-label" className={cn("font-medium text-base", isResetOpenOrPending && "text-muted-foreground")}>Cancel game</h4>
             </div>
             <div className="flex justify-between items-center gap-4 w-full">
               <span id="cancel-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]"><span className="text-destructive-foreground">Caution:</span> A canceled game cannot be played afterwards!</span>
               <Button
                 id="cancel-game" aria-describedby="cancel-game-desc" aria-labelledby="cancel-game-label"
                 variant={cancelOpen ? "secondary" : "destructive"}
+                size={isCancelOpenOrPending ? "icon" : "default"}
                 onClick={() => setCancelOpen(!cancelOpen)}
                 className="transition-colors"
                 disabled={(isResetOrCancelOpenOrPending && !cancelOpen) || game.status !== "ACTIVE"}
@@ -222,7 +218,7 @@ export const Settings = () => {
             {cancelOpen && <div className="mt-2 w-full">
               <div className="flex justify-between items-center">
                 <span>Are you sure?</span>
-                <Button variant="destructive" onClick={handleCancel}><CheckIcon /></Button>
+                <Button variant="destructive" size="icon" onClick={handleCancel}><CheckIcon /></Button>
               </div>
             </div>}
           </div>

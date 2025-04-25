@@ -12,23 +12,26 @@ import { HeartCrackIcon, BombIcon, XIcon, Loader2Icon } from "lucide-react";
 //* components
 import { Button } from "@/components/ui/button";
 import { useMutationState } from "@tanstack/react-query";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
+import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
 
 
 export const Actions = () => {
   //* hooks here
-  const { isAction, setAction, game } = useSchwimmenGameStore()
+  const { game, isAction, setAction } = useSchwimmenGameStore()
+  const { meta } = useSchwimmenMetaStore()
 
   //* if any action (create latest round/delete rounds) is pending 
   const isActionPending = useMutationState({
     filters: { mutationKey: ["game", game.id], status: "pending" },
     select: (mutation) => mutation.state.status === "pending",
-  })[0];
+  }).some((pending) => pending);
 
   return (
     <>
       {/* subtract life */}
       <Button
-        size="icon"
+        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
         variant="outline"
         disabled={isAction(ActionStatus.ISNUKE) || game.status !== "ACTIVE" || isActionPending}
         onClick={() => {
@@ -49,7 +52,7 @@ export const Actions = () => {
 
       {/* detonate nuke */}
       <Button
-        size="icon"
+        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
         variant="outline"
         disabled={isAction(ActionStatus.ISSUBTRACT) || game.status !== "ACTIVE" || isActionPending}
         onClick={() => {
