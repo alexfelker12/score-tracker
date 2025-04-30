@@ -54,3 +54,4 @@ src/app/trackers/schwimmen/\[trackerId\]/_components/tracker-with-rq.tsx
 src/app/trackers/schwimmen/\[trackerId\]/__old
 
 todos.yml
+src/app/trackers/schwimmen/\[trackerIdWithName\]/\[gameId\]/_components/game/players/player-claude.tsx

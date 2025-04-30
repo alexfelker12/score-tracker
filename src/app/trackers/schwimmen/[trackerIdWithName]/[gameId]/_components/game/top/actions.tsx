@@ -41,10 +41,11 @@ export const Actions = () => {
             setAction(ActionStatus.ISSUBTRACT)
           }
         }}
+        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
       >
         {isAction(ActionStatus.ISSUBTRACT)
           ? isActionPending
-            ? <Loader2Icon className="text-primary animate-spin size-5" />
+            ? <Loader2Icon className="text-primary !animate-spin size-5" />
             : <XIcon className="size-5" />
           : <HeartCrackIcon className="size-5" />
         }
@@ -62,10 +63,11 @@ export const Actions = () => {
             setAction(ActionStatus.ISNUKE)
           }
         }}
+        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
       >
         {isAction(ActionStatus.ISNUKE)
           ? isActionPending
-            ? <Loader2Icon className="text-primary animate-spin size-5" />
+            ? <Loader2Icon className="text-primary !animate-spin size-5" />
             : <XIcon className="size-5" />
           : <BombIcon className="size-5" />
         }

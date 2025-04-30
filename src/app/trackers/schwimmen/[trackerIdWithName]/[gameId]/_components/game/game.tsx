@@ -4,27 +4,26 @@
 import React from "react";
 
 //* packages
-import { GameRound } from "@prisma/client";
 import { useMutation } from "@tanstack/react-query";
-import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
 import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/game/actions";
 
 //* stores
-import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { GameParticipantWithUser, Round, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 
 //* lib
 import { getQueryClient } from "@/lib/get-query-client";
 
 //* local
-import { Actions } from "./actions";
-import { ConflictDialog } from "./conflict-dialog";
-import { FinishedGame } from "./finished-game";
-import { PlayerList } from "./player-list";
-import { RoundHistory } from "./round-history";
-import { Settings } from "./settings";
+import { ConflictDialog } from "./dialogs/conflict-dialog";
+import { FinishedGame } from "./dialogs/finished-game";
+import { PlayerList } from "./players/player-list";
+import { Actions } from "./top/actions";
+import { RoundHistory } from "./top/round-history";
+import { Settings } from "./top/settings";
 
+//* temporary
 import { Loader2Icon } from "lucide-react";
 
 
@@ -38,8 +37,8 @@ export const Game = (params: GameParams) => {
 
   //* hooks here
   const {
-    ready, game: thisGame, rounds,
-    init, getPlayer, getCurrentRound, checkWinCondition, finishGame, getLatestRound
+    ready, game: storeGame, latestSyncedRounds,
+    init, checkWinCondition, finishGame, getLatestRound
   } = useSchwimmenGameStore()
 
   //* initialize game
@@ -47,9 +46,9 @@ export const Game = (params: GameParams) => {
     init({
       ready: true,
       game: game,
-      players: game.participants,
-      rounds: game.rounds.filter((round): round is Omit<GameRound, "data"> & { data: SchwimmenRound } => round.data.type === "SCHWIMMEN"),
-      action: ActionStatus.ISIDLE,
+      players: game.participants.filter((player): player is GameParticipantWithUser => true),
+      rounds: game.rounds.filter((round): round is Round => round.data.type === "SCHWIMMEN"),
+      latestSyncedRounds: game.rounds.filter((round): round is Round => round.data.type === "SCHWIMMEN"),
       //* default latest round
       currentRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round,
     })
@@ -57,7 +56,8 @@ export const Game = (params: GameParams) => {
 
   //* on game finish, update game status
   React.useEffect(() => {
-    if (ready && thisGame.status === "ACTIVE" && game.status === "ACTIVE") {
+    console.log("checking game status")
+    if (ready && storeGame.status === "ACTIVE" && game.status === "ACTIVE") {
       const winningPlayer = checkWinCondition()
       const lastRound = getLatestRound()
 
@@ -70,7 +70,7 @@ export const Game = (params: GameParams) => {
         gameData: {
           type: "SCHWIMMEN",
           swimming: lastRound.data.playerSwimming!,
-          winByNuke: !!lastRound.data.nukeBy,
+          winByNuke: lastRound.data.nukeBy !== "" && lastRound.data.nukeBy !== undefined,
           winner: winningPlayer.id
         }
       }, {
@@ -80,12 +80,11 @@ export const Game = (params: GameParams) => {
         }
       })
     }
-  }, [ready, rounds])
-
-  const qc = getQueryClient()
+  }, [ready, latestSyncedRounds])
 
   //* PUT game status
   // isPending: isStatusUpdatePending
+  const qc = getQueryClient()
   const { mutate: updateGame } = useMutation({
     mutationFn: updateGameStatusAndData,
   })
@@ -114,13 +113,9 @@ export const Game = (params: GameParams) => {
         <PlayerList />
       </section>
 
-      <section>
-        Player swimming: {(getPlayer(getCurrentRound().data.playerSwimming || "") || { displayName: "no one yet" }).displayName}
-      </section>
-
       <ConflictDialog />
 
-      {(ready && thisGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
+      {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
     </div>
   );
 }

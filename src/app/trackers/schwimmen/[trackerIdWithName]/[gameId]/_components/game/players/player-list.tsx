@@ -13,19 +13,17 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 
 //* hooks
 import { useConfirmation } from "@/hooks/use-confirmation";
+import { Player, PlayerProps } from "./player";
 
 
 export const PlayerList = () => {
   //* hooks here
   const {
-    action, game, currentRoundNumber,
-    setAction, getRound, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
+    action, game, currentRoundNumber, rounds,
+    setAction, getRound, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
   } = useSchwimmenGameStore()
   // const { meta } = useSchwimmenMetaStore()
   const { showConfirmation } = useConfirmation()
-
-  //* current round
-  const current = getRound(currentRoundNumber)
 
   //* mutations for actions
   //* POST round  // , isPending: isLatestRoundPending
@@ -38,40 +36,48 @@ export const PlayerList = () => {
     mutationKey: ["game", game.id, "delete"],
     mutationFn: deleteRoundsFromRoundNumber,
   })
+  
+
+  //* current round
+  const current = getRound(currentRoundNumber)
 
   //* round dependent action
   const handleNewRound = (newRoundData: SchwimmenRound) => {
+    //* optimistically add new round, error cases are handled below 
+    const updatedRounds = addRound(newRoundData)
+
+    const handleCreateLatestRound = () => {
+      createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
+        onSettled: (data) => {
+          //* only successful for unfinished games
+          if (data && data.data) {
+            if (updatedRounds) setLatestSyncedRounds(updatedRounds)
+          } else {
+            //* in case of an error from rq or backend: set rounds back to state before optimistic update
+            setRounds(rounds)
+          }
+          setAction(ActionStatus.ISIDLE)
+        }
+      })
+    }
+
     //* if current round is not the latest round first delete rounds greater than current round
     if (getLatestRound().round > currentRoundNumber) {
       deleteRoundsFrom({ gameId: game.id, roundNumber: currentRoundNumber }, {
         onSettled: (data) => {
           //* only successful for unfinished games
           if (data && data.data) {
-            createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
-              onSettled: (data) => {
-                //* only successful for unfinished games
-                if (data && data.data) {
-                  addRound(newRoundData)
-                }
-                setAction(ActionStatus.ISIDLE)
-              }
-            })
+            handleCreateLatestRound()
           } else {
+            //* in case of an error from rq or backend: set rounds back to state before optimistic update
+            setRounds(rounds)
             setAction(ActionStatus.ISIDLE)
           }
         }
       })
     } else {
       //* else no rounds have to be deleted and latest round can simply be created
-      createLatestRound({ gameId: game.id, roundNumber: currentRoundNumber + 1, data: newRoundData }, {
-        onSettled: (data) => {
-          //* only successful for unfinished games
-          if (data && data.data) {
-            addRound(newRoundData)
-          }
-          setAction(ActionStatus.ISIDLE)
-        }
-      })
+      handleCreateLatestRound()
     }
   }
 
@@ -132,19 +138,34 @@ export const PlayerList = () => {
     }
   }
 
+  const isNotIdle = () => {
+    switch (action) {
+      case ActionStatus.ISSUBTRACT:
+      case ActionStatus.ISNUKE:
+        return true
+      default:
+        return false
+    }
+  };
+
+
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {current.data.players.map((jsonPlayer) => {
         const player = getPlayer(jsonPlayer.id)!
-        const remainingLifes = jsonPlayer.lifes
+        const playerProps: PlayerProps = {
+          player: player,
+          lifes: jsonPlayer.lifes,
+          isSwimming: current.data.playerSwimming === jsonPlayer.id,
+          isWinner: false,
+          isNotIdle: isNotIdle()
+        }
         return (
-          <p
+          <Player
             key={jsonPlayer.id}
-            onClick={() => handleClick(player.id)}
-            className="hover:bg-accent px-2 py-1 border border-primary rounded-lg cursor-pointer"
-          >
-            {player.displayName} - remaining lifes: {remainingLifes}
-          </p>
+            onClick={() => handleClick(jsonPlayer.id)}
+            {...playerProps}
+          />
         )
       })}
     </div>

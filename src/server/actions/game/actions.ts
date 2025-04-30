@@ -14,7 +14,11 @@ async function findGameById(gameId: string) {
     },
     include: {
       tracker: true,
-      participants: true,
+      participants: {
+        include: {
+          user: true
+        }
+      },
       rounds: true
     }
   })

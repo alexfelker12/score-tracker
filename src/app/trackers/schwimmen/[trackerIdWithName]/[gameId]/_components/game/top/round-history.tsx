@@ -16,7 +16,7 @@ export const RoundHistory = () => {
   //* hooks here
   const {
     currentRoundNumber,
-    isAction, setCurrentRoundNumber, getLatestRound
+    isAction, setCurrentRoundNumber, setPrevRoundNumber, getLatestRound
   } = useSchwimmenGameStore()
   const { meta } = useSchwimmenMetaStore()
 
@@ -30,10 +30,12 @@ export const RoundHistory = () => {
     switch (historyDir) {
       case "undo":
         if (isFirstRound) return
+        setPrevRoundNumber(currentRoundNumber)
         setCurrentRoundNumber(currentRoundNumber - 1)
         break
       case "redo":
         if (isLastRound) return
+        setPrevRoundNumber(currentRoundNumber)
         setCurrentRoundNumber(currentRoundNumber + 1)
         break
     }
@@ -46,7 +48,8 @@ export const RoundHistory = () => {
         variant="outline"
         disabled={!isAction(ActionStatus.ISIDLE) || isFirstRound}
         onClick={() => handleClick("undo")}
-      >
+        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
+        >
         <UndoIcon className="size-5" />
       </Button>
       <Button
@@ -54,7 +57,8 @@ export const RoundHistory = () => {
         variant="outline"
         disabled={!isAction(ActionStatus.ISIDLE) || isLastRound}
         onClick={() => handleClick("redo")}
-      >
+        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
+        >
         <RedoIcon className="size-5" />
       </Button>
     </div>
