@@ -138,15 +138,6 @@ export const PlayerList = () => {
     }
   }
 
-  const isNotIdle = () => {
-    switch (action) {
-      case ActionStatus.ISSUBTRACT:
-      case ActionStatus.ISNUKE:
-        return true
-      default:
-        return false
-    }
-  };
 
 
   return (
@@ -157,8 +148,7 @@ export const PlayerList = () => {
           player: player,
           lifes: jsonPlayer.lifes,
           isSwimming: current.data.playerSwimming === jsonPlayer.id,
-          isWinner: false,
-          isNotIdle: isNotIdle()
+          isWinner: false
         }
         return (
           <Player
