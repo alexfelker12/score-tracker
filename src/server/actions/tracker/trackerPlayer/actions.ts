@@ -28,7 +28,7 @@ async function addTrackerPlayer(params: {
       : {}),
   }
 
-  const createdTrackerPlayer = await prisma.trackerPlayer.create({
+  return await prisma.trackerPlayer.create({
     data: {
       tracker: {
         connect: {
@@ -42,10 +42,6 @@ async function addTrackerPlayer(params: {
       player
     }
   })
-
-  console.log(createdTrackerPlayer)
-
-  return createdTrackerPlayer
 }
 export type AddTrackerPlayerReturn = Prisma.PromiseReturnType<typeof addTrackerPlayer>
 export type AddTrackerPlayerArgs = Parameters<typeof addTrackerPlayer>
@@ -55,10 +51,7 @@ export async function addPlayerToTracker(...args: AddTrackerPlayerArgs) {
     addTrackerPlayer(...args)
   )
 
-  console.log(data)
-
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    console.log(error)
 
     //* unique constraint failed
     return {

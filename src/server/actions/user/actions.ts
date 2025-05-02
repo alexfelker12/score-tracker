@@ -1,14 +1,14 @@
 "use server"
 
 import { tryCatch } from "@/server/helpers/try-catch"
-import { caching, prisma } from "@/server/prisma"
+import { prisma } from "@/server/prisma"
 import { Prisma } from "@prisma/client/edge"
 
 
 //*** GET
 //* users by username
 async function findUsersByUsername(userId: string, nameStart: string) {
-  const queryArgs: Prisma.UserFindManyArgs = {
+  return await prisma.user.findMany({
     where: {
       id: {
         not: userId
@@ -37,11 +37,8 @@ async function findUsersByUsername(userId: string, nameStart: string) {
     },
     orderBy: {
       displayUsername: "asc"
-    },
-    ...caching
-  }
-
-  return await prisma.user.findMany(queryArgs)
+    }
+  })
 }
 export type FindUsersByUsernameReturn = Prisma.PromiseReturnType<typeof findUsersByUsername>
 export type FindUsersByUsernameArgs = Parameters<typeof findUsersByUsername>
@@ -59,7 +56,7 @@ export async function getUsersByUsername(...args: FindUsersByUsernameArgs) {
 
 //* all users except self
 async function findOtherUsers(userId: string) {
-  const queryArgs: Prisma.UserFindManyArgs = {
+  return await prisma.user.findMany({
     where: {
       id: {
         not: userId
@@ -70,11 +67,8 @@ async function findOtherUsers(userId: string) {
         sort: "asc",
         nulls: "last"
       }
-    },
-    ...caching
-  }
-
-  return await prisma.user.findMany(queryArgs)
+    }
+  })
 }
 export type FindOtherUsersReturn = Prisma.PromiseReturnType<typeof findOtherUsers>
 export type FindOtherUsersArgs = Parameters<typeof findOtherUsers>

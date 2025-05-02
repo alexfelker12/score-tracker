@@ -1,13 +1,14 @@
-import { GameParticipant } from '@prisma/client';
+// import { GameParticipantWithUser } from '@prisma/client';
 import { create } from 'zustand';
+import { GameParticipantWithUser } from './schwimmenGameStore';
 
 // Zentraler Store für den Confirmation-Status
 interface ConfirmationStore {
   isOpen: boolean
-  data: GameParticipant[]
-  resolver: ((value: GameParticipant) => void) | null
-  openConfirmation: (data?: GameParticipant[]) => Promise<GameParticipant>
-  confirm: (survivingPlayer: GameParticipant) => GameParticipant
+  data: GameParticipantWithUser[]
+  resolver: ((value: GameParticipantWithUser) => void) | null
+  openConfirmation: (data?: GameParticipantWithUser[]) => Promise<GameParticipantWithUser>
+  confirm: (survivingPlayer: GameParticipantWithUser) => GameParticipantWithUser
 }
 
 export const useConfirmationStore = create<ConfirmationStore>((set, get) => ({
@@ -15,7 +16,7 @@ export const useConfirmationStore = create<ConfirmationStore>((set, get) => ({
   data: [],
   resolver: null,
   openConfirmation: (data = []) => {
-    return new Promise<GameParticipant>((resolve) => {
+    return new Promise<GameParticipantWithUser>((resolve) => {
       set({ isOpen: true, data, resolver: resolve })
     })
   },

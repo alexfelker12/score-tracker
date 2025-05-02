@@ -11,7 +11,9 @@ export const auth = betterAuth({
   //   "http://192.168.178.71:3000",
   // ],
   //* production
-  trustedOrigins: [process.env.VERCEL_URL!],
+  trustedOrigins: [
+    process.env.VERCEL_URL!
+  ],
   emailAndPassword: {
     enabled: true,
   },

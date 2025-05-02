@@ -11,6 +11,7 @@ import { updateGameStatusAndData } from "@/server/actions/game/actions";
 import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
 
 //* lib
+import { SCHWIMMEN_TOP_ICON_SIZE_MAP } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 //* stores
@@ -18,14 +19,14 @@ import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore"
 import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 //* icons
-import { CheckIcon, Loader2Icon, SettingsIcon, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, Loader2Icon, SettingsIcon, XIcon } from "lucide-react";
 
 //* components
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
 
 
 // export type SettingsParams = {}, params: SettingsParams, const { } = params
@@ -88,9 +89,10 @@ export const Settings = () => {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button
-          size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-          variant="outline"
+          size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+          variant="gameOutline"
           disabled={!isAction(ActionStatus.ISIDLE)}
+          className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
         >
           <SettingsIcon className="size-5" />
         </Button>
@@ -98,7 +100,7 @@ export const Settings = () => {
       <DialogContent
         className={cn(
           "gap-6 [&_.hide-on-adjust]:transition-opacity",
-          meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-background/0 border-transparent"
+          meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-background/0 border-transparent shadow-none"
         )}
         isAdjusting={meta.isAdjustingSize}
       >
@@ -160,68 +162,79 @@ export const Settings = () => {
           </div>
 
           {/* option 3 - reset game */}
-          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", (isFirstRound || isCancelOpenOrPending) && "opacity-50")}>
+          <Collapsible
+            open={resetOpen} onOpenChange={setResetOpen}
+            className={cn("flex flex-wrap hide-on-adjust", (isFirstRound || isCancelOpenOrPending) && "opacity-50")}
+          >
             <div>
               <h4 id="reset-game-label" className="font-medium text-base">Reset game</h4>
             </div>
-            <div className="flex justify-between items-center gap-4 w-full">
+            <div className="flex justify-between items-center gap-4 mt-1 w-full">
               <span id="reset-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]">
-                <span className={cn("", isFirstRound ? "text-muted-foreground" : "text-destructive-foreground")}></span>
                 {isFirstRound
                   ? <span>Reset not possible: there is no progress yet</span>
-                  : <span><span className="text-destructive-foreground">Caution:</span> Game progress will be lost after resetting the game!</span>
+                  : <span><span className="text-secondary-foreground">Caution:</span> Game progress will be lost after resetting the game!</span>
                 }
               </span>
-              <Button
-                id="reset-game" aria-describedby="reset-game-desc" aria-labelledby="reset-game-label"
-                variant="secondary"
-                size={isResetOpenOrPending ? "icon" : "default"}
-                onClick={() => setResetOpen(!resetOpen)}
-                disabled={(isResetOrCancelOpenOrPending && !resetOpen) || isFirstRound || game.status !== "ACTIVE"}
-              >
-                {isResetPending
-                  ? <Loader2Icon className="text-primary animate-spin" />
-                  : resetOpen ? <XIcon /> : "Reset"
-                }
-              </Button>
+              <CollapsibleTrigger asChild>
+                <Button id="reset-game" aria-describedby="reset-game-desc" aria-labelledby="reset-game-label"
+                  variant="secondary" size={isResetPending ? "icon" : "default"}
+                  disabled={isResetOrCancelOpenOrPending || isFirstRound || game.status !== "ACTIVE"}
+                  onClick={() => setResetOpen(!resetOpen)}
+                  className={cn(resetOpen && "has-[>svg]:px-4")}
+                >
+                  {isResetPending
+                    ? <Loader2Icon className="text-secondary-foreground animate-spin" />
+                    : resetOpen ? <ChevronDownIcon className="size-5" /> : "Reset"
+                  }
+                </Button>
+              </CollapsibleTrigger>
             </div>
-            {resetOpen && <div className="mt-2 w-full">
-              <div className="flex justify-between items-center">
+            <CollapsibleContent className="w-full">
+              <div className="flex justify-between items-center pt-3">
                 <span>Are you sure?</span>
-                <Button variant="destructive" size="icon" onClick={handleReset}><CheckIcon /></Button>
-
+                <div className="space-x-3">
+                  <Button variant="outline" size="icon" onClick={() => setResetOpen(false)}><XIcon /></Button>
+                  <Button variant="destructive" size="icon" onClick={handleReset}><CheckIcon /></Button>
+                </div>
               </div>
-            </div>}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* option 4 - cancel game */}
-          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", isResetOpenOrPending && "opacity-50")}>
+          <Collapsible
+            open={cancelOpen} onOpenChange={setCancelOpen}
+            className={cn("flex flex-wrap hide-on-adjust", isResetOpenOrPending && "opacity-50")}
+          >
             <div>
-              <h4 id="cancel-game-label" className={cn("font-medium text-base", isResetOpenOrPending && "text-muted-foreground")}>Cancel game</h4>
+              <h4 id="cancel-game-label" className="font-medium text-base">Cancel game</h4>
             </div>
-            <div className="flex justify-between items-center gap-4 w-full">
-              <span id="cancel-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]"><span className="text-destructive-foreground">Caution:</span> A canceled game cannot be played afterwards!</span>
-              <Button
-                id="cancel-game" aria-describedby="cancel-game-desc" aria-labelledby="cancel-game-label"
-                variant={cancelOpen ? "secondary" : "destructive"}
-                size={isCancelOpenOrPending ? "icon" : "default"}
-                onClick={() => setCancelOpen(!cancelOpen)}
-                className="transition-colors"
-                disabled={(isResetOrCancelOpenOrPending && !cancelOpen) || game.status !== "ACTIVE"}
-              >
-                {isCancelPending
-                  ? <Loader2Icon className="text-primary animate-spin" />
-                  : cancelOpen ? <XIcon /> : "Cancel"
-                }
-              </Button>
+            <div className="flex justify-between items-center gap-4 mt-1 w-full">
+              <span id="cancel-game-desc" className="text-muted-foreground text-sm leading-[1.1rem]"><span className="text-secondary-foreground">Caution:</span> A canceled game cannot be played afterwards!</span>
+              <CollapsibleTrigger asChild>
+                <Button id="cancel-game" aria-describedby="cancel-game-desc" aria-labelledby="cancel-game-label"
+                  variant="destructive" size={isCancelPending ? "icon" : "default"}
+                  disabled={isResetOrCancelOpenOrPending || game.status !== "ACTIVE"}
+                  onClick={() => setCancelOpen(true)}
+                  className={cn(cancelOpen && "has-[>svg]:px-4")}
+                >
+                  {isCancelPending
+                    ? <Loader2Icon className="text-primary-foreground animate-spin" />
+                    : cancelOpen ? <ChevronDownIcon className="size-5" /> : "Cancel"
+                  }
+                </Button>
+              </CollapsibleTrigger>
             </div>
-            {cancelOpen && <div className="mt-2 w-full">
-              <div className="flex justify-between items-center">
+            <CollapsibleContent className="w-full">
+              <div className="flex justify-between items-center pt-3">
                 <span>Are you sure?</span>
-                <Button variant="destructive" size="icon" onClick={handleCancel}><CheckIcon /></Button>
+                <div className="space-x-3">
+                  <Button variant="outline" size="icon" onClick={() => setCancelOpen(false)}><XIcon /></Button>
+                  <Button variant="destructive" size="icon" onClick={handleCancel}><CheckIcon /></Button>
+                </div>
               </div>
-            </div>}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
 
         </div>
       </DialogContent>
