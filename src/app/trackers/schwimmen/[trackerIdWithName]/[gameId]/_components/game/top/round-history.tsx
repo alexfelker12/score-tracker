@@ -9,7 +9,7 @@ import { RedoIcon, UndoIcon } from "lucide-react";
 //* icons
 import { Button } from "@/components/ui/button";
 import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
-import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
+import { SCHWIMMEN_TOP_ICON_SIZE_MAP } from "@/lib/constants";
 
 
 export const RoundHistory = () => {
@@ -44,8 +44,8 @@ export const RoundHistory = () => {
   return (
     <div className="space-x-2">
       <Button
-        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-        variant="outline"
+        size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+        variant="gameOutline"
         disabled={!isAction(ActionStatus.ISIDLE) || isFirstRound}
         onClick={() => handleClick("undo")}
         className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
@@ -53,8 +53,8 @@ export const RoundHistory = () => {
         <UndoIcon className="size-5" />
       </Button>
       <Button
-        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-        variant="outline"
+        size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+        variant="gameOutline"
         disabled={!isAction(ActionStatus.ISIDLE) || isLastRound}
         onClick={() => handleClick("redo")}
         className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"

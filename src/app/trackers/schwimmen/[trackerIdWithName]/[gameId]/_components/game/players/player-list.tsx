@@ -2,6 +2,7 @@
 
 //* packages
 import { useMutation } from "@tanstack/react-query";
+import { AnimatePresence } from "motion/react";
 import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
@@ -20,7 +21,7 @@ export const PlayerList = () => {
   //* hooks here
   const {
     action, game, currentRoundNumber, rounds,
-    setAction, getRound, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
+    setAction, getRound, setCurrentRoundNumber, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
   } = useSchwimmenGameStore()
   // const { meta } = useSchwimmenMetaStore()
   const { showConfirmation } = useConfirmation()
@@ -36,7 +37,6 @@ export const PlayerList = () => {
     mutationKey: ["game", game.id, "delete"],
     mutationFn: deleteRoundsFromRoundNumber,
   })
-  
 
   //* current round
   const current = getRound(currentRoundNumber)
@@ -54,6 +54,7 @@ export const PlayerList = () => {
             if (updatedRounds) setLatestSyncedRounds(updatedRounds)
           } else {
             //* in case of an error from rq or backend: set rounds back to state before optimistic update
+            setCurrentRoundNumber(rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round)
             setRounds(rounds)
           }
           setAction(ActionStatus.ISIDLE)
@@ -70,6 +71,7 @@ export const PlayerList = () => {
             handleCreateLatestRound()
           } else {
             //* in case of an error from rq or backend: set rounds back to state before optimistic update
+            setCurrentRoundNumber(rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round)
             setRounds(rounds)
             setAction(ActionStatus.ISIDLE)
           }
@@ -82,7 +84,7 @@ export const PlayerList = () => {
   }
 
   //* click handler for all action states
-  const handleClick = async (playerId: string) => {
+  const handleClick = async (playerId: string, delay: number = 0) => {
     switch (action) {
       case ActionStatus.ISSUBTRACT:
         const newRoundData = subtractLifeOf(playerId)
@@ -92,7 +94,11 @@ export const PlayerList = () => {
           return
         }
 
-        handleNewRound(newRoundData)
+        if (delay > 0) {
+          setTimeout(() => handleNewRound(newRoundData), delay)
+        } else {
+          handleNewRound(newRoundData)
+        }
         break
 
       case ActionStatus.ISNUKE:
@@ -111,14 +117,22 @@ export const PlayerList = () => {
             //* do action
             const newRoundData = detonateNuke(playerId, survivingPlayer.id)
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
-            handleNewRound(newRoundData)
+            if (delay > 0) {
+              setTimeout(() => handleNewRound(newRoundData), delay)
+            } else {
+              handleNewRound(newRoundData)
+            }
 
             //* case 2: only 1 player would be swimming -> NO conflict
           } else if (affectedPlayers.length === 1) {
             //* do action
             const newRoundData = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
-            handleNewRound(newRoundData)
+            if (delay > 0) {
+              setTimeout(() => handleNewRound(newRoundData), delay)
+            } else {
+              handleNewRound(newRoundData)
+            }
           }
 
         } else {
@@ -126,7 +140,11 @@ export const PlayerList = () => {
           const newRoundData = detonateNuke(playerId)
           if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-          handleNewRound(newRoundData)
+          if (delay > 0) {
+            setTimeout(() => handleNewRound(newRoundData), delay)
+          } else {
+            handleNewRound(newRoundData)
+          }
         }
         break
 
@@ -138,26 +156,39 @@ export const PlayerList = () => {
     }
   }
 
+  // const amountDeadPlayers = current ? current.data.players.filter((player) => player.lifes < 1).length : 0
 
 
-  return (
+  if (current) return (
     <div className="flex flex-col gap-2">
-      {current.data.players.map((jsonPlayer) => {
-        const player = getPlayer(jsonPlayer.id)!
-        const playerProps: PlayerProps = {
-          player: player,
-          lifes: jsonPlayer.lifes,
-          isSwimming: current.data.playerSwimming === jsonPlayer.id,
-          isWinner: false
-        }
-        return (
-          <Player
-            key={jsonPlayer.id}
-            onClick={() => handleClick(jsonPlayer.id)}
-            {...playerProps}
-          />
-        )
-      })}
+      <AnimatePresence>
+        {current.data.players.map((jsonPlayer) => {
+          // if (meta.hideDead && jsonPlayer.lifes < 1) return;
+
+          const player = getPlayer(jsonPlayer.id)!
+          const playerProps: PlayerProps = {
+            player: player,
+            lifes: jsonPlayer.lifes,
+            isSwimming: current.data.playerSwimming === jsonPlayer.id,
+            // isWinner: false
+          }
+          return (
+            <Player
+              key={jsonPlayer.id}
+              onClick={() => handleClick(jsonPlayer.id)}
+              // initial={{ scale: 0.8, opacity: 0 }}
+              // animate={{ scale: 1, opacity: 1 }}
+              // exit={{ scale: 0.8, opacity: 0 }}
+              // layout
+              {...playerProps}
+            />
+          )
+        })}
+      </AnimatePresence>
+
+      {/* {(meta.hideDead && amountDeadPlayers > 0) && <span className="text-muted-foreground text-sm italic">
+        {amountDeadPlayers} player{amountDeadPlayers > 1 ? "s" : ""} hidden
+      </span>} */}
     </div>
   );
 }

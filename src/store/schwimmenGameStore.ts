@@ -31,8 +31,8 @@ type SchwimmenGameActions = {
   setAction: (action: ActionStatus) => void
   isAction: (action: ActionStatus) => boolean
 
-  getRound: (roundNumber: number) => Round
-  getCurrentRound: () => Round
+  getRound: (roundNumber: number) => Round | undefined
+  getCurrentRound: () => Round | undefined
   getLatestRound: () => Round
   setPrevRoundNumber: (roundNumber: number) => void
   setCurrentRoundNumber: (roundNumber: number) => void
@@ -75,8 +75,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   isAction: (action) => get().action === action,
 
   //* rounds
-  // at the end "!" because we know they exist
-  getRound: (roundNumber) => get().rounds.find((round) => round.round === roundNumber)!,
+  getRound: (roundNumber) => get().rounds.find((round) => round.round === roundNumber),
   getCurrentRound: () => get().getRound(get().currentRoundNumber),
   getLatestRound: () => get().rounds.reduce((prev, current) => (prev && prev.round > current.round) ? prev : current),
   setPrevRoundNumber: (roundNumber) => set({ prevRoundNumber: roundNumber || 0 }),
@@ -120,6 +119,9 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     if (get().game.status !== "ACTIVE") return;
     const playersHit: string[] = []
     const thisRound = get().getCurrentRound()
+
+    if (!thisRound) return undefined
+
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
 
@@ -159,6 +161,9 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     if (get().game.status !== "ACTIVE") return;
     const playersHit: string[] = []
     const thisRound = get().getCurrentRound()
+
+    if (!thisRound) return undefined
+
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === detonatorId)!
 
@@ -201,6 +206,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
   checkNukeForConflict: (playerId) => {
     const thisRound = get().getCurrentRound()
     const players = get().players
+
+    if (!thisRound) return undefined
 
     //* conflict can only happen, if no player is swimming
     if (!thisRound.data.playerSwimming) {

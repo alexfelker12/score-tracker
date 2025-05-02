@@ -11,7 +11,7 @@ import { updateGameStatusAndData } from "@/server/actions/game/actions";
 import { deleteRoundsFromRoundNumber } from "@/server/actions/game/roundData/actions";
 
 //* lib
-import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
+import { SCHWIMMEN_TOP_ICON_SIZE_MAP } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 //* stores
@@ -89,8 +89,8 @@ export const Settings = () => {
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button
-          size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-          variant="outline"
+          size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+          variant="gameOutline"
           disabled={!isAction(ActionStatus.ISIDLE)}
           className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
         >

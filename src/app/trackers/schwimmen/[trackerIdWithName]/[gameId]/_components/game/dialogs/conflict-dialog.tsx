@@ -5,6 +5,7 @@ import { useConfirmation } from "@/hooks/use-confirmation";
 
 //* components
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Player } from "../players/player";
 
 export const ConflictDialog = () => {
   const { isConfirmationOpen, confirmationData, handleConfirm } = useConfirmation();
@@ -18,11 +19,17 @@ export const ConflictDialog = () => {
             There are certain people about to drown. Who is surviving (for now)?
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {confirmationData.map((affectedPlayer) => (
-            <p key={affectedPlayer.id} onClick={() => { handleConfirm(affectedPlayer) }} className="cursor-pointer">
-              {affectedPlayer.displayName}
-            </p>
+            <Player
+              key={affectedPlayer.id}
+              isSwimming={false}
+              // isWinner={false}
+              lifes={1}
+              player={affectedPlayer}
+              onClick={() => { handleConfirm(affectedPlayer) }}
+              className="cursor-pointer"
+            />
           ))}
         </div>
       </AlertDialogContent>

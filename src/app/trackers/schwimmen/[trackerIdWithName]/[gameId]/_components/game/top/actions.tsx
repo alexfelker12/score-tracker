@@ -13,7 +13,8 @@ import { HeartCrackIcon, BombIcon, XIcon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMutationState } from "@tanstack/react-query";
 import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
-import { SCHWIMMEN_ICON_SIZE_MAP } from "@/lib/constants";
+import { SCHWIMMEN_TOP_ICON_SIZE_MAP } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 
 export const Actions = () => {
@@ -31,8 +32,8 @@ export const Actions = () => {
     <>
       {/* subtract life */}
       <Button
-        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-        variant="outline"
+        size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+        variant="gameOutline"
         disabled={isAction(ActionStatus.ISNUKE) || game.status !== "ACTIVE" || isActionPending}
         onClick={() => {
           if (isAction(ActionStatus.ISSUBTRACT)) {
@@ -41,7 +42,10 @@ export const Actions = () => {
             setAction(ActionStatus.ISSUBTRACT)
           }
         }}
-        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
+        className={cn(
+          "transition-[width,height,border-color] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200",
+          (isAction(ActionStatus.ISSUBTRACT) && !isActionPending) && "border-muted-foreground"
+        )}
       >
         {isAction(ActionStatus.ISSUBTRACT)
           ? isActionPending
@@ -53,8 +57,8 @@ export const Actions = () => {
 
       {/* detonate nuke */}
       <Button
-        size={`game${SCHWIMMEN_ICON_SIZE_MAP[meta.uiSize[0]]}`}
-        variant="outline"
+        size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
+        variant="gameOutline"
         disabled={isAction(ActionStatus.ISSUBTRACT) || game.status !== "ACTIVE" || isActionPending}
         onClick={() => {
           if (isAction(ActionStatus.ISNUKE)) {
@@ -63,7 +67,10 @@ export const Actions = () => {
             setAction(ActionStatus.ISNUKE)
           }
         }}
-        className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
+        className={cn(
+          "transition-[width,height,border-color] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200",
+          (isAction(ActionStatus.ISNUKE) && !isActionPending) && "border-muted-foreground"
+        )}
       >
         {isAction(ActionStatus.ISNUKE)
           ? isActionPending

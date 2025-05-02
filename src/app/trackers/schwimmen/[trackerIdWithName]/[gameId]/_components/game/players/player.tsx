@@ -8,8 +8,10 @@ import { AnimatePresence, motion, useAnimate } from "motion/react";
 
 //* stores
 import { ActionStatus, GameParticipantWithUser, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 //* lib
+import { SCHWIMMEN_GAME_ICON_SIZE_MAP, SCHWIMMEN_PLAYER_FALLBACK_SIZE_MAP, SCHWIMMEN_PLAYER_IMG_SIZE_MAP, SCHWIMMEN_PLAYER_TEXT_SIZE_MAP } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 //* icons
@@ -24,29 +26,25 @@ export type PlayerProps = {
   player: GameParticipantWithUser
   lifes: number
   isSwimming: boolean
-  isWinner: boolean
+  // isWinner: boolean
 }
 export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerProps) => {
-  const { player, lifes, isSwimming, isWinner, className, ...rest } = params
-
+  const { player, lifes, isSwimming, className, ...rest } = params
 
   //* variables
   const playerName = player.user ? (player.user.displayUsername || player.user.name) : player.displayName
   const isDead = lifes < 1
-  const lifesWithKey = Array.from({ length: lifes }).map((_, idx) => ({ key: idx }))
+  const lifesWithKey = Array.from({ length: isSwimming ? lifes - 1 : lifes }).map((_, idx) => ({ key: idx }))
 
   //* hooks here
   const { rounds, lastPlayersHit, action } = useSchwimmenGameStore()
-  // const { meta } = useSchwimmenMetaStore()
+  const { meta } = useSchwimmenMetaStore()
   const [scope, animate] = useAnimate()
   const [animationEnd, setAnimationEnd] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     //* when rounds changed at least one player was hit - do shake animation and set back to default afterwards
     if (lastPlayersHit.includes(player.id) && isNotIdle()) {
-      //* no action/animation when dead 
-      if (isDead) return;
-
       animate(scope.current, { ...getAnimationProps("shake")["keyframes"] }, { ...getAnimationProps("shake")["options"] }) // player card
       animate(".player-border", { backgroundColor: "red" }) // player border
       //* timeout after shake transition duration
@@ -55,7 +53,7 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
         animate(".player-border", { backgroundColor: "" }) // player border
       }, getAnimationProps("shake")["options"].duration * 1000)
     } else {
-      //* when not hit immdiatly set back to default animation
+      //* when not hit immidiatly set back to default animation
       animate(scope.current, { ...getAnimationProps("default")["keyframes"] }, { ...getAnimationProps("default")["options"] })
     }
 
@@ -80,7 +78,7 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
   }, [action])
 
   // React.useEffect(() => {
-  // }, [latestSyncedRounds])
+  // }, [meta.hideDead])
 
   const isNotIdle = () => {
     switch (action) {
@@ -91,8 +89,6 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
         return false
     }
   };
-
-
 
   const getAnimationProps = (type: "pulse" | "shake" | "default") => {
     switch (type) {
@@ -118,20 +114,18 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
         };
       default:
         return {
-          keyframes: { scale: 1, x: 0 },
+          keyframes: { scale: 1, x: 0, y: 0 },
           options: { duration: 0.2 },
         };
     }
   };
 
 
-  // const playerHitStyle = 
-
   return (
     <motion.div
       className={cn(
-        "player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-sm",
-        isDead && "opacity-50 cursor-not-allowed",
+        "player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity",
+        isDead && "opacity-50 cursor-not-allowed shadow-none",
         className
       )}
       ref={scope}
@@ -140,42 +134,46 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
 
       {/* actual player card - has 0.375rem (= 6px) border to smooth out corner for animated border */}
       <div className={cn(
-        "z-10 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2"
+        "z-10 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2",
+        // SCHWIMMEN_PLAYER_CARD_PADDING_SIZE_MAP[meta.uiSize[0]]
       )}>
         {/* player image and name */}
         <div className="flex items-center gap-2" >
-          <Avatar className="size-9">
+          <Avatar className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_PLAYER_IMG_SIZE_MAP[meta.uiSize[0]])}>
             <AvatarImage src={player.user && player.user.image || undefined}></AvatarImage>
-            <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>
+            <AvatarFallback><UserIcon className={cn(SCHWIMMEN_PLAYER_FALLBACK_SIZE_MAP[meta.uiSize[0]])} /></AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-1">
-            <span className="font-medium">{playerName}</span>
+            <span className={cn("font-medium transition-[font-size]", SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]])}>{playerName}</span>
           </div>
         </div>
 
         {/* lifes */}
-        <div className="flex flex-row-reverse items-center gap-1.5" >
+        <div className="flex flex-row-reverse items-center gap-1" >
+
+          {/* player is swimming */}
           <AnimatePresence>
-            {isSwimming
-              //* specific death animation when swimming
-              ? lifes > 0
-                ? <SwimmingEffect />
-                : <SkullIcon
-                  className="size-8"
+            {(isSwimming && !isDead) && <SwimmingEffect />}
+          </AnimatePresence>
+
+          {/* player lifes or dead state */}
+          <AnimatePresence>
+            {isDead
+              ? <PlayerIsDead
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 100 }}
+                exit={{ opacity: 0 }}
+                className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
+              />
+              : lifesWithKey.map(({ key }) => (
+                <PlayerHeart
+                  key={key}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 100 }}
+                  exit={{ opacity: 0 }}
+                  className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
                 />
-              //* normal death animation
-              : lifes > 0
-                ? lifesWithKey.map(({ key }) => (
-                  <PlayerHeart
-                    key={key}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 100 }}
-                    exit={{ opacity: 0 }}
-                    className="size-8"
-                  />
-                ))
-                // TODO: from alive and not swimming to dead animation
-                : <SkullIcon />
+              ))
             }
           </AnimatePresence>
         </div>
@@ -195,9 +193,9 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
 
         //* non motion div props
         className={cn("player-border absolute inset-0 rounded-lg bg-border transition-colors",
-          isDead && "!bg-border",
-          (isSwimming && !isNotIdle()) && "bg-swimming",
           (!animationEnd && isNotIdle()) && "bg-muted-foreground",
+          (isSwimming && !isNotIdle()) && "bg-swimming",
+          isDead && "bg-border",
         )}
       />
 
@@ -217,7 +215,16 @@ const PlayerHeart = ({ className, ref, ...params }: React.ComponentPropsWithRef<
   );
 }
 
+const PlayerIsDead = ({ className, ref, ...params }: React.ComponentPropsWithRef<typeof motion.div>) => {
+  return (
+    <motion.div className="right-2 absolute" ref={ref} {...params}>
+      <SkullIcon className={cn("", className)} />
+    </motion.div>
+  );
+}
+
 const SwimmingEffect = ({ ...params }: React.ComponentProps<"div">) => {
+  const { meta } = useSchwimmenMetaStore()
   return (
     <div className="bottom-0 absolute inset-x-0 h-12 overflow-hidden" {...params}>
       <AnimatePresence propagate>
@@ -297,7 +304,7 @@ const SwimmingEffect = ({ ...params }: React.ComponentProps<"div">) => {
                 delay: 0.5
               }}
             >
-              <ManSwimmingIcon className="size-8" />
+              <ManSwimmingIcon className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])} />
             </motion.div>
           </motion.div>
 
@@ -305,4 +312,4 @@ const SwimmingEffect = ({ ...params }: React.ComponentProps<"div">) => {
       </AnimatePresence>
     </div>
   );
-};
+}
