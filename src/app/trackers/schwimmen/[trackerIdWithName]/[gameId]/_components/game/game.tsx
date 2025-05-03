@@ -25,6 +25,9 @@ import { Settings } from "./top/settings";
 
 //* temporary
 import { Loader2Icon } from "lucide-react";
+import { LayoutGroup } from "motion/react";
+// import { tryCatch } from "@/server/helpers/try-catch";
+// import { useConfirmation } from "@/hooks/use-confirmation";
 
 
 export type GameParams = {
@@ -40,6 +43,7 @@ export const Game = (params: GameParams) => {
     ready, game: storeGame, latestSyncedRounds,
     init, checkWinCondition, finishGame, getLatestRound
   } = useSchwimmenGameStore()
+  // const { showConfirmation } = useConfirmation()
 
   //* initialize game
   React.useEffect(() => {
@@ -56,12 +60,17 @@ export const Game = (params: GameParams) => {
 
   //* on game finish, update game status
   React.useEffect(() => {
-    console.log("checking game status")
-    if (ready && storeGame.status === "ACTIVE" && game.status === "ACTIVE") {
+    const checkFinishCondition = async () => {
       const winningPlayer = checkWinCondition()
       const lastRound = getLatestRound()
 
       if (!winningPlayer) return;
+
+      //TODO: here conflict dialog to ask if finishing action is correct
+      // const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
+      // if (error) return
+      //? incorrect now. Probably use another store or refactor confirmation store something like this...
+
 
       //* update game status to "COMPLETED"
       updateGame({
@@ -80,6 +89,7 @@ export const Game = (params: GameParams) => {
         }
       })
     }
+    if (ready && storeGame.status === "ACTIVE" && game.status === "ACTIVE") checkFinishCondition();
   }, [ready, latestSyncedRounds])
 
   //* PUT game status
@@ -96,26 +106,28 @@ export const Game = (params: GameParams) => {
 
   return (
     <div className="relative flex flex-col gap-4">
-      <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
-        {/* settings & history */}
-        <div className="flex gap-x-4">
-          <Settings />
-          <RoundHistory />
-        </div>
+      <LayoutGroup>
+        <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
+          {/* settings & history */}
+          <div className="flex gap-x-4">
+            <Settings />
+            <RoundHistory />
+          </div>
 
-        {/* actions */}
-        <div className="space-x-2">
-          <Actions />
-        </div>
-      </section>
+          {/* actions */}
+          <div className="space-x-2">
+            <Actions />
+          </div>
+        </section>
 
-      <section aria-description="Player list">
-        <PlayerList />
-      </section>
+        <section aria-description="Player list">
+          <PlayerList />
+        </section>
 
-      <ConflictDialog />
+        <ConflictDialog />
 
-      {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
+        {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
+      </LayoutGroup>
     </div>
   );
 }

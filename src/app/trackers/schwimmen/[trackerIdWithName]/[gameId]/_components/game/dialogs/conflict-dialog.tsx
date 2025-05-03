@@ -24,7 +24,8 @@ export const ConflictDialog = () => {
             <Player
               key={affectedPlayer.id}
               isSwimming={false}
-              // isWinner={false}
+              isWinner={false}
+              isNotIdle
               lifes={1}
               player={affectedPlayer}
               onClick={() => { handleConfirm(affectedPlayer) }}

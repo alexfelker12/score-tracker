@@ -5,12 +5,6 @@ import { prisma } from "@/server/prisma";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  //* developement
-  // trustedOrigins: [
-  //   "http://localhost:3000",
-  //   "http://192.168.178.71:3000",
-  // ],
-  //* production
   trustedOrigins: [
     process.env.VERCEL_URL!
   ],

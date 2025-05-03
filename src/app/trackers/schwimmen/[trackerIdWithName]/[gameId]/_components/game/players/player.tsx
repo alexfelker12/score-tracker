@@ -4,10 +4,10 @@
 import React from "react";
 
 //* packages
-import { AnimatePresence, motion, useAnimate } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 //* stores
-import { ActionStatus, GameParticipantWithUser, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { GameParticipantWithUser, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 //* lib
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 //* icons
 import { ManSwimmingIcon } from "@/components/icons/man-swimming";
-import { HeartIcon, SkullIcon, UserIcon } from "lucide-react";
+import { CrownIcon, HeartIcon, SkullIcon, UserIcon } from "lucide-react";
 
 //* components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,10 +26,11 @@ export type PlayerProps = {
   player: GameParticipantWithUser
   lifes: number
   isSwimming: boolean
-  // isWinner: boolean
+  isNotIdle: boolean
+  isWinner: boolean
 }
-export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerProps) => {
-  const { player, lifes, isSwimming, className, ...rest } = params
+export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & PlayerProps) => {
+  const { player, lifes, isSwimming, isNotIdle, isWinner, className, ref, ...rest } = params
 
   //* variables
   const playerName = player.user ? (player.user.displayUsername || player.user.name) : player.displayName
@@ -37,104 +38,32 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
   const lifesWithKey = Array.from({ length: isSwimming ? lifes - 1 : lifes }).map((_, idx) => ({ key: idx }))
 
   //* hooks here
-  const { rounds, lastPlayersHit, action } = useSchwimmenGameStore()
+  const { action, rounds } = useSchwimmenGameStore()
   const { meta } = useSchwimmenMetaStore()
-  const [scope, animate] = useAnimate()
-  const [animationEnd, setAnimationEnd] = React.useState<boolean>(false)
+  const [isChoosing, setIsChoosing] = React.useState<boolean>(false)
 
   React.useEffect(() => {
-    //* when rounds changed at least one player was hit - do shake animation and set back to default afterwards
-    if (lastPlayersHit.includes(player.id) && isNotIdle()) {
-      animate(scope.current, { ...getAnimationProps("shake")["keyframes"] }, { ...getAnimationProps("shake")["options"] }) // player card
-      animate(".player-border", { backgroundColor: "red" }) // player border
-      //* timeout after shake transition duration
-      setTimeout(() => {
-        animate(scope.current, { ...getAnimationProps("default")["keyframes"] }, { ...getAnimationProps("default")["options"] }) // player card
-        animate(".player-border", { backgroundColor: "" }) // player border
-      }, getAnimationProps("shake")["options"].duration * 1000)
-    } else {
-      //* when not hit immidiatly set back to default animation
-      animate(scope.current, { ...getAnimationProps("default")["keyframes"] }, { ...getAnimationProps("default")["options"] })
-    }
-
-    //* when rounds change animations should stop (except shaking)
-    setAnimationEnd(true)
+    setIsChoosing(false)
   }, [rounds])
-
   React.useEffect(() => {
-    //* pulse effect when action is currently not IDLE
-    if (isNotIdle()) {
-      //* no action/animation when dead 
-      if (isDead) return;
-
-      animate(scope.current, { ...getAnimationProps("pulse")["keyframes"] }, { ...getAnimationProps("pulse")["options"] })
-    } else {
-      //* when in IDLE set back to default (still) animation
-      if (scope.animations.length > 0) animate(scope.current, { ...getAnimationProps("default")["keyframes"] }, { ...getAnimationProps("default")["options"] })
-
-      //* when back in idle state
-      setAnimationEnd(false)
-    }
+    setIsChoosing(isNotIdle)
   }, [action])
-
-  // React.useEffect(() => {
-  // }, [meta.hideDead])
-
-  const isNotIdle = () => {
-    switch (action) {
-      case ActionStatus.ISSUBTRACT:
-      case ActionStatus.ISNUKE:
-        return true
-      default:
-        return false
-    }
-  };
-
-  const getAnimationProps = (type: "pulse" | "shake" | "default") => {
-    switch (type) {
-      case "pulse":
-        return {
-          keyframes: {
-            scale: [1, 1.02, 1],
-          },
-          options: {
-            duration: 2,
-            repeat: Infinity,
-          },
-        };
-      case "shake":
-        return {
-          keyframes: {
-            x: [0, -2, 4, -2, 0],
-            y: [0, 1, 0, -1, 0],
-          },
-          options: {
-            duration: 0.3,
-          },
-        };
-      default:
-        return {
-          keyframes: { scale: 1, x: 0, y: 0 },
-          options: { duration: 0.2 },
-        };
-    }
-  };
 
 
   return (
     <motion.div
       className={cn(
-        "player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity",
-        isDead && "opacity-50 cursor-not-allowed shadow-none",
+        "z-10 player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity",
+        isDead && "!opacity-50 cursor-not-allowed shadow-none",
         className
       )}
-      ref={scope}
+      ref={ref}
       {...rest}
     >
 
       {/* actual player card - has 0.375rem (= 6px) border to smooth out corner for animated border */}
       <div className={cn(
-        "z-10 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2",
+        "z-20 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2",
         // SCHWIMMEN_PLAYER_CARD_PADDING_SIZE_MAP[meta.uiSize[0]]
       )}>
         {/* player image and name */}
@@ -153,19 +82,19 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
 
           {/* player is swimming */}
           <AnimatePresence>
-            {(isSwimming && !isDead) && <SwimmingEffect />}
+            {(isSwimming && !isDead && !isWinner) && <SwimmingEffect />}
           </AnimatePresence>
 
           {/* player lifes or dead state */}
           <AnimatePresence>
-            {isDead
+            {isDead && !isWinner
               ? <PlayerIsDead
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 100 }}
                 exit={{ opacity: 0 }}
                 className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
               />
-              : lifesWithKey.map(({ key }) => (
+              : !isWinner && lifesWithKey.map(({ key }) => (
                 <PlayerHeart
                   key={key}
                   initial={{ opacity: 0 }}
@@ -175,6 +104,15 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
                 />
               ))
             }
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isWinner && <PlayerIsWinner
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 100 }}
+              exit={{ opacity: 0 }}
+              className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
+            />}
           </AnimatePresence>
         </div>
       </div>
@@ -193,9 +131,10 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
 
         //* non motion div props
         className={cn("player-border absolute inset-0 rounded-lg bg-border transition-colors",
-          (!animationEnd && isNotIdle()) && "bg-muted-foreground",
-          (isSwimming && !isNotIdle()) && "bg-swimming",
+          isChoosing && "bg-muted-foreground",
+          (isSwimming && !isNotIdle) && "bg-swimming",
           isDead && "bg-border",
+          isWinner && "bg-yellow-300"
         )}
       />
 
@@ -206,11 +145,7 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
 const PlayerHeart = ({ className, ref, ...params }: React.ComponentPropsWithRef<typeof motion.div>) => {
   return (
     <motion.div ref={ref} {...params}>
-      <HeartIcon
-        className={cn("text-red-500 fill-red-500",
-          className
-        )}
-      />
+      <HeartIcon className={cn("text-red-500 fill-red-500", className)} />
     </motion.div>
   );
 }
@@ -219,6 +154,14 @@ const PlayerIsDead = ({ className, ref, ...params }: React.ComponentPropsWithRef
   return (
     <motion.div className="right-2 absolute" ref={ref} {...params}>
       <SkullIcon className={cn("", className)} />
+    </motion.div>
+  );
+}
+
+const PlayerIsWinner = ({ className, ref, ...params }: React.ComponentPropsWithRef<typeof motion.div>) => {
+  return (
+    <motion.div className="right-2 absolute" ref={ref} {...params}>
+      <CrownIcon className={cn("text-yellow-300 fill-yellow-300", className)} />
     </motion.div>
   );
 }

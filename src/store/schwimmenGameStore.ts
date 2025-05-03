@@ -40,8 +40,8 @@ type SchwimmenGameActions = {
   setRounds: (rounds: Round[]) => void
   setLatestSyncedRounds: (rounds: Round[]) => void
   addRound: (data: Round["data"]) => Round[] | undefined
-  subtractLifeOf: (playerId: string) => Round["data"] | undefined
-  detonateNuke: (playerId: string, survivorId?: string) => Round["data"] | undefined
+  subtractLifeOf: (playerId: string) => [Round["data"] | undefined, string[]]
+  detonateNuke: (playerId: string, survivorId?: string) => [Round["data"] | undefined, string[]]
   setLastPlayersHit: (playerIds: string[]) => void
 
   checkNukeForConflict: (detonatorId: string) => GameParticipantWithUser[] | undefined
@@ -116,11 +116,11 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     return updated.rounds
   },
   subtractLifeOf: (playerId) => {
-    if (get().game.status !== "ACTIVE") return;
+    if (get().game.status !== "ACTIVE") return [undefined, []];
     const playersHit: string[] = []
     const thisRound = get().getCurrentRound()
 
-    if (!thisRound) return undefined
+    if (!thisRound) return [undefined, []]
 
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === playerId)!
@@ -132,37 +132,37 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     }
 
     //* continue only if player is not dead yet
-    if (getPlayerFromRound.lifes <= 0) return;
+    if (getPlayerFromRound.lifes > 0) {
 
-    newRoundState.players = playersThisRound.map((player) => {
-      if (player.id !== playerId) return player;
+      newRoundState.players = playersThisRound.map((player) => {
+        if (player.id !== playerId) return player;
 
-      //* check if a player is swimming
-      if (thisRound.data.playerSwimming || player.lifes > 1) {
-        
-        //* push player hit by last action
-        playersHit.push(player.id)
+        //* check if a player is swimming
+        if (thisRound.data.playerSwimming || player.lifes > 1) {
 
-        return {
-          id: player.id,
-          lifes: player.lifes - 1
+          //* push player hit by last action
+          playersHit.push(player.id)
+
+          return {
+            id: player.id,
+            lifes: player.lifes - 1
+          }
+        } else {
+          newRoundState.playerSwimming = player.id
+          return player
         }
-      } else {
-        newRoundState.playerSwimming = player.id
-        return player
-      }
-    })
+      })
 
-    get().setLastPlayersHit(playersHit)
-
-    return newRoundState
+      get().setLastPlayersHit(playersHit)
+      return [newRoundState, playersHit]
+    } else return [undefined, []]
   },
   detonateNuke: (detonatorId, survivorId) => {
-    if (get().game.status !== "ACTIVE") return;
+    if (get().game.status !== "ACTIVE") return [undefined, []];
     const playersHit: string[] = []
     const thisRound = get().getCurrentRound()
 
-    if (!thisRound) return undefined
+    if (!thisRound) return [undefined, []]
 
     const playersThisRound = thisRound.data.players
     const getPlayerFromRound = playersThisRound.find((player) => player.id === detonatorId)!
@@ -175,30 +175,30 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     }
 
     //* continue only if player is not dead yet
-    if (getPlayerFromRound.lifes <= 0) return;
+    if (getPlayerFromRound.lifes > 0) {
+      newRoundState.players = playersThisRound.map((player) => {
+        if (player.id === detonatorId) return player;
 
-    newRoundState.players = playersThisRound.map((player) => {
-      if (player.id === detonatorId) return player;
+        if (survivorId && player.id === survivorId) {
+          //* set survivor as swimming before returning as is
+          newRoundState.playerSwimming = survivorId
+          return player
+        }
 
-      if (survivorId && player.id === survivorId) {
-        //* set survivor as swimming before returning as is
-        newRoundState.playerSwimming = survivorId
-        return player
-      }
+        //* push player hit by last action
+        playersHit.push(player.id)
 
-      //* push player hit by last action
-      playersHit.push(player.id)
+        //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
+        return {
+          id: player.id,
+          lifes: player.lifes - 1
+        }
+      })
 
-      //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
-      return {
-        id: player.id,
-        lifes: player.lifes - 1
-      }
-    })
+      get().setLastPlayersHit(playersHit)
 
-    get().setLastPlayersHit(playersHit)
-
-    return newRoundState
+      return [newRoundState, playersHit]
+    } else return [undefined, []]
   },
   setLastPlayersHit: (playerIds) => set({ lastPlayersHit: playerIds }),
 
