@@ -20,6 +20,7 @@ import { CrownIcon, HeartIcon, SkullIcon, UserIcon } from "lucide-react";
 
 //* components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlayerNameScroller } from "./player-name-scroller";
 
 
 export type PlayerProps = {
@@ -53,7 +54,7 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & 
   return (
     <motion.div
       className={cn(
-        "z-10 player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity",
+        "z-10 player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity max-w-[calc(100vw-2rem)]",
         isDead && "!opacity-50 cursor-not-allowed shadow-none",
         className
       )}
@@ -63,17 +64,28 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & 
 
       {/* actual player card - has 0.375rem (= 6px) border to smooth out corner for animated border */}
       <div className={cn(
-        "z-20 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2",
+        "z-20 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2 max-w-full gap-2",
         // SCHWIMMEN_PLAYER_CARD_PADDING_SIZE_MAP[meta.uiSize[0]]
       )}>
         {/* player image and name */}
-        <div className="flex items-center gap-2" >
+        <div className="flex items-center gap-2 overflow-hidden" >
           <Avatar className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_PLAYER_IMG_SIZE_MAP[meta.uiSize[0]])}>
             <AvatarImage src={player.user && player.user.image || undefined}></AvatarImage>
             <AvatarFallback><UserIcon className={cn(SCHWIMMEN_PLAYER_FALLBACK_SIZE_MAP[meta.uiSize[0]])} /></AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-1">
-            <span className={cn("font-medium transition-[font-size]", SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]])}>{playerName}</span>
+          <div className="flex flex-col gap-1 overflow-hidden">
+
+
+            <PlayerNameScroller
+              className={SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]]}
+            >
+              {playerName}
+            </PlayerNameScroller>
+
+
+            {/* <span className={cn("font-medium transition-[font-size]", SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]])}>{playerName}</span> */}
+
+
           </div>
         </div>
 

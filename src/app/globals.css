@@ -183,3 +183,38 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Wrapper to allow both gradients */
+.mask-gradient {
+  position: relative;
+}
+
+.mask-gradient::before,
+.mask-gradient::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1rem;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: linear-gradient(to right, var(--background), transparent);
+}
+
+/* Right side needs inverse direction */
+.mask-gradient::after {
+  right: 0;
+  left: auto;
+  background: linear-gradient(to left, var(--background), transparent);
+}
+
+/* Fade in on active sides */
+.mask-left::before {
+  opacity: 1;
+}
+
+.mask-right::after {
+  opacity: 1;
+}
