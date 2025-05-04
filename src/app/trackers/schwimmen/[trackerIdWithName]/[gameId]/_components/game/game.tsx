@@ -5,6 +5,7 @@ import React from "react";
 
 //* packages
 import { useMutation } from "@tanstack/react-query";
+import { LayoutGroup } from "motion/react";
 
 //* server
 import { FindGameByIdReturn, updateGameStatusAndData } from "@/server/actions/game/actions";
@@ -18,6 +19,7 @@ import { getQueryClient } from "@/lib/get-query-client";
 //* local
 import { ConflictDialog } from "./dialogs/conflict-dialog";
 import { FinishedGame } from "./dialogs/finished-game";
+import { LastActionDialog } from "./dialogs/last-action-dialog";
 import { PlayerList } from "./players/player-list";
 import { Actions } from "./top/actions";
 import { RoundHistory } from "./top/round-history";
@@ -25,8 +27,6 @@ import { Settings } from "./top/settings";
 
 //* temporary
 import { Loader2Icon } from "lucide-react";
-import { LayoutGroup } from "motion/react";
-import { LastActionDialog } from "./dialogs/last-action-dialog";
 // import { tryCatch } from "@/server/helpers/try-catch";
 // import { useConfirmation } from "@/hooks/use-confirmation";
 
@@ -66,12 +66,6 @@ export const Game = (params: GameParams) => {
       const lastRound = getLatestRound()
 
       if (!winningPlayer) return;
-
-      //TODO: here conflict dialog to ask if finishing action is correct
-      // const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
-      // if (error) return
-      //? incorrect now. Probably use another store or refactor confirmation store something like this...
-
 
       //* update game status to "COMPLETED"
       updateGame({
@@ -128,6 +122,7 @@ export const Game = (params: GameParams) => {
         </section>
 
         <ConflictDialog />
+        <LastActionDialog />
 
         {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
       </LayoutGroup>
