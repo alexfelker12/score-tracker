@@ -1,14 +1,14 @@
 "use client"
 
 //* hooks
-import { useConfirmation } from "@/hooks/use-confirmation";
+import { useNukeConfirmation } from "@/hooks/use-confirmation";
 
 //* components
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Player } from "../players/player";
 
 export const ConflictDialog = () => {
-  const { isConfirmationOpen, confirmationData, handleConfirm } = useConfirmation();
+  const { isConfirmationOpen, confirmationData, handleConfirm } = useNukeConfirmation();
 
   return (
     <AlertDialog open={isConfirmationOpen}>

@@ -25,6 +25,10 @@ import { Settings } from "./top/settings";
 
 //* temporary
 import { Loader2Icon } from "lucide-react";
+import { LayoutGroup } from "motion/react";
+import { LastActionDialog } from "./dialogs/last-action-dialog";
+// import { tryCatch } from "@/server/helpers/try-catch";
+// import { useConfirmation } from "@/hooks/use-confirmation";
 
 
 export type GameParams = {
@@ -74,9 +78,11 @@ export const Game = (params: GameParams) => {
           winner: winningPlayer.id
         }
       }, {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
-          finishGame("COMPLETED")
+        onSettled: (data) => {
+          if (data && data.data) {
+            qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
+            finishGame("COMPLETED")
+          }
         }
       })
     }
@@ -109,13 +115,17 @@ export const Game = (params: GameParams) => {
         </div>
       </section>
 
-      <section aria-description="Player list">
-        <PlayerList />
-      </section>
+      <LayoutGroup>
+        <section aria-description="Player list">
+          <PlayerList />
+        </section>
 
-      <ConflictDialog />
+        {/* dialogs */}
+        <ConflictDialog />
+        <LastActionDialog />
 
-      {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
+        {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
+      </LayoutGroup>
     </div>
   );
 }

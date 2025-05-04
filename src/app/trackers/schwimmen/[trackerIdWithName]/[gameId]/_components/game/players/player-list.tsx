@@ -13,7 +13,9 @@ import { tryCatch } from "@/server/helpers/try-catch";
 import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
 
 //* hooks
-import { useConfirmation } from "@/hooks/use-confirmation";
+import { useLastActionConfirmation, useNukeConfirmation } from "@/hooks/use-confirmation";
+
+//* local
 import { Player, PlayerProps } from "./player";
 
 
@@ -21,25 +23,27 @@ export const PlayerList = () => {
   //* hooks here
   const {
     action, game, currentRoundNumber, rounds,
-    setAction, getRound, setCurrentRoundNumber, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke,
+    setAction, getRound, setCurrentRoundNumber, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke, checkWinConditionForGameData
   } = useSchwimmenGameStore()
-  // const { meta } = useSchwimmenMetaStore()
-  const { showConfirmation } = useConfirmation()
-
-  //* mutations for actions
-  //* POST round  // , isPending: isLatestRoundPending
-  const { mutate: createLatestRound } = useMutation({
-    mutationKey: ["game", game.id, "create"],
-    mutationFn: createLatestRoundForGame,
-  })
-  //* DELETE rounds  // , isPending: isDeleteRoundsPending
-  const { mutate: deleteRoundsFrom } = useMutation({
-    mutationKey: ["game", game.id, "delete"],
-    mutationFn: deleteRoundsFromRoundNumber,
-  })
+  const { meta } = useSchwimmenMetaStore()
+  const { showNukeConfirmation } = useNukeConfirmation()
+  const { showLastActionConfirmation } = useLastActionConfirmation()
+  const [scope, animate] = useAnimate()
 
   //* current round
   const current = getRound(currentRoundNumber)
+
+  //* mutations for actions
+  //* POST round
+  const { mutate: createLatestRound, isPending: isLatestRoundPending } = useMutation({
+    mutationKey: ["game", game.id, "create"],
+    mutationFn: createLatestRoundForGame,
+  })
+  //* DELETE rounds
+  const { mutate: deleteRoundsFrom, isPending: isDeleteRoundsPending } = useMutation({
+    mutationKey: ["game", game.id, "delete"],
+    mutationFn: deleteRoundsFromRoundNumber,
+  })
 
   //* round dependent action
   const handleNewRound = (newRoundData: SchwimmenRound) => {
@@ -85,6 +89,51 @@ export const PlayerList = () => {
 
   //* click handler for all action states
   const handleClick = async (playerId: string, delay: number = 0) => {
+    if (!current || isLatestRoundPending || isDeleteRoundsPending) return;
+
+    const checkForRoundWin = async (newRoundData: SchwimmenRound, playersHit: string[]) => {
+      const winningPlayer = checkWinConditionForGameData(newRoundData)
+
+      if (winningPlayer) {
+        const { data: confirmed, error } = await tryCatch(showLastActionConfirmation(winningPlayer))
+        if (error || !confirmed) {
+          setAction(ActionStatus.ISIDLE)
+          return
+        }
+
+        executeNewRound(newRoundData, playersHit)
+      } else {
+        executeNewRound(newRoundData, playersHit)
+      }
+    }
+
+    const executeNewRound = (newRoundData: SchwimmenRound, playersHit: string[]) => {
+      //* hit animation
+      playersHit.forEach((playerId) => {
+        //* direct hit animation
+        animateShake(playerId)
+        animateBorderRed(playerId)
+
+        setTimeout(() => {
+          //* reset/unset after hit duration
+          animateDefault(playerId)
+          animateBorderUnset(playerId)
+        }, getAnimationProps("shake")["options"].duration * 1000)
+      })
+
+      //* animation stop for other players
+      current.data.players.filter((player) => !playersHit.includes(player.id)).forEach((otherPlayer) => {
+        if (otherPlayer.lifes > 0 && scope.animations.length > 0) animateDefault(otherPlayer.id)
+      })
+
+      //* execute of 
+      if (delay > 0) {
+        setTimeout(() => handleNewRound(newRoundData), delay)
+      } else {
+        handleNewRound(newRoundData)
+      }
+    }
+
     switch (action) {
       case ActionStatus.ISSUBTRACT:
         const newRoundData = subtractLifeOf(playerId)
@@ -94,11 +143,7 @@ export const PlayerList = () => {
           return
         }
 
-        if (delay > 0) {
-          setTimeout(() => handleNewRound(newRoundData), delay)
-        } else {
-          handleNewRound(newRoundData)
-        }
+        checkForRoundWin(newRoundData, playersHit)
         break
 
       case ActionStatus.ISNUKE:
@@ -111,7 +156,7 @@ export const PlayerList = () => {
           //* case 1: 2 or more players would be swimming -> conflict
           if (affectedPlayers.length >= 2) {
             //* get surviving player from conflict dialog, in case of error, log and set back to idle
-            const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
+            const { data: survivingPlayer, error } = await tryCatch(showNukeConfirmation(affectedPlayers))
             if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
             //* do action
@@ -123,16 +168,15 @@ export const PlayerList = () => {
               handleNewRound(newRoundData)
             }
 
+            checkForRoundWin(newRoundData, playersHit)
+          } else if (affectedPlayers.length === 1) {
             //* case 2: only 1 player would be swimming -> NO conflict
           } else if (affectedPlayers.length === 1) {
             //* do action
             const newRoundData = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
-            if (delay > 0) {
-              setTimeout(() => handleNewRound(newRoundData), delay)
-            } else {
-              handleNewRound(newRoundData)
-            }
+
+            checkForRoundWin(newRoundData, playersHit)
           }
 
         } else {
@@ -140,11 +184,7 @@ export const PlayerList = () => {
           const newRoundData = detonateNuke(playerId)
           if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-          if (delay > 0) {
-            setTimeout(() => handleNewRound(newRoundData), delay)
-          } else {
-            handleNewRound(newRoundData)
-          }
+          checkForRoundWin(newRoundData, playersHit)
         }
         break
 
@@ -156,7 +196,77 @@ export const PlayerList = () => {
     }
   }
 
-  // const amountDeadPlayers = current ? current.data.players.filter((player) => player.lifes < 1).length : 0
+
+  React.useEffect(() => {
+    //* pulse effect when action is currently not IDLE
+    if (isNotIdle()) {
+      if (!current) return
+
+      current.data.players.forEach((jsonPlayer) => {
+        //* no action/animation when dead 
+        if (jsonPlayer.lifes > 0) animatePulse(jsonPlayer.id)
+      })
+
+    } else {
+      if (scope.animations.length > 0) animateDefault()
+    }
+  }, [action])
+
+
+  //* animation functions
+  const isNotIdle = () => {
+    switch (action) {
+      case ActionStatus.ISSUBTRACT:
+      case ActionStatus.ISNUKE:
+        return true
+      default:
+        return false
+    }
+  }
+  const getAnimationProps = (type: "pulse" | "shake" | "default") => {
+    switch (type) {
+      case "pulse":
+        return {
+          keyframes: {
+            scale: [1, 1.02, 1],
+          },
+          options: {
+            duration: 2,
+            repeat: Infinity,
+          },
+        };
+      case "shake":
+        return {
+          keyframes: {
+            x: [0, -2, 4, -2, 0],
+            y: [0, 1, 0, -1, 0],
+          },
+          options: {
+            duration: 0.3,
+          },
+        };
+      default:
+        return {
+          keyframes: { scale: 1, x: 0, y: 0 },
+          options: { duration: 0.2 },
+        };
+    }
+  }
+  const animateShake = (playerId: string) => {
+    animate(`#player-${playerId}`, { ...getAnimationProps("shake")["keyframes"] }, { ...getAnimationProps("shake")["options"] }) // player card
+  }
+  const animatePulse = (playerId?: string) => {
+    animate(playerId ? `#player-${playerId}` : ".player-card", { ...getAnimationProps("pulse")["keyframes"] }, { ...getAnimationProps("pulse")["options"] }) // player card
+  }
+  const animateDefault = (playerId?: string) => {
+    animate(playerId ? `#player-${playerId}` : ".player-card", { ...getAnimationProps("default")["keyframes"] }, { ...getAnimationProps("default")["options"] }) // player card
+  }
+  const animateBorderRed = (playerId: string) => {
+    animate(`#player-${playerId} .player-border`, { backgroundColor: "red" }) // player border
+  }
+  const animateBorderUnset = (playerId: string) => {
+    animate(`#player-${playerId} .player-border`, { backgroundColor: "" }) // player border
+  }
 
 
   if (current) return (

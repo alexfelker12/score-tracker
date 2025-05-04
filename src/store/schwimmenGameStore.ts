@@ -46,6 +46,7 @@ type SchwimmenGameActions = {
 
   checkNukeForConflict: (detonatorId: string) => GameParticipantWithUser[] | undefined
   checkWinCondition: () => GameParticipantWithUser | undefined
+  checkWinConditionForGameData: (data: Round["data"]) => GameParticipantWithUser | undefined
 
   finishGame: (newStatus: Exclude<Game["status"], "ACTIVE">) => void
 }
@@ -232,6 +233,10 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     if (playersAlive.length !== 1) return;
 
     return get().getPlayer(playersAlive[0].id)
+  },
+  checkWinConditionForGameData: (data) => {
+    const playersAlive = data.players.filter((player) => player.lifes > 0)
+    if (playersAlive.length === 1) return get().getPlayer(playersAlive[0].id); // 0 exists because length === 1 check is true
   },
 
   //* post finish

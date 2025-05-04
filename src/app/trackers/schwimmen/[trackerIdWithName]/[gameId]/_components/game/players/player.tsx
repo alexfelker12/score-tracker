@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 //* icons
 import { ManSwimmingIcon } from "@/components/icons/man-swimming";
-import { HeartIcon, SkullIcon, UserIcon } from "lucide-react";
+import { CrownIcon, HeartIcon, SkullIcon, UserIcon } from "lucide-react";
 
 //* components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -203,22 +203,26 @@ export const Player = (params: React.ComponentProps<typeof motion.div> & PlayerP
   );
 }
 
-const PlayerHeart = ({ className, ref, ...params }: React.ComponentPropsWithRef<typeof motion.div>) => {
+const PlayerHeart = ({ className, ...params }: React.ComponentPropsWithoutRef<typeof motion.div>) => {
   return (
-    <motion.div ref={ref} {...params}>
-      <HeartIcon
-        className={cn("text-red-500 fill-red-500",
-          className
-        )}
-      />
+    <motion.div {...params}>
+      <HeartIcon className={cn("text-red-500 fill-red-500", className)} />
     </motion.div>
   );
 }
 
-const PlayerIsDead = ({ className, ref, ...params }: React.ComponentPropsWithRef<typeof motion.div>) => {
+const PlayerIsDead = ({ className, ...params }: React.ComponentPropsWithoutRef<typeof motion.div>) => {
   return (
-    <motion.div className="right-2 absolute" ref={ref} {...params}>
+    <motion.div className="right-2 absolute" {...params}>
       <SkullIcon className={cn("", className)} />
+    </motion.div>
+  );
+}
+
+const PlayerIsWinner = ({ className, ...params }: React.ComponentPropsWithoutRef<typeof motion.div>) => {
+  return (
+    <motion.div className="right-2 absolute" {...params}>
+      <CrownIcon className={cn("text-yellow-300 fill-yellow-300", className)} />
     </motion.div>
   );
 }
