@@ -1,8 +1,11 @@
 "use client"
 
+//* next/react
+import React from "react";
+
 //* packages
 import { useMutation } from "@tanstack/react-query";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { SchwimmenRound } from "prisma/json_types/types";
 
 //* server
@@ -10,7 +13,8 @@ import { createLatestRoundForGame, deleteRoundsFromRoundNumber } from "@/server/
 import { tryCatch } from "@/server/helpers/try-catch";
 
 //* stores
-import { ActionStatus, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { ActionStatus, Round, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
+import { useSchwimmenMetaStore } from "@/store/schwimmenMetaStore";
 
 //* hooks
 import { useLastActionConfirmation, useNukeConfirmation } from "@/hooks/use-confirmation";
@@ -30,7 +34,21 @@ export const PlayerList = () => {
   const { showLastActionConfirmation } = useLastActionConfirmation()
   const [scope, animate] = useAnimate()
 
-  //* current round
+  React.useEffect(() => {
+    //* pulse effect when action is currently not IDLE
+    if (isNotIdle()) {
+      if (!current) return
+
+      current.data.players.forEach((jsonPlayer) => {
+        //* no action/animation when dead 
+        if (jsonPlayer.lifes > 0) animatePulse(jsonPlayer.id)
+      })
+
+    } else {
+      if (scope.animations.length > 0) animateDefault()
+    }
+  }, [action])
+
   const current = getRound(currentRoundNumber)
 
   //* mutations for actions
@@ -136,7 +154,7 @@ export const PlayerList = () => {
 
     switch (action) {
       case ActionStatus.ISSUBTRACT:
-        const newRoundData = subtractLifeOf(playerId)
+        const [newRoundData, playersHit] = subtractLifeOf(playerId)
 
         if (!newRoundData) {
           setAction(ActionStatus.ISIDLE)
@@ -153,27 +171,25 @@ export const PlayerList = () => {
 
         if (affectedPlayers) {
 
-          //* case 1: 2 or more players would be swimming -> conflict
           if (affectedPlayers.length >= 2) {
+            //* case 1: 2 or more players would be swimming -> conflict
+
             //* get surviving player from conflict dialog, in case of error, log and set back to idle
             const { data: survivingPlayer, error } = await tryCatch(showNukeConfirmation(affectedPlayers))
             if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
             //* do action
-            const newRoundData = detonateNuke(playerId, survivingPlayer.id)
+            const [newRoundData, playersHit] = detonateNuke(playerId, survivingPlayer.id)
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
-            if (delay > 0) {
-              setTimeout(() => handleNewRound(newRoundData), delay)
-            } else {
-              handleNewRound(newRoundData)
-            }
 
             checkForRoundWin(newRoundData, playersHit)
           } else if (affectedPlayers.length === 1) {
             //* case 2: only 1 player would be swimming -> NO conflict
           } else if (affectedPlayers.length === 1) {
+            //* case 2: only 1 player would be swimming -> NO conflict
+
             //* do action
-            const newRoundData = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
+            const [newRoundData, playersHit] = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
             checkForRoundWin(newRoundData, playersHit)
@@ -181,7 +197,7 @@ export const PlayerList = () => {
 
         } else {
           //* if no conflict, just pass playerId
-          const newRoundData = detonateNuke(playerId)
+          const [newRoundData, playersHit] = detonateNuke(playerId)
           if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
           checkForRoundWin(newRoundData, playersHit)
@@ -189,10 +205,7 @@ export const PlayerList = () => {
         break
 
       case ActionStatus.ISIDLE:
-      // basically do nothing
-      //? what was this for and why is it in the idle case?
-      //* after every action check if win condition is met (only one player alive)
-      // checkWinCondition()
+      default:
     }
   }
 
@@ -270,35 +283,53 @@ export const PlayerList = () => {
 
 
   if (current) return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" ref={scope}>
       <AnimatePresence>
         {current.data.players.map((jsonPlayer) => {
-          // if (meta.hideDead && jsonPlayer.lifes < 1) return;
+          if (meta.hideDead && jsonPlayer.lifes < 1) return;
 
           const player = getPlayer(jsonPlayer.id)!
           const playerProps: PlayerProps = {
             player: player,
             lifes: jsonPlayer.lifes,
             isSwimming: current.data.playerSwimming === jsonPlayer.id,
-            // isWinner: false
+            isNotIdle: isNotIdle(),
+            isWinner: current.data.players.filter((roundPlayer) => roundPlayer.lifes > 0).length === 1 && jsonPlayer.lifes > 0
           }
           return (
             <Player
               key={jsonPlayer.id}
-              onClick={() => handleClick(jsonPlayer.id)}
-              // initial={{ scale: 0.8, opacity: 0 }}
-              // animate={{ scale: 1, opacity: 1 }}
-              // exit={{ scale: 0.8, opacity: 0 }}
-              // layout
+              id={`player-${jsonPlayer.id}`}
+              onClick={() => handleClick(jsonPlayer.id, (jsonPlayer.lifes <= 1 && current.data.playerSwimming) ? 300 : 0)}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              layout
               {...playerProps}
             />
           )
         })}
       </AnimatePresence>
 
-      {/* {(meta.hideDead && amountDeadPlayers > 0) && <span className="text-muted-foreground text-sm italic">
-        {amountDeadPlayers} player{amountDeadPlayers > 1 ? "s" : ""} hidden
-      </span>} */}
+      {/* hidden dead player count */}
+      <AnimatePresence>{meta.hideDead && <HiddenPlayerCount currentRound={current} />}</AnimatePresence>
     </div>
+  );
+}
+
+const HiddenPlayerCount = ({ currentRound }: { currentRound: Round | undefined }) => {
+  const amountDeadPlayers = currentRound ? currentRound.data.players.filter((player) => player.lifes < 1).length : 0
+
+  if (amountDeadPlayers > 0) return (
+    <motion.span
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ bounce: false, duration: 0.3, ease: "easeInOut" }}
+      className="z-0 w-fit text-muted-foreground text-sm italic"
+      layout
+    >
+      {amountDeadPlayers} player{amountDeadPlayers > 1 ? "s" : ""} hidden
+    </motion.span>
   );
 }

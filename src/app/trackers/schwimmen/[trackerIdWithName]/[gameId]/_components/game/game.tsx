@@ -44,6 +44,7 @@ export const Game = (params: GameParams) => {
     ready, game: storeGame, latestSyncedRounds,
     init, checkWinCondition, finishGame, getLatestRound
   } = useSchwimmenGameStore()
+  // const { showConfirmation } = useConfirmation()
 
   //* initialize game
   React.useEffect(() => {
@@ -60,12 +61,17 @@ export const Game = (params: GameParams) => {
 
   //* on game finish, update game status
   React.useEffect(() => {
-    console.log("checking game status")
-    if (ready && storeGame.status === "ACTIVE" && game.status === "ACTIVE") {
+    const checkFinishCondition = async () => {
       const winningPlayer = checkWinCondition()
       const lastRound = getLatestRound()
 
       if (!winningPlayer) return;
+
+      //TODO: here conflict dialog to ask if finishing action is correct
+      // const { data: survivingPlayer, error } = await tryCatch(showConfirmation(affectedPlayers))
+      // if (error) return
+      //? incorrect now. Probably use another store or refactor confirmation store something like this...
+
 
       //* update game status to "COMPLETED"
       updateGame({
@@ -86,6 +92,7 @@ export const Game = (params: GameParams) => {
         }
       })
     }
+    if (ready && storeGame.status === "ACTIVE" && game.status === "ACTIVE") checkFinishCondition();
   }, [ready, latestSyncedRounds])
 
   //* PUT game status
@@ -120,9 +127,7 @@ export const Game = (params: GameParams) => {
           <PlayerList />
         </section>
 
-        {/* dialogs */}
         <ConflictDialog />
-        <LastActionDialog />
 
         {(ready && storeGame.status !== "ACTIVE") && <FinishedGame trackerPath={trackerPath} />}
       </LayoutGroup>

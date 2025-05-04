@@ -15,6 +15,7 @@ import { ArrowRightIcon } from "lucide-react";
 
 //* components
 import { Button } from "@/components/ui/button";
+import { motion } from "motion/react";
 
 export const FinishedGame = ({ trackerPath }: { trackerPath: string }) => {
   const [finishedGameOverlayOpen, setFinishedGameOverlayOpen] = React.useState(true)
@@ -27,8 +28,11 @@ export const FinishedGame = ({ trackerPath }: { trackerPath: string }) => {
       variant="outline"
       onClick={() => setFinishedGameOverlayOpen(true)}
       className="border-primary/50 self-end"
+      asChild
     >
-      Continue <ArrowRightIcon />
+      <motion.button layout>
+        Continue <ArrowRightIcon />
+      </motion.button>
     </Button>
     {finishedGameOverlayOpen && <CompletedDialog
       ref={finishedGameOverlayRef}
@@ -92,7 +96,7 @@ const CompletedDialog = ({ className, ...params }: React.ComponentProps<"div">) 
         </div>
 
         <p
-          // className="!mb-4"
+        // className="!mb-4"
         ><span className="text-primary">{winningPlayer.displayName}</span> won!</p>
 
         {/* <Button
