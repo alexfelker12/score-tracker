@@ -10,6 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 //* server
 import { getTrackerById } from "@/server/actions/tracker/actions";
+import { addPlayerToTracker, deleteTrackerPlayerById } from "@/server/actions/tracker/trackerPlayer/actions";
 
 //* lib
 import { useSession } from "@/lib/auth-client";
@@ -24,7 +25,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { addPlayerToTracker, deleteTrackerPlayerById } from "@/server/actions/tracker/trackerPlayer/actions";
 
 //* local
 import { AddPlayerDialog } from "../../_components/tracker-create-form";
@@ -39,9 +39,15 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
 
   const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
 
+  const qc = getQueryClient()
+
   const { data, isPending, isFetching } = useQuery({
     queryKey: ["trackers", trackerId],
-    queryFn: () => getTrackerById(trackerId),
+    queryFn: () => {
+      console.log("running query fn")
+      return getTrackerById(trackerId)
+    },
+    staleTime: 0,
     refetchOnMount: false,
     refetchOnReconnect: false
   })
@@ -58,7 +64,6 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
   })
 
   //* DELETE tracker player
-  const qc = getQueryClient()
   const { mutate: deletePlayer, isPending: isDeletePending } = useMutation({
     mutationKey: ["trackers", trackerId, "delete-player"],
     mutationFn: deleteTrackerPlayerById,
@@ -154,7 +159,7 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
                         onClick={() => {
                           if (isSessionPending || !session || session.user.id !== data.data?.creatorId || data.data?.players.length <= 2) return;
 
-                          // Set the pending delete ID to this player's ID
+                          // set the pending delete ID to this player's ID
                           setPendingDeleteId(trackerPlayer.id)
 
                           deletePlayer({
