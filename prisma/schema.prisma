@@ -159,7 +159,7 @@ model Game {
   gameData Json
 
   participants GameParticipant[]
-  rounds    GameRound[]
+  rounds       GameRound[]
 
   @@index([trackerId])
 }
@@ -179,6 +179,7 @@ model GameRound {
 model GameParticipant {
   id          String @id @default(cuid())
   displayName String
+  order       Int?
 
   gameId String
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)

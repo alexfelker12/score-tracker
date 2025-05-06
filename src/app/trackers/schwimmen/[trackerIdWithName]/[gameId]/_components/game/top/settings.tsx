@@ -27,6 +27,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 
 // export type SettingsParams = {}, params: SettingsParams, const { } = params
@@ -37,7 +38,7 @@ export const Settings = () => {
   const [cancelOpen, setCancelOpen] = React.useState<boolean>(false)
   // stores
   const { game, isAction, getLatestRound, setCurrentRoundNumber, resetRounds, finishGame } = useSchwimmenGameStore()
-  const { meta, setHideDead, setUiSize, setIsAdjustingSize } = useSchwimmenMetaStore()
+  const { meta, setShowDealer, setHideDead, setUiSize, setIsAdjustingSize } = useSchwimmenMetaStore()
 
   //* DELETE reset game - delete every round from round 0
   const { mutate: deleteRoundsFrom, isPending: isResetPending } = useMutation({ mutationFn: deleteRoundsFromRoundNumber })
@@ -114,7 +115,26 @@ export const Settings = () => {
         {/* all options */}
         <div className="space-y-6">
 
-          {/* option 1 - hide dead player */}
+          {/* option - show card dealer */}
+          <div className={cn("flex flex-wrap gap-1 hide-on-adjust", isResetOrCancelOpenOrPending && "opacity-50")}>
+            <div>
+              <h4 id="show-dealer-label" className="font-medium text-base">Show card dealer</h4>
+            </div>
+            <div className="flex justify-between items-center gap-4 w-full">
+              <span id="show-dealer-desc" className="text-muted-foreground text-sm leading-[1.1rem]">Control whether the card dealer of the current round should be shown</span>
+              <Switch
+                id="show-dealer" aria-describedby="show-dealer-desc" aria-labelledby="show-dealer-label"
+                checked={meta.showDealer}
+                onCheckedChange={(checked) => {
+                  if (isResetOrCancelOpenOrPending) return;
+                  setShowDealer(checked)
+                }}
+                disabled={isResetOrCancelOpenOrPending}
+              />
+            </div>
+          </div>
+
+          {/* option - hide dead player */}
           <div className={cn("flex flex-wrap gap-1 hide-on-adjust", isResetOrCancelOpenOrPending && "opacity-50")}>
             <div>
               <h4 id="hide-dead-label" className="font-medium text-base">Hide dead players</h4>
@@ -133,7 +153,9 @@ export const Settings = () => {
             </div>
           </div>
 
-          {/* option 2 - ui sizing */}
+          <Separator className="hide-on-adjust" />
+
+          {/* option - ui sizing */}
           <div className={cn("flex flex-wrap gap-3", isResetOrCancelOpenOrPending && "opacity-50")}>
             <div className="w-full hide-on-adjust">
               <h4 id="ui-sizer-label" className="font-medium text-base leading-none">Adjust game size</h4>
@@ -161,7 +183,9 @@ export const Settings = () => {
             </div>
           </div>
 
-          {/* option 3 - reset game */}
+          <Separator className="hide-on-adjust" />
+
+          {/* option - reset game */}
           <Collapsible
             open={resetOpen} onOpenChange={setResetOpen}
             className={cn("flex flex-wrap hide-on-adjust", (isFirstRound || isCancelOpenOrPending) && "opacity-50")}
@@ -201,7 +225,7 @@ export const Settings = () => {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* option 4 - cancel game */}
+          {/* option - cancel game */}
           <Collapsible
             open={cancelOpen} onOpenChange={setCancelOpen}
             className={cn("flex flex-wrap hide-on-adjust", isResetOpenOrPending && "opacity-50")}

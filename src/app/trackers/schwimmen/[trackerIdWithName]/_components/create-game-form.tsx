@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import React from "react"
 
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Separator } from "@/components/ui/separator"
 
 
 
@@ -37,66 +38,80 @@ export type CreateGameFormParams = {
 
 //* main
 export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: CreateGameFormParams) => {
+  //* hooks
+  const { invalidateQueries } = getQueryClient()
+  const { push } = useRouter()
+
   const [error, setError] = React.useState<string | null>(null)
   const [selectedPlayerIds, setSelectedPlayerIds] = React.useState<string[]>(
     players.map((player) => player.id)
   )
-  const [orderedPlayerIds, setOrderedPlayerIds] = React.useState<string[]>(
-    players.map((player) => player.id)
-  )
-  React.useEffect(() => {
-    const newIds = players.map((p) => p.id);
-  
-    setSelectedPlayerIds((prev) => {
-      const stillValid = prev.filter(id => newIds.includes(id));
-      const added = newIds.filter(id => !stillValid.includes(id));
-      return [...stillValid, ...added];
-    });
-  
-    setOrderedPlayerIds((prev) => {
-      const stillValid = prev.filter(id => newIds.includes(id));
-      const added = newIds.filter(id => !stillValid.includes(id));
-      return [...stillValid, ...added];
-    });
-  }, [players]);
 
-  const router = useRouter()
-  const qc = getQueryClient()
-
-  //* POST mutation: tracker
+  // POST mutation: tracker
   const { mutate, isPending } = useMutation({
     mutationKey: ['trackers', trackerId, 'game-create'],
     mutationFn: createGame,
     onSettled: async (data, error) => {
       if (!error && data && data.data) {
-        router.push(`/trackers/schwimmen/${data.data.trackerId}-${encodeURIComponent(data.data.tracker.displayName)}/${data.data.id}`)
+        push(`/trackers/schwimmen/${data.data.trackerId}-${encodeURIComponent(data.data.tracker.displayName)}/${data.data.id}`)
 
         //* invalidate query to refetch latest data
-        qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
+        invalidateQueries({ queryKey: ["trackers", trackerId] })
       }
     },
   })
-
   function handleCreateGame() {
     if (selectedPlayerIds.length > maxPlayers || selectedPlayerIds.length < minPlayers) return;
 
     mutate({
       trackerId,
-      playerIds: selectedPlayerIds
+      players: selectedPlayerIds.map((selectedPlayerId, sortIndex) => ({
+        playerId: selectedPlayerId,
+        order: sortIndex
+      }))
     })
   }
 
-  // Setup DnD Kit
+  //* update players when tracker players change
+  React.useEffect(() => {
+    const newIds = players.map(p => p.id)
+    setSelectedPlayerIds((prev) => {
+      const stillValid = prev.filter(id => newIds.includes(id))
+      const added = newIds.filter(id => !stillValid.includes(id))
+      return [...stillValid, ...added]
+    })
+  }, [players])
+
+
+  // setup DnD Kit
   const sensors = useSensors(useSensor(PointerSensor))
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
-    if (active.id !== over?.id) {
-      const oldIndex = orderedPlayerIds.indexOf(active.id)
-      const newIndex = orderedPlayerIds.indexOf(over.id)
-      setOrderedPlayerIds(arrayMove(orderedPlayerIds, oldIndex, newIndex))
+    if (over && active.id !== over.id) {
+      const oldIndex = selectedPlayerIds.indexOf(String(active.id))
+      const newIndex = selectedPlayerIds.indexOf(String(over.id))
+      setSelectedPlayerIds(arrayMove(selectedPlayerIds, oldIndex, newIndex))
     }
   }
+  function handleSelectionChange(newSelectedIds: string[]) {
+    const newOrdered = selectedPlayerIds.filter(id => newSelectedIds.includes(id))
+
+    newSelectedIds.forEach(id => {
+      if (!newOrdered.includes(id)) newOrdered.push(id)
+    })
+
+    setSelectedPlayerIds(newOrdered)
+
+    if (newSelectedIds.length > maxPlayers) {
+      setError(`Maximum ${maxPlayers} participants allowed`)
+    } else if (newSelectedIds.length < minPlayers) {
+      setError(`Minimum ${minPlayers} participants required`)
+    } else {
+      setError(null)
+    }
+  }
+
 
   return (
     <Dialog>
@@ -107,7 +122,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
         <DialogHeader>
           <DialogTitle>Choose participants</DialogTitle>
           <DialogDescription>
-            Deselect players who should not participate in this game and optionally sort players in their card dealing order
+            Deselect players who should not participate in this game and sort selected players in their card dealing order
           </DialogDescription>
         </DialogHeader>
 
@@ -119,37 +134,53 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             orientation="vertical"
             className="flex-col flex-1 gap-2 w-full"
             value={selectedPlayerIds}
-            onValueChange={(players) => {
-              if (players.length > maxPlayers) {
-                setError(`Maximum ${maxPlayers} participants allowed`)
-              } else if (players.length < minPlayers) {
-                setError(`Minimum ${minPlayers} participants required`)
-              } else {
-                setError(null)
-              }
-
-              setSelectedPlayerIds(players)
-            }}
+            onValueChange={handleSelectionChange}
           >
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
-            >
-              <SortableContext items={orderedPlayerIds} strategy={verticalListSortingStrategy}>
-                {orderedPlayerIds.map(id => {
-                  const player = players.find(p => p.id === id)!
-                  return (
-                    <SortablePlayerItem
-                      key={id}
-                      trackerPlayer={player}
-                      // selected={selectedPlayerIds.includes(id)}
-                    />
-                  )
-                })}
-              </SortableContext>
-            </DndContext>
+            {/** selected players, simultaneously the orderable players */}
+            {(selectedPlayerIds.length > 0) &&
+              <>
+                <div aria-description="Selected players below untill unselected" role="presentation" className="relative -mt-2 w-full text-center">
+                  <Separator className="top-1/2 -z-10 absolute w-full -translate-y-1/2" />
+                  <span className="bg-card px-2 text-muted-foreground text-sm leading-none whitespace-nowrap">selected players</span>
+                </div>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                  modifiers={[restrictToVerticalAxis]}
+                >
+                  <SortableContext items={selectedPlayerIds} strategy={verticalListSortingStrategy}>
+                    {selectedPlayerIds.map((id, idx) => {
+                      const player = players.find(p => p.id === id)!
+                      return (
+                        <SortablePlayerItem
+                          key={id}
+                          trackerPlayer={player}
+                          sortIndex={idx + 1}
+                        />
+                      )
+                    })}
+                  </SortableContext>
+                </DndContext>
+              </>
+            }
+
+            {/* deselected players */}
+            {(players.length > selectedPlayerIds.length) &&
+              <>
+                <div aria-description="Deselected players below" role="presentation" className="relative w-full text-center">
+                  <Separator className="top-1/2 -z-10 absolute w-full -translate-y-1/2" />
+                  <span className="bg-card px-2 text-muted-foreground text-sm leading-none whitespace-nowrap">deselected players</span>
+                </div>
+
+                {players
+                  .filter(p => !selectedPlayerIds.includes(p.id))
+                  .map((player) => (
+                    <StaticPlayerItem key={player.id} trackerPlayer={player} />
+                  ))}
+              </>
+            }
           </ToggleGroup>
         </div>
 
@@ -169,37 +200,37 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
   );
 }
 
-type TrackerPlayerCardDetailsProps = {
+type TrackerPlayerCardProps = {
   trackerPlayer: TrackerPlayerWithUser
 }
 
-const SortablePlayerItem = ({ trackerPlayer }: TrackerPlayerCardDetailsProps
-  // & { selected: boolean }
-) => {
+const SortablePlayerItem = ({ trackerPlayer, sortIndex }: TrackerPlayerCardProps & { sortIndex: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: trackerPlayer.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: 30
+    transition
   }
 
   return (
     <ToggleGroupItem
       value={trackerPlayer.id}
-      className="flex items-center gap-2 bg-background data-[state=on]:bg-background hover:bg-background shadow-sm px-2 py-1.5 border data-[state=on]:border-primary hover:border-primary/60 rounded-lg w-full text-muted-foreground text-sm data-[state=on]:text-accent-foreground data-[state=on]:ring-ring/50 data-[state=on]:ring-[1.5px]"
+      className="flex items-center gap-2 data-[state=on]:bg-background shadow-sm px-2 py-1.5 border data-[state=on]:border-primary/50 rounded-lg w-full text-muted-foreground text-sm data-[state=on]:text-accent-foreground"
       ref={setNodeRef}
       style={style}
     >
-      <div className="flex justify-between items-center gap-2 w-full">
-        {/* Tracker player details */}
-        <TrackerPlayerCardDetails trackerPlayer={trackerPlayer} />
+      <div className="flex justify-between items-center gap-1.5 w-full">
+        {/* Tracker player details and order index*/}
+        <div className="flex items-center gap-1.5">
+          <span>{sortIndex}.</span>
+          <TrackerPlayerCardDetails trackerPlayer={trackerPlayer} />
+        </div>
 
         {/* Drag Handle */}
         <span
           {...attributes}
           {...listeners}
-          className="p-2 text-muted-foreground cursor-grab active:cursor-grabbing"
+          className="p-1.5 text-muted-foreground cursor-grab active:cursor-grabbing"
           aria-label="Drag to reorder"
         >
           <GripHorizontalIcon className="size-6" />
@@ -209,9 +240,22 @@ const SortablePlayerItem = ({ trackerPlayer }: TrackerPlayerCardDetailsProps
   )
 }
 
-const TrackerPlayerCardDetails = ({ trackerPlayer }: TrackerPlayerCardDetailsProps) => {
+const StaticPlayerItem = ({ trackerPlayer }: TrackerPlayerCardProps) => {
   return (
-    <div className="flex gap-2">
+    <ToggleGroupItem
+      value={trackerPlayer.id}
+      className="flex items-center gap-2 bg-muted/30 hover:bg-muted/40 shadow-sm px-2 py-1.5 border border-muted-foreground/20 rounded-lg w-full text-muted-foreground text-sm"
+    >
+      <div className="flex justify-start items-center gap-1.5 w-full">
+        <TrackerPlayerCardDetails trackerPlayer={trackerPlayer} />
+      </div>
+    </ToggleGroupItem>
+  );
+}
+
+const TrackerPlayerCardDetails = ({ trackerPlayer }: TrackerPlayerCardProps) => {
+  return (
+    <>
       <Avatar className="size-9">
         <AvatarImage src={trackerPlayer.player && trackerPlayer.player.image || undefined}></AvatarImage>
         <AvatarFallback><UserIcon className="size-5" /></AvatarFallback>
@@ -224,7 +268,7 @@ const TrackerPlayerCardDetails = ({ trackerPlayer }: TrackerPlayerCardDetailsPro
           <span className="text-muted-foreground text-xs italic leading-none">Guest</span>
         }
       </div>
-    </div>
+    </>
   );
 }
 

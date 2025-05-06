@@ -14,7 +14,6 @@ import { addPlayerToTracker, deleteTrackerPlayerById } from "@/server/actions/tr
 
 //* lib
 import { useSession } from "@/lib/auth-client";
-import { getQueryClient } from "@/lib/get-query-client";
 import { cn } from "@/lib/utils";
 
 //* icons
@@ -39,15 +38,12 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
 
   const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
 
-  const qc = getQueryClient()
+  //? invalidating not reliable, has conflicts with refetch options -> manual refetch
+  // const { invalidateQueries } = getQueryClient()
 
-  const { data, isPending, isFetching } = useQuery({
+  const { data, isPending, isFetching, refetch } = useQuery({
     queryKey: ["trackers", trackerId],
-    queryFn: () => {
-      console.log("running query fn")
-      return getTrackerById(trackerId)
-    },
-    staleTime: 0,
+    queryFn: () => getTrackerById(trackerId),
     refetchOnMount: false,
     refetchOnReconnect: false
   })
@@ -58,7 +54,8 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
     mutationFn: addPlayerToTracker,
     onSettled: async (data) => {
       if (data && data.data) {
-        await qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
+        //? await invalidateQueries({ queryKey: ["trackers", trackerId] })
+        await refetch()
       } else if (data && data.error) { }
     },
   })
@@ -69,10 +66,11 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
     mutationFn: deleteTrackerPlayerById,
     onSettled: async (data) => {
       if (data && data.data) {
-        await qc.invalidateQueries({ queryKey: ["trackers", trackerId] })
-        setPendingDeleteId(null) // Reset pending ID after deletion completes
+        //? await invalidateQueries({ queryKey: ["trackers", trackerId] })
+        await refetch()
+        setPendingDeleteId(null) // reset after deletion completes
       } else if (data && data.error) {
-        setPendingDeleteId(null) // Also reset on error
+        setPendingDeleteId(null)
       }
     },
   })

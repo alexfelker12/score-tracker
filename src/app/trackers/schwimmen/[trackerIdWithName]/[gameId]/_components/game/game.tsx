@@ -56,6 +56,7 @@ export const Game = (params: GameParams) => {
       latestSyncedRounds: game.rounds.filter((round): round is Round => round.data.type === "SCHWIMMEN"),
       //* default latest round
       currentRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round,
+      prevRoundNumber: game.rounds.reduce((prev, current) => prev && prev.round > current.round ? prev : current).round,
     })
   }, [useSchwimmenGameStore])
 

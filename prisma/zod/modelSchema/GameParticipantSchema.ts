@@ -11,6 +11,7 @@ import type { UserWithRelations } from './UserSchema'
 export const GameParticipantSchema = z.object({
   id: z.string().cuid(),
   displayName: z.string(),
+  order: z.number().int().nullable(),
   gameId: z.string(),
   userId: z.string().nullable(),
 })

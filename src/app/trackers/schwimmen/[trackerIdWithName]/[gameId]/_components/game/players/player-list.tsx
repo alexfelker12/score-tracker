@@ -27,7 +27,7 @@ export const PlayerList = () => {
   //* hooks here
   const {
     action, game, currentRoundNumber, rounds,
-    setAction, getRound, setCurrentRoundNumber, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke, checkWinConditionForGameData
+    setAction, getCurrentRound, setCurrentRoundNumber, setRounds, setLatestSyncedRounds, getPlayer, subtractLifeOf, addRound, getLatestRound, checkNukeForConflict, detonateNuke, checkWinConditionForGameData
   } = useSchwimmenGameStore()
   const { meta } = useSchwimmenMetaStore()
   const { showNukeConfirmation } = useNukeConfirmation()
@@ -49,7 +49,7 @@ export const PlayerList = () => {
     }
   }, [action])
 
-  const current = getRound(currentRoundNumber)
+  const current = getCurrentRound()
 
   //* mutations for actions
   //* POST round
@@ -109,7 +109,7 @@ export const PlayerList = () => {
   const handleClick = async (playerId: string, delay: number = 0) => {
     if (!current || isLatestRoundPending || isDeleteRoundsPending) return;
 
-    const checkForRoundWin = async (newRoundData: SchwimmenRound, playersHit: string[]) => {
+    const checkWinAndExecute = async (newRoundData: SchwimmenRound, playersHit: string[]) => {
       const winningPlayer = checkWinConditionForGameData(newRoundData)
 
       if (winningPlayer) {
@@ -161,7 +161,7 @@ export const PlayerList = () => {
           return
         }
 
-        checkForRoundWin(newRoundData, playersHit)
+        checkWinAndExecute(newRoundData, playersHit)
         break
 
       case ActionStatus.ISNUKE:
@@ -182,9 +182,7 @@ export const PlayerList = () => {
             const [newRoundData, playersHit] = detonateNuke(playerId, survivingPlayer.id)
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-            checkForRoundWin(newRoundData, playersHit)
-          } else if (affectedPlayers.length === 1) {
-            //* case 2: only 1 player would be swimming -> NO conflict
+            checkWinAndExecute(newRoundData, playersHit)
           } else if (affectedPlayers.length === 1) {
             //* case 2: only 1 player would be swimming -> NO conflict
 
@@ -192,7 +190,7 @@ export const PlayerList = () => {
             const [newRoundData, playersHit] = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-            checkForRoundWin(newRoundData, playersHit)
+            checkWinAndExecute(newRoundData, playersHit)
           }
 
         } else {
@@ -200,7 +198,7 @@ export const PlayerList = () => {
           const [newRoundData, playersHit] = detonateNuke(playerId)
           if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-          checkForRoundWin(newRoundData, playersHit)
+          checkWinAndExecute(newRoundData, playersHit)
         }
         break
 
@@ -281,7 +279,6 @@ export const PlayerList = () => {
     animate(`#player-${playerId} .player-border`, { backgroundColor: "" }) // player border
   }
 
-
   if (current) return (
     <div className="flex flex-col gap-2" ref={scope}>
       <AnimatePresence>
@@ -325,7 +322,7 @@ const HiddenPlayerCount = ({ currentRound }: { currentRound: Round | undefined }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ bounce: false, duration: 0.3, ease: "easeInOut" }}
+      transition={{ bounce: false, duration: 0.3, ease: "easeOut" }}
       className="z-0 w-fit text-muted-foreground text-sm italic"
       layout
     >

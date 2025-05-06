@@ -26,14 +26,6 @@ export default async function TrackerPage({
     name: navTrailName
   }
 
-  // const deletedGame = await prisma.game.delete({
-  //   where: {
-  //     id: "cm9praylm0005bw0wi3j7xcvv"
-  //   }
-  // })
-
-  // console.log(deletedGame)
-
   return (
     <main className="flex flex-col gap-6">
       <Breadcrumbs lastTrail={dynNavTrail} />

@@ -4,7 +4,7 @@
 import React from "react";
 
 //* packages
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useAnimate } from "motion/react";
 
 //* stores
 import { GameParticipantWithUser, useSchwimmenGameStore } from "@/store/schwimmenGameStore";
@@ -21,6 +21,7 @@ import { CrownIcon, HeartIcon, SkullIcon, UserIcon } from "lucide-react";
 //* components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlayerNameScroller } from "./player-name-scroller";
+import { Badge } from "@/components/ui/badge";
 
 
 export type PlayerProps = {
@@ -30,7 +31,7 @@ export type PlayerProps = {
   isNotIdle: boolean
   isWinner: boolean
 }
-export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & PlayerProps) => {
+export const Player = (params: React.ComponentPropsWithRef<typeof motion.button> & PlayerProps) => {
   const { player, lifes, isSwimming, isNotIdle, isWinner, className, ref, ...rest } = params
 
   //* variables
@@ -39,10 +40,11 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & 
   const lifesWithKey = Array.from({ length: isSwimming ? lifes - 1 : lifes }).map((_, idx) => ({ key: idx }))
 
   //* hooks here
-  const { action, rounds } = useSchwimmenGameStore()
+  const { action, rounds, game } = useSchwimmenGameStore()
   const { meta } = useSchwimmenMetaStore()
   const [isChoosing, setIsChoosing] = React.useState<boolean>(false)
 
+  //* useEffect to react to round and action changes
   React.useEffect(() => {
     setIsChoosing(false)
   }, [rounds])
@@ -52,105 +54,254 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.div> & 
 
 
   return (
-    <motion.div
+    <motion.button
       className={cn(
-        "z-10 player-card relative cursor-pointer p-0.5 overflow-hidden rounded-lg shadow-xs transition-opacity max-w-[calc(100vw-2rem)]",
+        "z-10 relative player-card shadow-xs transition-opacity max-w-[calc(100vw-2rem)] text-start",
         isDead && "!opacity-50 cursor-not-allowed shadow-none",
         className
       )}
       ref={ref}
       {...rest}
     >
+      {/* dealer badge */}
+      <AnimatePresence>
+        {(meta.showDealer && game.status === "ACTIVE") &&
+          <DealerBadge
+            player={player}
 
-      {/* actual player card - has 0.375rem (= 6px) border to smooth out corner for animated border */}
-      <div className={cn(
-        "z-20 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2 max-w-full gap-2",
-        // SCHWIMMEN_PLAYER_CARD_PADDING_SIZE_MAP[meta.uiSize[0]]
-      )}>
-        {/* player image and name */}
-        <div className="flex items-center gap-2 overflow-hidden" >
-          <Avatar className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_PLAYER_IMG_SIZE_MAP[meta.uiSize[0]])}>
-            <AvatarImage src={player.user && player.user.image || undefined}></AvatarImage>
-            <AvatarFallback><UserIcon className={cn(SCHWIMMEN_PLAYER_FALLBACK_SIZE_MAP[meta.uiSize[0]])} /></AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col gap-1 overflow-hidden">
+            initial={{ x: -15, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -15, opacity: 0 }}
+            transition={{
+              opacity: { delay: 0, duration: 0.2 },
+              x: { delay: 0, duration: 0.2 },
+            }}
+          />
+        }
+      </AnimatePresence>
+
+      <div className="relative p-0.5 rounded-lg cursor-pointer overflow-hidden">
+
+        {/* actual player card - has 0.375rem (= 6px) border to smooth out corner for animated border */}
+        <div className={cn(
+          "z-20 flex justify-between bg-background rounded-[0.375rem] overflow-hidden relative p-2 max-w-full gap-2",
+          // SCHWIMMEN_PLAYER_CARD_PADDING_SIZE_MAP[meta.uiSize[0]]
+        )}>
+          {/* player image and name */}
+          <div className="flex flex-1 items-center gap-2 overflow-hidden" >
+            <Avatar className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_PLAYER_IMG_SIZE_MAP[meta.uiSize[0]])}>
+              <AvatarImage src={player.user && player.user.image || undefined}></AvatarImage>
+              <AvatarFallback><UserIcon className={cn(SCHWIMMEN_PLAYER_FALLBACK_SIZE_MAP[meta.uiSize[0]])} /></AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col flex-1 gap-1 overflow-hidden">
 
 
-            <PlayerNameScroller
-              className={SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]]}
-            >
-              {playerName}
-            </PlayerNameScroller>
+              <PlayerNameScroller
+                className={SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]]}
+              >
+                {playerName}
+              </PlayerNameScroller>
 
 
-            {/* <span className={cn("font-medium transition-[font-size]", SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]])}>{playerName}</span> */}
+              {/* <span className={cn("font-medium transition-[font-size]", SCHWIMMEN_PLAYER_TEXT_SIZE_MAP[meta.uiSize[0]])}>{playerName}</span> */}
 
 
+            </div>
           </div>
-        </div>
 
-        {/* lifes */}
-        <div className="flex flex-row-reverse items-center gap-1" >
+          {/* lifes */}
+          <div className="flex flex-row-reverse items-center gap-1" >
 
-          {/* player is swimming */}
-          <AnimatePresence>
-            {(isSwimming && !isDead && !isWinner) && <SwimmingEffect />}
-          </AnimatePresence>
+            {/* player is swimming */}
+            <AnimatePresence>
+              {(isSwimming && !isDead && !isWinner) && <SwimmingEffect />}
+            </AnimatePresence>
 
-          {/* player lifes or dead state */}
-          <AnimatePresence>
-            {isDead && !isWinner
-              ? <PlayerIsDead
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 100 }}
-                exit={{ opacity: 0 }}
-                className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
-              />
-              : !isWinner && lifesWithKey.map(({ key }) => (
-                <PlayerHeart
-                  key={key}
+            {/* player lifes or dead state */}
+            <AnimatePresence>
+              {isDead && !isWinner
+                ? <PlayerIsDead
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 100 }}
                   exit={{ opacity: 0 }}
                   className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
                 />
-              ))
-            }
-          </AnimatePresence>
+                : !isWinner && lifesWithKey.map(({ key }) => (
+                  <PlayerHeart
+                    key={key}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 100 }}
+                    exit={{ opacity: 0 }}
+                    className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
+                  />
+                ))
+              }
+            </AnimatePresence>
 
-          <AnimatePresence>
-            {isWinner && <PlayerIsWinner
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 100 }}
-              exit={{ opacity: 0 }}
-              className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
-            />}
-          </AnimatePresence>
+            <AnimatePresence>
+              {isWinner && <PlayerIsWinner
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 100 }}
+                exit={{ opacity: 0 }}
+                className={cn("transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200", SCHWIMMEN_GAME_ICON_SIZE_MAP[meta.uiSize[0]])}
+              />}
+            </AnimatePresence>
+          </div>
         </div>
+
+        {/* div with slightly negative inset to act as a border for animations */}
+        <motion.div
+          transition={{ duration: 0.5, ease: "easeOut", }}
+
+          //* blue background - rising water levels animation
+          {...((isSwimming && !isDead) ? {
+            animate: { y: [56, 0] },
+          } : {
+            animate: { y: [0] },
+          })}
+
+          //* non motion div props
+          className={cn("player-border absolute inset-0 rounded-lg bg-border transition-colors",
+            isChoosing && "bg-muted-foreground",
+            (isSwimming && !isNotIdle) && "bg-swimming",
+            isDead && "bg-border",
+            isWinner && "bg-yellow-300"
+          )}
+        />
+
       </div>
+    </motion.button>
+  );
+}
 
-      {/* div with slightly negative inset to act as a border for animations */}
-      <motion.div
-        //* default
-        transition={{ bounce: false, duration: 0.5, ease: "easeInOut", }}
 
-        //* blue background - rising water levels animation
-        {...((isSwimming && !isDead) ? {
-          animate: { y: [56, 0] },
-        } : {
-          animate: { y: [0] },
-        })}
+//* local components
+const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWithoutRef<typeof motion.span> & Pick<PlayerProps, "player">) => {
+  const { currentRoundNumber, players, prevRoundNumber, getCurrentRound } = useSchwimmenGameStore()
+  const [badgeRef, animateBadgeFn] = useAnimate()
+  const [isMounted, setIsMounted] = React.useState<boolean>(false)
 
-        //* non motion div props
-        className={cn("player-border absolute inset-0 rounded-lg bg-border transition-colors",
-          isChoosing && "bg-muted-foreground",
-          (isSwimming && !isNotIdle) && "bg-swimming",
-          isDead && "bg-border",
-          isWinner && "bg-yellow-300"
-        )}
-      />
+  const isCurrentDealer = currentRoundNumber % players.length === player.order
+  const wasPrevDealer = prevRoundNumber % players.length === player.order
+  
 
-    </motion.div>
+  // TODO: current implementation ignores dead players, they have to be correctly skipped in the badge display logic
+
+  //* not working, think of something else
+
+  // const current = getCurrentRound()
+
+  // const getLastAlive = (orderOffset = 0) => {
+  //   const currentPlayer = players.find((player) => (player.order || 0) + orderOffset === currentRoundNumber % players.length)!
+
+  //   console.log(currentPlayer)
+
+  //   const isCurrentAlive = current!.data.players.find((player) => player.id === currentPlayer.id)!.lifes > 0
+
+  //   if (isCurrentAlive) {
+  //     return currentPlayer
+  //   } else {
+  //     return getLastAlive(orderOffset - 1)
+  //   }
+  // }
+
+  // console.log(player.displayName + ":", "last alive in order:", getLastAlive())
+
+
+  const transitionDuration = 0.2
+
+  //* badge animation on round number change
+  React.useEffect(() => {
+    if (!isMounted) {
+      setIsMounted(true)
+      return;
+    }
+
+    if (!isCurrentDealer && !wasPrevDealer) return;
+
+    switch (true) {
+      // is current dealer + round forward
+      case currentRoundNumber - prevRoundNumber > 0 && isCurrentDealer:
+        animateBadge("down-enter")
+        break;
+      // is current dealer + round backward
+      case currentRoundNumber - prevRoundNumber < 0 && isCurrentDealer:
+        animateBadge("up-enter")
+        break;
+      // was prev dealer + round forward
+      case currentRoundNumber - prevRoundNumber > 0 && wasPrevDealer:
+        animateBadge("down-leave")
+        break;
+      // was prev dealer + round backward
+      case currentRoundNumber - prevRoundNumber < 0 && wasPrevDealer:
+        animateBadge("up-leave")
+        break;
+    }
+
+  }, [currentRoundNumber])
+
+  const getBadgeAnimation = (type: "up-enter" | "down-enter" | "up-leave" | "down-leave") => {
+    switch (type) {
+      case "up-enter":
+        return {
+          keyframes: {
+            y: [15, 0]
+          },
+          options: {
+            duration: transitionDuration,
+            delay: transitionDuration
+          },
+        };
+      case "down-enter":
+        return {
+          keyframes: {
+            y: [-15, 0]
+          },
+          options: {
+            duration: transitionDuration,
+            delay: transitionDuration
+          },
+        };
+      case "up-leave":
+        return {
+          keyframes: {
+            y: [0, -15]
+          },
+          options: {
+            duration: transitionDuration
+          },
+        };
+      case "down-leave":
+        return {
+          keyframes: {
+            y: [0, 15]
+          },
+          options: {
+            duration: transitionDuration
+          },
+        };
+    }
+  }
+  const animateBadge = (type: Parameters<typeof getBadgeAnimation>[0]) => {
+    animateBadgeFn(badgeRef.current, { ...getBadgeAnimation(type)["keyframes"] }, { ...getBadgeAnimation(type)["options"] }) // dealer badge
+  }
+
+  return (
+    <Badge
+      className={cn(
+        "opacity-0 bottom-0 left-0 z-50 absolute bg-[var(--color-black)] dark:bg-[var(--color-white)] text-[var(--color-white)] dark:text-[var(--color-black)] -translate-x-1 translate-y-1 transition-opacity select-none transition-discrete duration-200",
+        isCurrentDealer && "opacity-100 delay-200",
+        !isCurrentDealer && "!opacity-0 !delay-0",
+        className
+      )}
+      asChild
+    >
+      <motion.span
+        ref={badgeRef}
+        className="transition-discrete"
+        {...spanProps}
+      >Dealer</motion.span>
+    </Badge>
   );
 }
 

@@ -17,10 +17,15 @@ async function findGameById(gameId: string) {
       participants: {
         include: {
           user: true
+        },
+        orderBy: {
+          order: {
+            sort: "asc"
+          }
         }
       },
       rounds: true
-    }
+    },
   })
 }
 export type FindGameByIdReturn = Prisma.PromiseReturnType<typeof findGameById>
@@ -39,15 +44,23 @@ export async function getGameById(...args: FindGameByIdArgs) {
 
 //*** POST
 //* create game
+type playerIdWithOrder = {
+  playerId: string
+  order: number
+}
+const getPlayerOrder = (playerId: string, players: playerIdWithOrder[]) => {
+  return players.find((player) => player.playerId === playerId)?.order
+    || players.map((player) => player.playerId).indexOf(playerId)
+}
 async function createGameWithParticipants(params: {
   trackerId: string
-  playerIds: string[]
+  players: playerIdWithOrder[]
 }) {
-  const { trackerId, playerIds } = params
+  const { trackerId, players } = params
 
   const trackerPlayers = await prisma.trackerPlayer.findMany({
     where: {
-      id: { in: playerIds }
+      id: { in: players.map((player) => player.playerId) }
     },
     include: {
       player: true
@@ -65,9 +78,11 @@ async function createGameWithParticipants(params: {
         createMany: {
           data: trackerPlayers.map((trackerPlayer) => (trackerPlayer.player ? {
             displayName: trackerPlayer.player.displayUsername || trackerPlayer.player.name,
-            userId: trackerPlayer.playerId
+            userId: trackerPlayer.playerId,
+            order: getPlayerOrder(trackerPlayer.id, players)
           } : {
-            displayName: trackerPlayer.displayName
+            displayName: trackerPlayer.displayName,
+            order: getPlayerOrder(trackerPlayer.id, players)
           }))
         }
       },
@@ -80,7 +95,13 @@ async function createGameWithParticipants(params: {
     },
     include: {
       tracker: true,
-      participants: true
+      participants: {
+        orderBy: {
+          order: {
+            sort: "asc"
+          }
+        }
+      }
     }
   })
 

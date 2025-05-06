@@ -100,7 +100,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
     const prevRounds = state.rounds.filter((round) => round.round <= state.currentRoundNumber)
 
-    const updated = {
+    const updated: Partial<SchwimmenGameState> = {
       rounds: [
         ...prevRounds,
         {
@@ -109,7 +109,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
           data
         }
       ],
-      currentRoundNumber: state.currentRoundNumber + 1
+      currentRoundNumber: state.currentRoundNumber + 1,
+      prevRoundNumber: state.currentRoundNumber
     }
 
     set(updated)
@@ -178,7 +179,7 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     //* continue only if player is not dead yet
     if (getPlayerFromRound.lifes > 0) {
       newRoundState.players = playersThisRound.map((player) => {
-        if (player.id === detonatorId) return player;
+        if (player.id === detonatorId || player.lifes < 1) return player;
 
         if (survivorId && player.id === survivorId) {
           //* set survivor as swimming before returning as is
