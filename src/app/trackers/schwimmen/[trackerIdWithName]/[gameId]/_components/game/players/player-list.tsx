@@ -21,7 +21,6 @@ import { useLastActionConfirmation, useNukeConfirmation } from "@/hooks/use-conf
 
 //* local
 import { Player, PlayerProps } from "./player";
-import { OrderedPlayer } from "@/lib/ordered-player";
 
 
 export const PlayerList = () => {
