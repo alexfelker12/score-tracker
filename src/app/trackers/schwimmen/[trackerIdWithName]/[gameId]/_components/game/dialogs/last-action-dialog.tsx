@@ -25,6 +25,7 @@ export const LastActionDialog = () => {
             lifes={1}
             isSwimming={false}
             isWinner={true}
+            hideDealer
             player={winningPlayer}
             className="cursor-pointer"
           />

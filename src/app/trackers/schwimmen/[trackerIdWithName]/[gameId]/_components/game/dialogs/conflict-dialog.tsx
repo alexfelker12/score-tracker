@@ -23,10 +23,11 @@ export const ConflictDialog = () => {
           {confirmationData.map((affectedPlayer) => (
             <Player
               key={affectedPlayer.id}
-              isSwimming={false}
-              isWinner={false}
               isNotIdle
               lifes={1}
+              isSwimming={false}
+              isWinner={false}
+              hideDealer
               player={affectedPlayer}
               onClick={() => { handleConfirm(affectedPlayer) }}
               className="cursor-pointer"

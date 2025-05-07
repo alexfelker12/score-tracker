@@ -30,9 +30,10 @@ export type PlayerProps = {
   isSwimming: boolean
   isNotIdle: boolean
   isWinner: boolean
+  hideDealer?: boolean
 }
 export const Player = (params: React.ComponentPropsWithRef<typeof motion.button> & PlayerProps) => {
-  const { player, lifes, isSwimming, isNotIdle, isWinner, className, ref, ...rest } = params
+  const { player, lifes, isSwimming, isNotIdle, isWinner, hideDealer, className, ref, ...rest } = params
 
   //* variables
   const playerName = player.user ? (player.user.displayUsername || player.user.name) : player.displayName
@@ -65,7 +66,7 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.button>
     >
       {/* dealer badge */}
       <AnimatePresence>
-        {(meta.showDealer && game.status === "ACTIVE") &&
+        {(meta.showDealer && game.status === "ACTIVE" && !hideDealer) &&
           <DealerBadge
             player={player}
 
