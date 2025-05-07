@@ -14,7 +14,7 @@ export default async function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request, {
     cookieName: "session_token",
     cookiePrefix: "better-auth",
-    // useSecureCookies: true,
+    useSecureCookies: process.env.NODE_ENV === "production",
   });
 
   if (!sessionCookie) {
