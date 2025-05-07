@@ -2,23 +2,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
 //* packages
-// import { betterFetch } from '@better-fetch/fetch';
-// import { Session } from "better-auth";
-import { getSessionCookie } from "better-auth/cookies";
+import { betterFetch } from '@better-fetch/fetch';
+import { Session } from "better-auth";
 
 export default async function middleware(request: NextRequest) {
   //? node runtime not supported outside of canary
   // const session = await auth.api.getSession({ headers: await headers() })
 
   //* get session with fetch call
-  const sessionCookie = getSessionCookie(request, {
-    cookieName: "session_token",
-    cookiePrefix: "better-auth",
-    // useSecureCookies: process.env.NODE_ENV === "production",
-    useSecureCookies: true,
+  const { data: session } = await betterFetch<Session>("/api/auth/get-session", {
+    baseURL: request.nextUrl.origin,
+    headers: {
+      cookie: request.headers.get("cookie") || "", // Forward the cookies from the request
+    },
   });
 
-  if (!sessionCookie) {
+  if (!session) {
     //* create search params from the url of the protecteded route to redirect back after authentication
     const fromProtectedURL = "?" + new URLSearchParams({ from: request.nextUrl.pathname })
     return NextResponse.redirect(new URL(`/sign-in${request.nextUrl.pathname !== "/" ? fromProtectedURL : ""}`, request.url))
