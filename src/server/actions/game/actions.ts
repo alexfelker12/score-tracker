@@ -113,9 +113,11 @@ async function createGameWithParticipants(params: {
         type: "SCHWIMMEN",
         players: newGame.participants.map((participant) => ({
           id: participant.id,
-          lifes: 3
+          lifes: 3,
+          order: participant.order || 0
         })),
-        playerSwimming: undefined
+        playerSwimming: undefined,
+        dealer: newGame.participants[0].id
       },
       game: {
         connect: {

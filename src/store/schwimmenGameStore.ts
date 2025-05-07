@@ -1,3 +1,4 @@
+import { OrderedPlayer } from "@/lib/ordered-player"
 import { Game, GameParticipant, GameRound, User } from "@prisma/client"
 import { SchwimmenRound } from "prisma/json_types/types"
 import { create } from "zustand"
@@ -43,6 +44,10 @@ type SchwimmenGameActions = {
   subtractLifeOf: (playerId: string) => [Round["data"] | undefined, string[]]
   detonateNuke: (playerId: string, survivorId?: string) => [Round["data"] | undefined, string[]]
   setLastPlayersHit: (playerIds: string[]) => void
+
+  getCurrentDealer: () => string | undefined
+  getPrevDealer: () => string | undefined
+  getNextDealerFromRoundData: (roundPlayers: SchwimmenRound["players"]) => string
 
   checkNukeForConflict: (detonatorId: string) => GameParticipantWithUser[] | undefined
   checkWinCondition: () => GameParticipantWithUser | undefined
@@ -118,9 +123,10 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     return updated.rounds
   },
   subtractLifeOf: (playerId) => {
-    if (get().game.status !== "ACTIVE") return [undefined, []];
+    const state = get()
+    if (state.game.status !== "ACTIVE") return [undefined, []];
     const playersHit: string[] = []
-    const thisRound = get().getCurrentRound()
+    const thisRound = state.getCurrentRound()
 
     if (!thisRound) return [undefined, []]
 
@@ -130,7 +136,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
     const newRoundState: SchwimmenRound = {
       type: "SCHWIMMEN",
       playerSwimming: thisRound.data.playerSwimming,
-      players: []
+      players: [],
+      dealer: ""
     }
 
     //* continue only if player is not dead yet
@@ -146,8 +153,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
           playersHit.push(player.id)
 
           return {
-            id: player.id,
-            lifes: player.lifes - 1
+            ...player,
+            lifes: player.lifes - 1,
           }
         } else {
           newRoundState.playerSwimming = player.id
@@ -155,14 +162,17 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
         }
       })
 
-      get().setLastPlayersHit(playersHit)
+      newRoundState.dealer = state.getNextDealerFromRoundData(newRoundState.players)
+
+      state.setLastPlayersHit(playersHit)
       return [newRoundState, playersHit]
     } else return [undefined, []]
   },
   detonateNuke: (detonatorId, survivorId) => {
-    if (get().game.status !== "ACTIVE") return [undefined, []];
+    const state = get()
+    if (state.game.status !== "ACTIVE") return [undefined, []];
     const playersHit: string[] = []
-    const thisRound = get().getCurrentRound()
+    const thisRound = state.getCurrentRound()
 
     if (!thisRound) return [undefined, []]
 
@@ -173,7 +183,8 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
       type: "SCHWIMMEN",
       playerSwimming: thisRound.data.playerSwimming,
       players: [],
-      nukeBy: detonatorId
+      nukeBy: detonatorId,
+      dealer: ""
     }
 
     //* continue only if player is not dead yet
@@ -192,17 +203,49 @@ export const useSchwimmenGameStore = create<SchwimmenGameStore>((set, get) => ({
 
         //* detonateNuke always gets called without conflict, because conflict gets checked beforehand -> safely can subtract lifes
         return {
-          id: player.id,
-          lifes: player.lifes - 1
+          ...player,
+          lifes: player.lifes - 1,
         }
       })
 
-      get().setLastPlayersHit(playersHit)
+      newRoundState.dealer = state.getNextDealerFromRoundData(newRoundState.players)
 
+      state.setLastPlayersHit(playersHit)
       return [newRoundState, playersHit]
     } else return [undefined, []]
   },
   setLastPlayersHit: (playerIds) => set({ lastPlayersHit: playerIds }),
+
+  //* dealer
+  getCurrentDealer: () => {
+    const currentRound = get().getCurrentRound()
+    if (!currentRound) return;
+    return currentRound.data.dealer
+  },
+  getPrevDealer: () => {
+    const prevRound = get().getRound(get().prevRoundNumber)
+    if (!prevRound) return;
+    return prevRound.data.dealer
+  },
+  getNextDealerFromRoundData: (roundPlayers) => {
+    const state = get()
+    //* first: create list of orderPlayers
+    const orderedPlayers = roundPlayers.map(player => new OrderedPlayer(player))
+
+    //* second: set references by index
+    for (let i = 0; i < orderedPlayers.length; i++) {
+      const nextIndex = (i + 1) % orderedPlayers.length // wrap around
+      orderedPlayers[i].setNextPlayer(orderedPlayers[nextIndex])
+    }
+
+    const currentRound = state.getCurrentRound()
+    if (!currentRound) return ""
+
+    const currentDealer = orderedPlayers.find((player) => player.getJsonPlayer().id === currentRound.data.dealer)
+    const nextPlayer = currentDealer?.getNextPlayer()?.returnIfAlive()?.getJsonPlayer().id
+
+    return nextPlayer || ""
+  },
 
   //* checks
   checkNukeForConflict: (playerId) => {

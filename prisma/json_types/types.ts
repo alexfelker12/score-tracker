@@ -11,9 +11,11 @@ export type SchwimmenRound = {
   players: {
     id: string
     lifes: number
+    order: number
   }[]
   playerSwimming: string | undefined
   nukeBy?: string
+  dealer: string
 }
 
 //* Durak

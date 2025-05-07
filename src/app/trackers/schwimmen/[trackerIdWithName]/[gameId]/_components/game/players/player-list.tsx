@@ -21,6 +21,7 @@ import { useLastActionConfirmation, useNukeConfirmation } from "@/hooks/use-conf
 
 //* local
 import { Player, PlayerProps } from "./player";
+import { OrderedPlayer } from "@/lib/ordered-player";
 
 
 export const PlayerList = () => {
@@ -34,6 +35,7 @@ export const PlayerList = () => {
   const { showLastActionConfirmation } = useLastActionConfirmation()
   const [scope, animate] = useAnimate()
 
+  //* effects
   React.useEffect(() => {
     //* pulse effect when action is currently not IDLE
     if (isNotIdle()) {
@@ -49,21 +51,32 @@ export const PlayerList = () => {
     }
   }, [action])
 
-  const current = getCurrentRound()
+  // React.useEffect(() => {
+  //   if (!current) return;
+
+  //   //* first: create list of orderPlayers
+  //   const orderedPlayers = current.data.players.map(player => new OrderedPlayer(player))
+
+  //   //* second: set references by index
+  //   for (let i = 0; i < orderedPlayers.length; i++) {
+  //     const nextIndex = (i + 1) % orderedPlayers.length // wrap around
+  //     orderedPlayers[i].setNextPlayer(orderedPlayers[nextIndex])
+  //   }
+  // }, [currentRoundNumber])
+
 
   //* mutations for actions
-  //* POST round
+  // POST round
   const { mutate: createLatestRound, isPending: isLatestRoundPending } = useMutation({
     mutationKey: ["game", game.id, "create"],
     mutationFn: createLatestRoundForGame,
   })
-  //* DELETE rounds
+  // DELETE rounds
   const { mutate: deleteRoundsFrom, isPending: isDeleteRoundsPending } = useMutation({
     mutationKey: ["game", game.id, "delete"],
     mutationFn: deleteRoundsFromRoundNumber,
   })
-
-  //* round dependent action
+  // round dependent action
   const handleNewRound = (newRoundData: SchwimmenRound) => {
     //* optimistically add new round, error cases are handled below 
     const updatedRounds = addRound(newRoundData)
@@ -104,8 +117,7 @@ export const PlayerList = () => {
       handleCreateLatestRound()
     }
   }
-
-  //* click handler for all action states
+  // click handler for all action states
   const handleClick = async (playerId: string, delay: number = 0) => {
     if (!current || isLatestRoundPending || isDeleteRoundsPending) return;
 
@@ -208,22 +220,6 @@ export const PlayerList = () => {
   }
 
 
-  React.useEffect(() => {
-    //* pulse effect when action is currently not IDLE
-    if (isNotIdle()) {
-      if (!current) return
-
-      current.data.players.forEach((jsonPlayer) => {
-        //* no action/animation when dead 
-        if (jsonPlayer.lifes > 0) animatePulse(jsonPlayer.id)
-      })
-
-    } else {
-      if (scope.animations.length > 0) animateDefault()
-    }
-  }, [action])
-
-
   //* animation functions
   const isNotIdle = () => {
     switch (action) {
@@ -278,6 +274,10 @@ export const PlayerList = () => {
   const animateBorderUnset = (playerId: string) => {
     animate(`#player-${playerId} .player-border`, { backgroundColor: "" }) // player border
   }
+
+
+  //* current round
+  const current = getCurrentRound()
 
   if (current) return (
     <div className="flex flex-col gap-2" ref={scope}>

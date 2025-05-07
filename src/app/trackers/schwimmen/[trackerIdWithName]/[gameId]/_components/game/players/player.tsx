@@ -177,36 +177,12 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.button>
 
 //* local components
 const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWithoutRef<typeof motion.span> & Pick<PlayerProps, "player">) => {
-  const { currentRoundNumber, players, prevRoundNumber, getCurrentRound } = useSchwimmenGameStore()
+  const {
+    currentRoundNumber, prevRoundNumber,
+    getCurrentDealer, getPrevDealer
+  } = useSchwimmenGameStore()
   const [badgeRef, animateBadgeFn] = useAnimate()
   const [isMounted, setIsMounted] = React.useState<boolean>(false)
-
-  const isCurrentDealer = currentRoundNumber % players.length === player.order
-  const wasPrevDealer = prevRoundNumber % players.length === player.order
-  
-
-  // TODO: current implementation ignores dead players, they have to be correctly skipped in the badge display logic
-
-  //* not working, think of something else
-
-  // const current = getCurrentRound()
-
-  // const getLastAlive = (orderOffset = 0) => {
-  //   const currentPlayer = players.find((player) => (player.order || 0) + orderOffset === currentRoundNumber % players.length)!
-
-  //   console.log(currentPlayer)
-
-  //   const isCurrentAlive = current!.data.players.find((player) => player.id === currentPlayer.id)!.lifes > 0
-
-  //   if (isCurrentAlive) {
-  //     return currentPlayer
-  //   } else {
-  //     return getLastAlive(orderOffset - 1)
-  //   }
-  // }
-
-  // console.log(player.displayName + ":", "last alive in order:", getLastAlive())
-
 
   const transitionDuration = 0.2
 
@@ -216,6 +192,14 @@ const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWi
       setIsMounted(true)
       return;
     }
+
+    const isCurrentDealer = getCurrentDealer() === player.id
+    const wasPrevDealer = getPrevDealer() === player.id
+
+    console.log("getCurrentDealer():", getCurrentDealer())
+    console.log("getPrevDealer():", getPrevDealer())
+    console.log("isCurrentDealer:", isCurrentDealer)
+    console.log("wasPrevDealer:", wasPrevDealer)
 
     if (!isCurrentDealer && !wasPrevDealer) return;
 
@@ -290,8 +274,8 @@ const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWi
     <Badge
       className={cn(
         "opacity-0 bottom-0 left-0 z-50 absolute bg-[var(--color-black)] dark:bg-[var(--color-white)] text-[var(--color-white)] dark:text-[var(--color-black)] -translate-x-1 translate-y-1 transition-opacity select-none transition-discrete duration-200",
-        isCurrentDealer && "opacity-100 delay-200",
-        !isCurrentDealer && "!opacity-0 !delay-0",
+        getCurrentDealer() === player.id && "opacity-100 delay-200",
+        getCurrentDealer() !== player.id && "!opacity-0 !delay-0",
         className
       )}
       asChild
