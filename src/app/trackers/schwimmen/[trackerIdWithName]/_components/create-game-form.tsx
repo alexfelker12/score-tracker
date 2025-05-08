@@ -139,7 +139,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             {/** selected players, simultaneously the orderable players */}
             {(selectedPlayerIds.length > 0) &&
               <>
-                <LabeledSeparator className="-mt-2">selected players</LabeledSeparator>
+                <LabeledSeparator>selected players</LabeledSeparator>
 
                 <DndContext
                   sensors={sensors}
