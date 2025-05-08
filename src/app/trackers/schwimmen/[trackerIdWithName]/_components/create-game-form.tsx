@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Separator } from "@/components/ui/separator"
+import { LabeledSeparator } from "@/components/ui/labeled-separator"
 
 
 
@@ -139,10 +140,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             {/** selected players, simultaneously the orderable players */}
             {(selectedPlayerIds.length > 0) &&
               <>
-                <div aria-description="Selected players below untill unselected" role="presentation" className="relative -mt-2 w-full text-center">
-                  <Separator className="top-1/2 -z-10 absolute w-full -translate-y-1/2" />
-                  <span className="bg-card px-2 text-muted-foreground text-sm leading-none whitespace-nowrap">selected players</span>
-                </div>
+                <LabeledSeparator className="-mt-2">selected players</LabeledSeparator>
 
                 <DndContext
                   sensors={sensors}
@@ -169,10 +167,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             {/* deselected players */}
             {(players.length > selectedPlayerIds.length) &&
               <>
-                <div aria-description="Deselected players below" role="presentation" className="relative w-full text-center">
-                  <Separator className="top-1/2 -z-10 absolute w-full -translate-y-1/2" />
-                  <span className="bg-card px-2 text-muted-foreground text-sm leading-none whitespace-nowrap">deselected players</span>
-                </div>
+                <LabeledSeparator>deselected players</LabeledSeparator>
 
                 {players
                   .filter(p => !selectedPlayerIds.includes(p.id))
