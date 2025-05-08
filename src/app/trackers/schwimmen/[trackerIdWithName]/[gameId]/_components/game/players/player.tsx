@@ -57,7 +57,7 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.button>
   return (
     <motion.button
       className={cn(
-        "z-10 relative player-card shadow-xs transition-opacity max-w-[calc(100vw-2rem)] text-start",
+        "z-10 relative player-card transition-opacity max-w-[calc(100vw-2rem)] text-start focus-visible:ring-2 focus-visible:ring-ring/50 outline-none rounded-lg focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDead && "!opacity-50 cursor-not-allowed shadow-none",
         className
       )}
@@ -65,21 +65,24 @@ export const Player = (params: React.ComponentPropsWithRef<typeof motion.button>
       {...rest}
     >
       {/* dealer badge */}
-      <AnimatePresence>
-        {(meta.showDealer && game.status === "ACTIVE" && !hideDealer) &&
-          <DealerBadge
-            player={player}
+      {!isWinner &&
+        //* dont render AnimatePresence when winner to disable exit animation 
+        <AnimatePresence>
+          {(meta.showDealer && game.status === "ACTIVE" && !hideDealer) &&
+            <DealerBadge
+              player={player}
 
-            initial={{ x: -15, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -15, opacity: 0 }}
-            transition={{
-              opacity: { delay: 0, duration: 0.2 },
-              x: { delay: 0, duration: 0.2 },
-            }}
-          />
-        }
-      </AnimatePresence>
+              initial={{ x: -15, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -15, opacity: 0 }}
+              transition={{
+                opacity: { delay: 0, duration: 0.2 },
+                x: { delay: 0, duration: 0.2 },
+              }}
+            />
+          }
+        </AnimatePresence>
+      }
 
       <div className="relative p-0.5 rounded-lg cursor-pointer overflow-hidden">
 
@@ -186,6 +189,8 @@ const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWi
   const [isMounted, setIsMounted] = React.useState<boolean>(false)
 
   const transitionDuration = 0.2
+  const isCurrentDealer = getCurrentDealer() === player.id
+  const wasPrevDealer = getPrevDealer() === player.id
 
   //* badge animation on round number change
   React.useEffect(() => {
@@ -194,30 +199,22 @@ const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWi
       return;
     }
 
-    const isCurrentDealer = getCurrentDealer() === player.id
-    const wasPrevDealer = getPrevDealer() === player.id
-
-    console.log("getCurrentDealer():", getCurrentDealer())
-    console.log("getPrevDealer():", getPrevDealer())
-    console.log("isCurrentDealer:", isCurrentDealer)
-    console.log("wasPrevDealer:", wasPrevDealer)
-
     if (!isCurrentDealer && !wasPrevDealer) return;
 
     switch (true) {
-      // is current dealer + round forward
+      // is current dealer & round forward
       case currentRoundNumber - prevRoundNumber > 0 && isCurrentDealer:
         animateBadge("down-enter")
         break;
-      // is current dealer + round backward
+      // is current dealer & round backward
       case currentRoundNumber - prevRoundNumber < 0 && isCurrentDealer:
         animateBadge("up-enter")
         break;
-      // was prev dealer + round forward
+      // was prev dealer & round forward
       case currentRoundNumber - prevRoundNumber > 0 && wasPrevDealer:
         animateBadge("down-leave")
         break;
-      // was prev dealer + round backward
+      // was prev dealer & round backward
       case currentRoundNumber - prevRoundNumber < 0 && wasPrevDealer:
         animateBadge("up-leave")
         break;
@@ -275,8 +272,8 @@ const DealerBadge = ({ player, className, ...spanProps }: React.ComponentPropsWi
     <Badge
       className={cn(
         "opacity-0 bottom-0 left-0 z-50 absolute bg-[var(--color-black)] dark:bg-[var(--color-white)] text-[var(--color-white)] dark:text-[var(--color-black)] -translate-x-1 translate-y-1 transition-opacity select-none transition-discrete duration-200",
-        getCurrentDealer() === player.id && "opacity-100 delay-200",
-        getCurrentDealer() !== player.id && "!opacity-0 !delay-0",
+        isCurrentDealer && "opacity-100 delay-200",
+        !isCurrentDealer && "!opacity-0 !delay-0",
         className
       )}
       asChild

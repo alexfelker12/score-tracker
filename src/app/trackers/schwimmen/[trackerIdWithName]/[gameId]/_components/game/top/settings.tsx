@@ -25,10 +25,9 @@ import { CheckIcon, ChevronDownIcon, Loader2Icon, SettingsIcon, XIcon } from "lu
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LabeledSeparator } from "@/components/ui/labeled-separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { LabeledSeparator } from "@/components/ui/labeled-separator";
 
 
 // export type SettingsParams = {}, params: SettingsParams, const { } = params

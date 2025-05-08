@@ -23,6 +23,12 @@ import { useLastActionConfirmation, useNukeConfirmation } from "@/hooks/use-conf
 import { Player, PlayerProps } from "./player";
 
 
+type HandleClickHelpers = {
+  newRoundData: SchwimmenRound,
+  playersHit: string[],
+  delay: number
+}
+
 export const PlayerList = () => {
   //* hooks here
   const {
@@ -50,20 +56,6 @@ export const PlayerList = () => {
     }
   }, [action])
 
-  // React.useEffect(() => {
-  //   if (!current) return;
-
-  //   //* first: create list of orderPlayers
-  //   const orderedPlayers = current.data.players.map(player => new OrderedPlayer(player))
-
-  //   //* second: set references by index
-  //   for (let i = 0; i < orderedPlayers.length; i++) {
-  //     const nextIndex = (i + 1) % orderedPlayers.length // wrap around
-  //     orderedPlayers[i].setNextPlayer(orderedPlayers[nextIndex])
-  //   }
-  // }, [currentRoundNumber])
-
-
   //* mutations for actions
   // POST round
   const { mutate: createLatestRound, isPending: isLatestRoundPending } = useMutation({
@@ -75,6 +67,7 @@ export const PlayerList = () => {
     mutationKey: ["game", game.id, "delete"],
     mutationFn: deleteRoundsFromRoundNumber,
   })
+
   // round dependent action
   const handleNewRound = (newRoundData: SchwimmenRound) => {
     //* optimistically add new round, error cases are handled below 
@@ -116,69 +109,79 @@ export const PlayerList = () => {
       handleCreateLatestRound()
     }
   }
+
   // click handler for all action states
-  const handleClick = async (playerId: string, delay: number = 0) => {
+  const checkWinAndExecute = async (data: HandleClickHelpers) => {
+    const { newRoundData } = data
+
+    const winningPlayer = checkWinConditionForGameData(newRoundData)
+
+    if (winningPlayer) {
+      const { data: confirmed, error } = await tryCatch(showLastActionConfirmation(winningPlayer))
+      if (error || !confirmed) {
+        setAction(ActionStatus.ISIDLE)
+        return
+      }
+
+      executeNewRound(data)
+    } else {
+      executeNewRound(data)
+    }
+  }
+  const executeNewRound = (data: HandleClickHelpers) => {
+    const { newRoundData, playersHit, delay = 0 } = data
+
+    //* hit animation - not for winning round
+    playersHit.forEach((playerId) => {
+      //* direct hit animation
+      animateShake(playerId)
+      animateBorderRed(playerId)
+
+      setTimeout(() => {
+        //* reset/unset after hit duration
+        animateDefault(playerId)
+        animateBorderUnset(playerId)
+      }, getAnimationProps("shake")["options"].duration * 1000)
+    })
+
+    //* animation stop for other players
+    current && current.data.players.filter((player) => !playersHit.includes(player.id)).forEach((otherPlayer) => {
+      if (otherPlayer.lifes > 0 && scope.animations.length > 0) animateDefault(otherPlayer.id)
+    })
+
+    //* execute with delay upon death of player
+    if (delay > 0) {
+      setTimeout(() => handleNewRound(newRoundData), delay)
+    } else {
+      handleNewRound(newRoundData)
+    }
+  }
+  const getRoundDelay = ({ newRoundData, playersHit }: Omit<HandleClickHelpers, "delay">) => {
+    //* determine hit animation delay: when player is hit and has 0 lifes in new round
+    const playerDeadByLastAction = newRoundData.players.some((player) => {
+      return playersHit.includes(player.id) && player.lifes < 1
+    })
+    return meta.hideDead && playerDeadByLastAction ? 300 : 0
+  }
+  const handleClick = async (player: SchwimmenRound["players"][0]) => {
     if (!current || isLatestRoundPending || isDeleteRoundsPending) return;
-
-    const checkWinAndExecute = async (newRoundData: SchwimmenRound, playersHit: string[]) => {
-      const winningPlayer = checkWinConditionForGameData(newRoundData)
-
-      if (winningPlayer) {
-        const { data: confirmed, error } = await tryCatch(showLastActionConfirmation(winningPlayer))
-        if (error || !confirmed) {
-          setAction(ActionStatus.ISIDLE)
-          return
-        }
-
-        executeNewRound(newRoundData, playersHit)
-      } else {
-        executeNewRound(newRoundData, playersHit)
-      }
-    }
-
-    const executeNewRound = (newRoundData: SchwimmenRound, playersHit: string[]) => {
-      //* hit animation
-      playersHit.forEach((playerId) => {
-        //* direct hit animation
-        animateShake(playerId)
-        animateBorderRed(playerId)
-
-        setTimeout(() => {
-          //* reset/unset after hit duration
-          animateDefault(playerId)
-          animateBorderUnset(playerId)
-        }, getAnimationProps("shake")["options"].duration * 1000)
-      })
-
-      //* animation stop for other players
-      current.data.players.filter((player) => !playersHit.includes(player.id)).forEach((otherPlayer) => {
-        if (otherPlayer.lifes > 0 && scope.animations.length > 0) animateDefault(otherPlayer.id)
-      })
-
-      //* execute of 
-      if (delay > 0) {
-        setTimeout(() => handleNewRound(newRoundData), delay)
-      } else {
-        handleNewRound(newRoundData)
-      }
-    }
 
     switch (action) {
       case ActionStatus.ISSUBTRACT:
-        const [newRoundData, playersHit] = subtractLifeOf(playerId)
+        const [newRoundData, playersHit] = subtractLifeOf(player.id)
 
         if (!newRoundData) {
           setAction(ActionStatus.ISIDLE)
           return
         }
 
-        checkWinAndExecute(newRoundData, playersHit)
+        checkWinAndExecute({ newRoundData, playersHit, delay: getRoundDelay({ newRoundData, playersHit }) })
         break
 
       case ActionStatus.ISNUKE:
         //* playerId is detonator
         //* returns players in case of conflict, else undefined
-        const affectedPlayers = checkNukeForConflict(playerId)
+        const affectedPlayers = checkNukeForConflict(player.id)
 
         if (affectedPlayers) {
 
@@ -190,26 +193,26 @@ export const PlayerList = () => {
             if (error) { console.error("Error during confirmation:", error); setAction(ActionStatus.ISIDLE); return; }
 
             //* do action
-            const [newRoundData, playersHit] = detonateNuke(playerId, survivingPlayer.id)
+            const [newRoundData, playersHit] = detonateNuke(player.id, survivingPlayer.id)
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-            checkWinAndExecute(newRoundData, playersHit)
+            checkWinAndExecute({ newRoundData, playersHit, delay: getRoundDelay({ newRoundData, playersHit }) })
           } else if (affectedPlayers.length === 1) {
             //* case 2: only 1 player would be swimming -> NO conflict
 
             //* do action
-            const [newRoundData, playersHit] = detonateNuke(playerId, affectedPlayers[0].id) // 0 exists because length === 1 check is true
+            const [newRoundData, playersHit] = detonateNuke(player.id, affectedPlayers[0].id) // 0 exists because length === 1 check is true
             if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-            checkWinAndExecute(newRoundData, playersHit)
+            checkWinAndExecute({ newRoundData, playersHit, delay: getRoundDelay({ newRoundData, playersHit }) })
           }
 
         } else {
           //* if no conflict, just pass playerId
-          const [newRoundData, playersHit] = detonateNuke(playerId)
+          const [newRoundData, playersHit] = detonateNuke(player.id)
           if (!newRoundData) { setAction(ActionStatus.ISIDLE); return; }
 
-          checkWinAndExecute(newRoundData, playersHit)
+          checkWinAndExecute({ newRoundData, playersHit, delay: getRoundDelay({ newRoundData, playersHit }) })
         }
         break
 
@@ -296,7 +299,7 @@ export const PlayerList = () => {
             <Player
               key={jsonPlayer.id}
               id={`player-${jsonPlayer.id}`}
-              onClick={() => handleClick(jsonPlayer.id, (jsonPlayer.lifes <= 1 && current.data.playerSwimming) ? 300 : 0)}
+              onClick={() => handleClick(jsonPlayer)}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -313,6 +316,7 @@ export const PlayerList = () => {
   );
 }
 
+// TODO: see, if hidden player count has to be sized too
 const HiddenPlayerCount = ({ currentRound }: { currentRound: Round | undefined }) => {
   const amountDeadPlayers = currentRound ? currentRound.data.players.filter((player) => player.lifes < 1).length : 0
 
