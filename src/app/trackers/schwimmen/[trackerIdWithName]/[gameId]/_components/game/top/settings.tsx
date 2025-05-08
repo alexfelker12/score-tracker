@@ -114,7 +114,7 @@ export const Settings = () => {
         {/* all options */}
         <div className="space-y-6">
 
-          <section className="space-y-4 hide-on-adjust" aria-description="Control the appearance of game features">
+          <section className="space-y-4 hide-on-adjust">
             <LabeledSeparator className="!mb-2">Appearance</LabeledSeparator>
 
             {/* option - show card dealer */}
@@ -156,7 +156,7 @@ export const Settings = () => {
             </div>
           </section>
 
-          <section className="space-y-4" aria-description="Adjust the size of game elements">
+          <section className="space-y-4">
             <LabeledSeparator className="!mb-2 hide-on-adjust">Size</LabeledSeparator>
 
             {/* option - ui sizing */}
@@ -188,7 +188,7 @@ export const Settings = () => {
             </div>
           </section>
 
-          <section className="space-y-4 hide-on-adjust" aria-description="Handle game progress">
+          <section className="space-y-4 hide-on-adjust">
             <LabeledSeparator className="!mb-2">Progress</LabeledSeparator>
 
             {/* option - reset game */}

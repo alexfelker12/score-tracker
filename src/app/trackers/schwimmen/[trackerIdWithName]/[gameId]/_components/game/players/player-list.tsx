@@ -145,7 +145,7 @@ export const PlayerList = () => {
     })
 
     //* animation stop for other players
-    current && current.data.players.filter((player) => !playersHit.includes(player.id)).forEach((otherPlayer) => {
+    if (current) current.data.players.filter((player) => !playersHit.includes(player.id)).forEach((otherPlayer) => {
       if (otherPlayer.lifes > 0 && scope.animations.length > 0) animateDefault(otherPlayer.id)
     })
 

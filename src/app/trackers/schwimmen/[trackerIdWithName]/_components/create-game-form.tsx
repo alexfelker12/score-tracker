@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation"
 import React from "react"
 
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { TrackerPlayer, User } from "@prisma/client"
 import { useMutation } from "@tanstack/react-query"
 
@@ -19,9 +19,8 @@ import { GripHorizontalIcon, Loader2Icon, UserIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Separator } from "@/components/ui/separator"
 import { LabeledSeparator } from "@/components/ui/labeled-separator"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 
 

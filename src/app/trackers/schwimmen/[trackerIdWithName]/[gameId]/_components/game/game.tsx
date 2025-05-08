@@ -104,7 +104,7 @@ export const Game = (params: GameParams) => {
 
   return (
     <div className="relative flex flex-col gap-4">
-      <section className="flex justify-between items-center gap-4" aria-description="Game actions and settings">
+      <section className="flex justify-between items-center gap-4">
         {/* settings & history */}
         <div className="flex gap-x-4">
           <Settings />
@@ -118,7 +118,7 @@ export const Game = (params: GameParams) => {
       </section>
 
       <LayoutGroup>
-        <section aria-description="Player list">
+        <section>
           <PlayerList />
         </section>
 
