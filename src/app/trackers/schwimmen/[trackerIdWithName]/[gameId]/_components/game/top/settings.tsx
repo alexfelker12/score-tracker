@@ -70,7 +70,6 @@ export const Settings = () => {
       }
     })
   }
-
   const handleCancel = () => {
     if (isResetOpenOrPending || game.status !== "ACTIVE") return;
 
@@ -88,12 +87,12 @@ export const Settings = () => {
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={game.status !== "ACTIVE" ? false : dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button
           size={`game${SCHWIMMEN_TOP_ICON_SIZE_MAP[meta.uiSize[0]]}`}
           variant="gameOutline"
-          disabled={!isAction(ActionStatus.ISIDLE)}
+          disabled={!isAction(ActionStatus.ISIDLE) || game.status !== "ACTIVE"}
           className="transition-[width,height] [&_svg]:transition-[width,height] duration-200 [&_svg]:duration-200"
         >
           <SettingsIcon className="size-5" />
