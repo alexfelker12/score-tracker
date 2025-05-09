@@ -1,7 +1,15 @@
+import { Breadcrumbs } from "@/components/breadcrumbs";
+
 export default async function UserProfile() {
   return (
-    <main className="flex flex-col justify-center items-center space-y-4 p-4 w-full h-full">
-      Profile
-    </main >
+    <main className="flex flex-col space-y-4 h-full">
+      <Breadcrumbs />
+      
+      <div>
+        {/* heading + description */}
+        <h1 className="text-2xl">Your profile</h1>
+        <p className="text-muted-foreground text-sm"></p>
+      </div>
+    </main>
   );
 }

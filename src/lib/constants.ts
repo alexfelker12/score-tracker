@@ -60,3 +60,7 @@ export const SCHWIMMEN_GAME_ICON_SIZE_MAP = [
   "size-10",
   "size-11",
 ] as const
+
+export const IGNORED_HREFS = [
+  "/user",
+]

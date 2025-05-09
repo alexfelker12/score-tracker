@@ -1,6 +1,7 @@
 import { BreadcrumbType } from "@/components/breadcrumbs"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { IGNORED_HREFS } from "./constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -106,10 +107,14 @@ export const getNavTrailFromString = (str: string): BreadcrumbType[] => {
 
   const autoNavTrail: BreadcrumbType[] = []
   strSplit.reduce((accumulator, currentValue) => {
-    const href = accumulator + currentValue[0]
-    const name = currentValue[1].charAt(0).toUpperCase() + currentValue[1].slice(1)
-    autoNavTrail.push({ name, href })
-    return href
+    if (!IGNORED_HREFS.includes(currentValue[0])) {
+      const href = accumulator + currentValue[0]
+      const name = currentValue[1].charAt(0).toUpperCase() + currentValue[1].slice(1)
+      autoNavTrail.push({ name, href })
+      return href
+    } else {
+      return accumulator
+    }
   }, "");
 
   return autoNavTrail

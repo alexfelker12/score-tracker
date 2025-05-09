@@ -1,5 +1,7 @@
-import { permanentRedirect } from 'next/navigation';
+// import { permanentRedirect } from 'next/navigation';
 
 export default async function UserPage() {
-  permanentRedirect('/user/profile');
+  //* handled in next config 
+  // permanentRedirect('/user/profile');
+  return null;
 }
