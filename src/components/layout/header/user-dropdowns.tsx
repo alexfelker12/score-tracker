@@ -81,12 +81,12 @@ export const AuthenticatedUser = ({ session }: AuthenticatedUserProps) => {
         {/* profile links */}
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/profile">
+            <Link href="/user/profile">
               <ContactIcon /> Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/profile/settings">
+            <Link href="/user/settings">
               <SettingsIcon /> Settings
             </Link>
           </DropdownMenuItem>
