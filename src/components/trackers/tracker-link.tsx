@@ -1,8 +1,9 @@
 import Link from "next/link";
 
+import { ArrowRightIcon } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRightIcon } from "lucide-react";
 
 export type TrackerLinkProps = {
   name: string
@@ -16,7 +17,7 @@ export type TrackerLinkProps = {
 export const TrackerLink = ({ name, href, description, categories }: TrackerLinkProps) => {
   return (
     <Link href={`/trackers${href}`} className="group">
-      <Card className="group-hover:bg-accent justify-between gap-4 py-4 w-full h-full transition-all">
+      <Card className="justify-between gap-4 group-hover:bg-accent py-4 w-full h-full transition-all">
         <CardHeader className="px-4">
 
           {/* heading + description */}

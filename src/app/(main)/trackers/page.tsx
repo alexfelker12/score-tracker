@@ -1,6 +1,6 @@
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { TRACKERS } from "@/lib/constants";
-import { TrackerLink } from "./_components/tracker-link";
+import { TrackerLink } from "@/components/trackers/tracker-link";
 
 export default function Trackers() {
   return (

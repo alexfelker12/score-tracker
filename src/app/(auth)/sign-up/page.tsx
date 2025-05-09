@@ -1,12 +1,11 @@
 import { AuthForm } from "@/components/auth/auth-form";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { LogOutIcon } from "lucide-react";
 import { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 // import { redirect } from "next/navigation";
 
 

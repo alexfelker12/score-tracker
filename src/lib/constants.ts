@@ -1,4 +1,4 @@
-import { TrackerLinkProps } from "@/app/trackers/_components/tracker-link";
+import type { TrackerLinkProps } from "@/components/trackers/tracker-link";
 
 export const TRACKERS: TrackerLinkProps[] = [
   {
