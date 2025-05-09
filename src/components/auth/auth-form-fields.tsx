@@ -4,13 +4,14 @@ import Link from 'next/link'
 
 import { ControllerRenderProps } from 'react-hook-form'
 
-import { LoaderCircleIcon, ShieldAlertIcon } from 'lucide-react'
+import { EyeIcon, EyeOffIcon, LoaderCircleIcon, ShieldAlertIcon } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import React from 'react'
 
 
 export const AuthFormEmail = ({ ...field }: ControllerRenderProps) => {
@@ -57,6 +58,8 @@ export const AuthFormUsername = ({ ...field }: ControllerRenderProps) => {
 
 export const AuthFormSignInPassword = ({ ...field }: ControllerRenderProps) => {
   // const field = useFormField()
+  const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false)
+  const Icon = passwordVisible ? EyeOffIcon : EyeIcon
 
   //* password field
   return (
@@ -65,39 +68,62 @@ export const AuthFormSignInPassword = ({ ...field }: ControllerRenderProps) => {
         <span>Password</span>
         {/* reset password */}
         <Button className="text-muted-foreground" variant="link" size="inline" asChild>
-          <Link href="/reset-password">Forgot password?</Link>
+          <Link href="/forgot-password">Forgot password?</Link>
         </Button>
       </FormLabel>
       <FormControl>
-        <Input
-          className="h-9"
-          type="password"
-          autoComplete="current-password"
-          {...field}
-        />
+        <div className="relative">
+          <Input
+            className="pr-9 h-9"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            {...field}
+          />
+          <Button
+            onClick={() => setPasswordVisible(!passwordVisible)}
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="top-1/2 right-1 absolute -translate-y-1/2 size-7"
+          >
+            <Icon className="size-[18px]" />
+          </Button>
+        </div>
       </FormControl>
       <FormMessage className="text-destructive" />
     </FormItem>
-
   )
 }
 
-export const AuthFormSignUpPassword = ({ ...field }: ControllerRenderProps) => {
+export const AuthFormSignUpPassword = ({ label, ...field }: ControllerRenderProps & { label: string }) => {
   // const field = useFormField()
+  const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false)
+  const Icon = passwordVisible ? EyeOffIcon : EyeIcon
 
   //* password field
   return (
     <FormItem className="space-y-1">
       <FormLabel className="flex justify-between items-center data-[error=true]:text-destructive">
-        <span>Password</span>
+        <span>{label}</span>
       </FormLabel>
       <FormControl>
-        <Input
-          className="h-9"
-          type="password"
-          autoComplete="new-password"
-          {...field}
-        />
+        <div className="relative">
+          <Input
+            className="pr-9 h-9"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="new-password"
+            {...field}
+          />
+          <Button
+            onClick={() => setPasswordVisible(!passwordVisible)}
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="top-1/2 right-1 absolute -translate-y-1/2 size-7"
+          >
+            <Icon className="size-[18px]" />
+          </Button>
+        </div>
       </FormControl>
       <FormMessage className="text-destructive" />
     </FormItem>

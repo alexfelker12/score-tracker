@@ -11,8 +11,8 @@ export const MAXPASSWORDLENGTH = 32;
 
 export const signInFormSchema = z.object({
   username: z
-  .string()
-  .min(MINUSERNAMELENGTH, { message: `Username cannot be empty` }),
+    .string()
+    .min(MINUSERNAMELENGTH, { message: `Username cannot be empty` }),
   password: z
     .string()
     .min(MINSIGNINPASSWORDLENGTH, { message: "Password cannot be empty" }),
@@ -29,6 +29,18 @@ export const signUpFormSchema = z.object({
     .string()
     .min(MINSIGNUPPASSWORDLENGTH, { message: `Your password must be at least ${MINSIGNUPPASSWORDLENGTH} characters long` })
     .max(MAXPASSWORDLENGTH, { message: `Your password should not exceed ${MAXPASSWORDLENGTH} characters` }),
+  confirmPassword: z
+    .string()
+    .min(MINSIGNUPPASSWORDLENGTH)
+    .max(MAXPASSWORDLENGTH),
+}).superRefine(({ confirmPassword, password }, ctx) => {
+  if (confirmPassword !== password) {
+    ctx.addIssue({
+      code: "custom",
+      message: "The passwords are not matching",
+      path: ['confirmPassword']
+    });
+  }
 });
 
 export const signInDefaultValues: z.infer<typeof signInFormSchema> = {
@@ -39,6 +51,7 @@ export const signInDefaultValues: z.infer<typeof signInFormSchema> = {
 
 export const signUpDefaultValues: z.infer<typeof signUpFormSchema> = {
   email: "",
-  password: "",
   username: "",
+  password: "",
+  confirmPassword: "",
 };

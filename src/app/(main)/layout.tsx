@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Header from "@/components/layout/header/header";
@@ -46,7 +46,7 @@ export default function RootLayout({
           <Header />
 
           {/* main content */}
-          <div className="[&_>_main]:max-w-4xl [&_>_main]:p-4 [&_>_main]:w-full flex justify-center">
+          <div className="flex justify-center [&_>_main]:p-4 [&_>_main]:w-full [&_>_main]:max-w-4xl">
             {children}
           </div>
 

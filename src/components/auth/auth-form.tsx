@@ -29,6 +29,7 @@ import { Separator } from "@/components/ui/separator"
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
+import { LabeledSeparator } from '../ui/labeled-separator'
 
 export type AuthFormProps = {
   type: "sign-in" | "sign-up"
@@ -70,10 +71,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         />
 
         {/* login options divider */}
-        <div className='relative'>
-          <Separator />
-          <span className='top-1/2 left-1/2 absolute bg-card px-2 text-muted-foreground text-sm -translate-x-1/2 -translate-y-1/2'>or continue with</span>
-        </div>
+        <LabeledSeparator>or continue with</LabeledSeparator>
 
         {/* alternative/social logins */}
         <AuthFormSocials
@@ -170,6 +168,9 @@ export const AuthFormSignIn = ({ loading, setLoading, callbackUrl }: AuthFormSig
         />
 
         {/* password field */}
+        {
+          //TODO: implement forgot password flow https://www.better-auth.com/docs/authentication/email-password
+        }
         <FormField control={form.control}
           name="password"
           render={({ field }) => (
@@ -280,7 +281,15 @@ export const AuthFormSignUp = ({ loading, setLoading, callbackUrl }: AuthFormSig
         <FormField control={form.control}
           name="password"
           render={({ field }) => (
-            <AuthFormSignUpPassword {...field} />
+            <AuthFormSignUpPassword label="Password" {...field} />
+          )}
+        />
+
+        {/* confirm password field */}
+        <FormField control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <AuthFormSignUpPassword label="Confirm password" {...field} />
           )}
         />
 
