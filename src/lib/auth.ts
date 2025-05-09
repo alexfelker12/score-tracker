@@ -7,12 +7,13 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [
     // process.env.VERCEL_URL!, // only on production
-    // process.env.VERCEL_URL!,
+    `${process.env.VERCEL_URL!}`,
     "http://192.168.178.71:3000",
     "https://bw-score-tracker.vercel.app/"
   ],
   emailAndPassword: {
     enabled: true,
+    autoSignIn: true
   },
   socialProviders: {
     google: {

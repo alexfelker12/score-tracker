@@ -1,6 +1,7 @@
 "use client"
 
 import Link from 'next/link'
+import React from 'react'
 
 import { ControllerRenderProps } from 'react-hook-form'
 
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import React from 'react'
 
 
 export const AuthFormEmail = ({ ...field }: ControllerRenderProps) => {
@@ -19,7 +19,7 @@ export const AuthFormEmail = ({ ...field }: ControllerRenderProps) => {
 
   //* email field
   return (
-    <FormItem className="space-y-1">
+    <FormItem className="gap-1 space-y-1">
       <FormLabel className="data-[error=true]:text-destructive">Email</FormLabel>
       <FormControl>
         <Input
@@ -40,7 +40,7 @@ export const AuthFormUsername = ({ ...field }: ControllerRenderProps) => {
 
   //* username field
   return (
-    <FormItem className="space-y-1">
+    <FormItem className="gap-1 space-y-1">
       <FormLabel className="data-[error=true]:text-destructive">Username</FormLabel>
       <FormControl>
         <Input
@@ -61,16 +61,23 @@ export const AuthFormSignInPassword = ({ ...field }: ControllerRenderProps) => {
   const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false)
   const Icon = passwordVisible ? EyeOffIcon : EyeIcon
 
+  React.useEffect(() => {
+    if (field.value === "") setPasswordVisible(false)
+  }, [field.value])
+
   //* password field
   return (
-    <FormItem className="space-y-1">
-      <FormLabel className="flex justify-between items-center data-[error=true]:text-destructive">
-        <span>Password</span>
+    <FormItem className="gap-1 space-y-1">
+      <span className="inline-flex justify-between">
+        <FormLabel className="flex justify-between items-center w-fit data-[error=true]:text-destructive">
+          <span>Password</span>
+        </FormLabel>
+
         {/* reset password */}
-        <Button className="text-muted-foreground" variant="link" size="inline" asChild>
+        <Button className="h-3.5 text-muted-foreground" variant="link" size="inline" asChild>
           <Link href="/forgot-password">Forgot password?</Link>
         </Button>
-      </FormLabel>
+      </span>
       <FormControl>
         <div className="relative">
           <Input
@@ -84,7 +91,8 @@ export const AuthFormSignInPassword = ({ ...field }: ControllerRenderProps) => {
             type="button"
             size="icon"
             variant="ghost"
-            className="top-1/2 right-1 absolute -translate-y-1/2 size-7"
+            className="top-1/2 right-1 absolute transition-opacity -translate-y-1/2 size-7"
+            disabled={field.value === ""}
           >
             <Icon className="size-[18px]" />
           </Button>
@@ -100,9 +108,13 @@ export const AuthFormSignUpPassword = ({ label, ...field }: ControllerRenderProp
   const [passwordVisible, setPasswordVisible] = React.useState<boolean>(false)
   const Icon = passwordVisible ? EyeOffIcon : EyeIcon
 
+  React.useEffect(() => {
+    if (field.value === "") setPasswordVisible(false)
+  }, [field.value])
+
   //* password field
   return (
-    <FormItem className="space-y-1">
+    <FormItem className="gap-1 space-y-1">
       <FormLabel className="flex justify-between items-center data-[error=true]:text-destructive">
         <span>{label}</span>
       </FormLabel>
@@ -119,7 +131,8 @@ export const AuthFormSignUpPassword = ({ label, ...field }: ControllerRenderProp
             type="button"
             size="icon"
             variant="ghost"
-            className="top-1/2 right-1 absolute -translate-y-1/2 size-7"
+            className="top-1/2 right-1 absolute transition-opacity -translate-y-1/2 size-7"
+            disabled={field.value === ""}
           >
             <Icon className="size-[18px]" />
           </Button>

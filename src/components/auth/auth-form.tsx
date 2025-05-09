@@ -17,19 +17,18 @@ import { signIn, signUp } from '@/lib/auth-client'
 
 //* icons
 import { GoogleIcon } from '@/components/icons/google-logo'
-import { LoaderCircleIcon } from 'lucide-react'
+import { HouseIcon, LoaderCircleIcon } from 'lucide-react'
 
 //* components
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Form, FormField } from "@/components/ui/form"
-import { Separator } from "@/components/ui/separator"
 
 //* local
+import { LabeledSeparator } from '../ui/labeled-separator'
 import { AuthFormEmail, AuthFormErrors, AuthFormRememberMe, AuthFormSignInPassword, AuthFormSignUpPassword, AuthFormSubmitButton, AuthFormUsername } from './auth-form-fields'
 import { signInDefaultValues, signInFormSchema, signUpDefaultValues, signUpFormSchema } from './form-data'
 import { formTextData } from './text-data'
-import { LabeledSeparator } from '../ui/labeled-separator'
 
 export type AuthFormProps = {
   type: "sign-in" | "sign-up"
@@ -54,50 +53,60 @@ export const AuthForm = ({ type }: AuthFormProps) => {
     : ""
 
   return (
-    <Card className='w-full max-w-sm'>
-      {/* -- login form header */}
-      <CardHeader className='text-center'>
-        <h1 className='font-bold text-2xl'>{formTextData[type].mainHeader}</h1>
-        <p className='text-muted-foreground text-sm'>{formTextData[type].subHeader}</p>
-      </CardHeader>
+    <div className="flex flex-col justify-start items-center space-y-2 w-full max-w-sm">
+      <Button
+        asChild
+        variant="ghost"
+        className="self-start"
+      >
+        <Link href="/"><HouseIcon /> Go to homepage</Link>
+      </Button>
 
-      {/* -- login options */}
-      <CardContent className='space-y-6'>
-        {/* credential login */}
-        <FormComp
-          loading={loading}
-          setLoading={setLoading}
-          callbackUrl={fromProtectedRouteOrHome}
-        />
+      <Card className="w-full">
+        {/* -- login form header */}
+        <CardHeader className='text-center'>
+          <h1 className='font-bold text-2xl'>{formTextData[type].mainHeader}</h1>
+          <p className='text-muted-foreground text-sm'>{formTextData[type].subHeader}</p>
+        </CardHeader>
 
-        {/* login options divider */}
-        <LabeledSeparator>or continue with</LabeledSeparator>
+        {/* -- login options */}
+        <CardContent className='space-y-6'>
+          {/* credential login */}
+          <FormComp
+            loading={loading}
+            setLoading={setLoading}
+            callbackUrl={fromProtectedRouteOrHome}
+          />
 
-        {/* alternative/social logins */}
-        <AuthFormSocials
-          type={type}
-          loading={loading}
-          setLoading={setLoading}
-          callbackUrl={fromProtectedRouteOrHome}
-        />
-      </CardContent>
+          {/* login options divider */}
+          <LabeledSeparator>or continue with</LabeledSeparator>
 
-      {/* -- login form footer */}
-      <CardFooter className='w-full text-center text-sm'>
-        <span className='w-full'>{formTextData[type].pageSwitchPhrase}{" "}
-          <Link
-            className='underline underline-offset-4'
-            href={
-              type === "sign-in"
-                ? `/sign-up${originalParamsOrBlank}`
-                : `/sign-in${originalParamsOrBlank}`
-            }
-          >
-            {formTextData[type].pageSwitchLink}
-          </Link>
-        </span>
-      </CardFooter>
-    </Card>
+          {/* alternative/social logins */}
+          <AuthFormSocials
+            type={type}
+            loading={loading}
+            setLoading={setLoading}
+            callbackUrl={fromProtectedRouteOrHome}
+          />
+        </CardContent>
+
+        {/* -- login form footer */}
+        <CardFooter className='w-full text-center text-sm'>
+          <span className='w-full'>{formTextData[type].pageSwitchPhrase}{" "}
+            <Link
+              className='underline underline-offset-4'
+              href={
+                type === "sign-in"
+                  ? `/sign-up${originalParamsOrBlank}`
+                  : `/sign-in${originalParamsOrBlank}`
+              }
+            >
+              {formTextData[type].pageSwitchLink}
+            </Link>
+          </span>
+        </CardFooter>
+      </Card>
+    </div>
   )
 }
 
@@ -129,16 +138,16 @@ export const AuthFormSignIn = ({ loading, setLoading, callbackUrl }: AuthFormSig
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
           form.setError("root", { message: ctx.error.message })
-        },
-        // ctx: ResponseContext
-        onResponse: () => {
           setLoading(false)
           setCredentialsLoading(false)
         },
         // ctx: SuccessContext
         onSuccess() {
+          toast.loading("Signed in successfully", {
+            description: "We are redirecting you to the app"
+          })
+          // router.refresh()
           router.push(callbackUrl)
-          router.refresh()
         },
       }
     })
@@ -227,20 +236,17 @@ export const AuthFormSignUp = ({ loading, setLoading, callbackUrl }: AuthFormSig
       // callbackURL: callbackUrl,
       fetchOptions: {
         onError: (ctx: ErrorContext) => {
-          form.setError("root", {
-            message: ctx.error.message
-          })
-        },
-        // ctx: ResponseContext
-        onResponse: () => {
+          form.setError("root", { message: ctx.error.message })
           setLoading(false)
           setCredentialsLoading(false)
         },
         // ctx: SuccessContext
         onSuccess() {
-          //* default redirect to home page
+          toast.loading("Signed up successfully", {
+            description: "We are redirecting you to the app"
+          })
+          // router.refresh()
           router.push(callbackUrl)
-          router.refresh()
         },
       }
     })
@@ -325,16 +331,15 @@ export const AuthFormSocials = ({ type, loading, setLoading, callbackUrl }: Auth
           toast.error(type === "sign-in" ? "Sign-in failed" : "Sign-up failed", {
             description: ctx.error.message
           })
-        },
-        //? ctx: ResponseContext
-        onResponse: () => {
           setLoading(false)
           setSocialsLoading(false)
         },
         // ctx: SuccessContext
-        // onSuccess: () => {
-        //   router.refresh()
-        // },
+        onSuccess() {
+          toast.loading(`Signed ${type === "sign-in" ? "in" : "up"} successfully`, {
+            description: "We are redirecting you the app"
+          })
+        },
       }
     })
   }

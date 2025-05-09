@@ -17,10 +17,11 @@ import { Button } from "@/components/ui/button"
 
 
 export type SignOutButtonProps = AuthenticatedUserProps & {
+  callbackUrl?: string
   asChild?: boolean
   children?: ReactNode
 }
-export const SignOutButton = ({ session, asChild, children }: SignOutButtonProps) => {
+export const SignOutButton = ({ session, callbackUrl, asChild, children }: SignOutButtonProps) => {
   const router = useRouter()
   const Comp = asChild ? Slot : Button
 
@@ -33,7 +34,9 @@ export const SignOutButton = ({ session, asChild, children }: SignOutButtonProps
           toast.success("You have signed out successfully")
           // router.push("/sign-in")
           //* refresh current page on sign out to trigger middleware redirect to sign-in page with current url search params (if not "/")
-          router.refresh()
+          if (callbackUrl) {
+            router.push(callbackUrl)
+          } else router.refresh()
         },
       }
     })
