@@ -9,7 +9,7 @@ export const auth = betterAuth({
     // process.env.VERCEL_URL!, // only on production
     process.env.VERCEL_URL!,
     "http://192.168.178.71:3000",
-    "https://bw-score-tracker.vercel.app/"
+    "https://bw-score-tracker.vercel.app"
   ],
   emailAndPassword: {
     enabled: true,
