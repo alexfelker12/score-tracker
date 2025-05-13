@@ -1,12 +1,12 @@
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { Profile } from "./_components/profile";
+import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
+import { getQueryClient } from "@/lib/get-query-client";
+import { getUserDataById } from "@/server/actions/user/profile/actions";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { headers } from "next/headers";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getQueryClient } from "@/lib/get-query-client";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { getUserDataById } from "@/server/actions/user/profile/actions";
+import { Profile, ProfileSkeleton } from "./_components/profile";
 
 export default async function UserProfile() {
   const session = await auth.api.getSession({
@@ -17,13 +17,18 @@ export default async function UserProfile() {
     <main className="flex flex-col space-y-4 h-full">
       <Breadcrumbs />
 
-      <div>
-        {/* heading + description */}
-        <h1 className="text-2xl">Your profile</h1>
-        <p className="text-muted-foreground text-sm"></p>
-      </div>
-
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={
+        <>
+          <div className="flex justify-between w-full">
+            <div>
+              {/* heading + description */}
+              <h1 className="text-2xl">Your profile</h1>
+            </div>
+            <Skeleton className="w-20 h-9" />
+          </div>
+          <ProfileSkeleton />
+        </>
+      }>
         <ProfileWrapper session={session} />
       </Suspense>
     </main>
@@ -45,13 +50,5 @@ async function ProfileWrapper(params: ProfileWrapperProps) {
     <HydrationBoundary state={dehydrate(qc)}>
       <Profile {...params} />
     </HydrationBoundary>
-  );
-}
-
-const Loading = () => {
-  return (
-    <div>
-      <Skeleton className="w-full h-9" />
-    </div>
   );
 }

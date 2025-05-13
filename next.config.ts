@@ -12,6 +12,20 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  images: {
+    // remotePatterns: ["https://lh3.googleusercontent.com"]
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cryb20dtvxvf2ikd.public.blob.vercel-storage.com",
+        pathname: "/profile-images/**"
+      },
+    ]
+  }
 };
 
 export default nextConfig;

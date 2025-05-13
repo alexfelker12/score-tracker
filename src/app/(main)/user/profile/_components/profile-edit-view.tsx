@@ -2,83 +2,186 @@
 
 import React from "react";
 
-import { useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
+import { useUpdateUser, UseUpdateUserProps } from "@/hooks/use-update-user";
+import { useUploadImage } from "@/hooks/use-upload-image";
 
-import { updateUser } from "@/lib/auth-client";
+import { userProfileSchema } from "@/schema/user-profile";
+
+import { ImagePlus, Loader2, SaveIcon, UserIcon, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { getQueryClient } from "@/lib/get-query-client";
-import { tryCatch } from "@/server/helpers/try-catch";
-import { toast } from "sonner";
-import { ProfileWrapperProps } from "../page";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileViewProps } from "./profile";
 
+type FormType = z.infer<typeof userProfileSchema>
 
-export const ProfileEditView = (params: ProfileWrapperProps) => {
-  const { session } = params;
-  const usernameRef = React.useRef<HTMLInputElement>(null);
-  const qc = getQueryClient()
+export const ProfileEditView = (params: ProfileViewProps & Pick<UseUpdateUserProps, "onSuccess">) => {
+  const { userData: user, onSuccess } = params
 
-  const { mutate: updateUserData, isPending: isUpdatePending } = useMutation({
-    mutationKey: ["user", session.user.id, "profile", "update"],
-    mutationFn: async (newUsername: string) => {
-      const { data, error } = await tryCatch(
-        updateUser({
-          username: newUsername,
-          // image: newImageUrl, // Uncomment when adding image update
-        })
-      )
-      if (error) return { error }
-      return { data }
+  const [previewImage, setPreviewImage] = React.useState<string | null>(user.image || null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  //* hooks to change user data
+  const { uploadImage, isUploading } = useUploadImage({
+    userId: user.id,
+  })
+  const { updateUser, isUpdatePending } = useUpdateUser({
+    userId: user.id,
+    onSuccess
+  })
+
+  //* set up form
+  const form = useForm<FormType>({
+    resolver: zodResolver(userProfileSchema),
+    defaultValues: {
+      displayName: user.displayUsername || "",
+      imageFile: undefined,
     },
-    onSettled: (res) => {
-      const data = res?.data
-      if (data && data.data) {
-        if (usernameRef.current) usernameRef.current.value = "";
-        // refetch();
-        qc.invalidateQueries({ queryKey: ["user", session.user.id, "profile"] })
-      } else if (data && data.error) {
-        switch (data.error.code) {
-          case "USERNAME_IS_ALREADY_TAKEN_PLEASE_TRY_ANOTHER":
-            toast.error("Error while updating user data", {
-              description: "Username is already taken. Please try another"
-            })
-            break;
-          case "USERNAME_IS_INVALID":
-            toast.error("Error while updating user data", {
-              description: "Username contains invalid characters. Only numbers, letters and underscores are allowed"
-            })
-            break;
-          default:
-            console.log(data.error.message)
+  })
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    form.setValue("imageFile", file, { shouldValidate: true })
+
+    //* preview image
+    const fileReader = new FileReader()
+    fileReader.onload = (e) => {
+      const result = e.target?.result as string
+      setPreviewImage(result)
+    }
+    fileReader.readAsDataURL(file)
+  }
+
+  const clearImage = () => {
+    form.setValue("imageFile", undefined)
+    setPreviewImage(user.image || null)
+
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  //* on submit
+  async function onSubmit(values: FormType) {
+    if (isUpdatePending || isUploading) return
+
+    try {
+      //* upload image if provided
+      let imageUrl: string | null = null
+      if (values.imageFile) {
+        imageUrl = await uploadImage(values.imageFile)
+        if (!imageUrl) {
+          toast.error("Failed to upload image. Please try again.")
+          return
         }
       }
-    },
-  });
 
-  const handleUpdateClick = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const newUsername = usernameRef.current?.value;
-    if (!newUsername) return;
-
-    updateUserData(newUsername);
-  };
+      if (values.displayName !== user.displayUsername || imageUrl) {
+        updateUser({
+          ...(values.displayName !== user.displayUsername ? { username: values.displayName } : {}),
+          ...(imageUrl ? { image: imageUrl } : {})
+        })
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.")
+      console.error(error)
+    }
+  }
 
   return (
-    <div className="mt-4">
-      <p>Update data:</p>
-      <p className="text-muted-foreground text-sm">username</p>
-      <form className="flex justify-between gap-4 w-full" onSubmit={handleUpdateClick}>
-        <Input ref={usernameRef} />
-        <Button
-          type="submit"
-          disabled={isUpdatePending}
-        >
-          {isUpdatePending ? "Updating..." : "Update username"}
-        </Button>
-      </form>
+    <div className="space-y-6">
+      {/* Image upload section */}
+      <div className="flex flex-col items-center space-y-2">
+        <div className="relative">
+
+          <Avatar className="size-24">
+            <AvatarImage src={previewImage || user.image || undefined} alt="Profile" />
+            {!user.image && <AvatarFallback><UserIcon className="size-12" /></AvatarFallback>}
+          </Avatar>
+
+          {form.watch("imageFile") && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="-top-2 -right-2 absolute rounded-full w-6 h-6"
+              onClick={clearImage}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center">
+          <label
+            htmlFor="imageUpload"
+            className="flex items-center gap-2 p-2 text-muted-foreground text-sm hover:text-foreground cursor-pointer"
+          >
+            <ImagePlus className="w-4 h-4" /> Change profile picture
+          </label>
+          <input
+            id="imageUpload"
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleImageChange}
+            disabled={isUploading || isUpdatePending}
+          />
+        </div>
+
+        {form.formState.errors.imageFile && (
+          <p className="text-destructive text-sm">{form.formState.errors.imageFile.message}</p>
+        )}
+      </div>
+
+      {/* Form for profile data */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="username" {...field} />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  This is your public display name.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isUpdatePending || isUploading}
+            >
+              {isUpdatePending || isUploading
+                ? <Loader2 className="animate-spin" />
+                : <SaveIcon />
+              }
+              {isUploading
+                ? "Uploading..."
+                : isUpdatePending
+                  ? "Saving..."
+                  : "Save"
+              }
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

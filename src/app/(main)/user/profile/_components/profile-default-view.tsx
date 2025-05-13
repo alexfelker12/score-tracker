@@ -1,33 +1,26 @@
 "use client";
 
-import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { useQuery } from "@tanstack/react-query";
+import { MailIcon, UserIcon } from "lucide-react";
+import { ProfileViewProps } from "./profile";
 
-import { getUserDataById } from "@/server/actions/user/profile/actions";
+export const ProfileDefaultView = ({ userData }: ProfileViewProps) => {
+  return (
+    <div className="flex md:flex-row flex-col items-center md:items-start md:space-x-6 space-y-4 md:space-y-0">
+      <Avatar className="size-24">
+        <AvatarImage src={userData.image || undefined} alt={userData.displayUsername || "User"} />
+        {!userData.image && <AvatarFallback><UserIcon className="size-12" /></AvatarFallback>}
+      </Avatar>
 
-import { ProfileWrapperProps } from "../page";
-
-
-export const ProfileDefaultView = (params: ProfileWrapperProps) => {
-  const { session } = params;
-
-  const { data, isPending: isQueryPending, isFetching, refetch } = useQuery({
-    queryKey: ["user", session.user.id, "profile"],
-    queryFn: () => getUserDataById({ userId: session.user.id }),
-    refetchOnMount: false,
-    refetchOnReconnect: false
-  });
-
-  if (data && data.data) return (
-    <>
-      <div>
-        <p>{data.data.displayUsername || "no username yet"}</p>
-        <p>{data.data.image
-          ? <img src={data.data.image} alt="profile image" width={40} height={40}></img>
-          : "no profile image yet"
-        }</p>
+      <div className="space-y-1 text-center md:text-left">
+        <h2 className="font-bold text-xl">
+          {userData.displayUsername || "Anonymous User"}
+        </h2>
+        <span className="flex items-center gap-2 text-muted-foreground">
+          <MailIcon className="size-4" /> {userData.email}
+        </span>
       </div>
-    </>
+    </div>
   );
-}
+};
