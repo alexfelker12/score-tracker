@@ -1,6 +1,6 @@
 "use server"
 
-import { participantsSchemaBase } from "@/schema/participants"
+import { participantsSchema } from "@/schema/participants"
 import { tryCatch } from "@/server/helpers/try-catch"
 import { prisma } from "@/server/prisma"
 import { Prisma, TrackerType } from "@prisma/client/edge"
@@ -49,14 +49,11 @@ export async function getAllTrackersByCreator(...args: FindTrackersByCreatorArgs
 }
 
 //* all trackers where player is participant and not creator
-async function findTrackersForParticipant(trackerType: TrackerType, userId: string) {
+async function findTrackersAsParticipant(trackerType: TrackerType, userId: string) {
   return await prisma.tracker.findMany({
     where: {
       type: trackerType,
       archived: false,
-      creatorId: {
-        not: userId
-      },
       players: {
         some: {
           playerId: userId
@@ -81,12 +78,12 @@ async function findTrackersForParticipant(trackerType: TrackerType, userId: stri
     }
   })
 }
-export type FindTrackersForParticipantReturn = Prisma.PromiseReturnType<typeof findTrackersForParticipant>
-export type FindTrackersForParticipantArgs = Parameters<typeof findTrackersForParticipant>
+export type FindTrackersAsParticipantReturn = Prisma.PromiseReturnType<typeof findTrackersAsParticipant>
+export type FindTrackersAsParticipantArgs = Parameters<typeof findTrackersAsParticipant>
 
-export async function getAllTrackersAsParticipant(...args: FindTrackersForParticipantArgs) {
-  const { data, error } = await tryCatch<FindTrackersForParticipantReturn>(
-    findTrackersForParticipant(...args)
+export async function getAllTrackersAsParticipant(...args: FindTrackersAsParticipantArgs) {
+  const { data, error } = await tryCatch<FindTrackersAsParticipantReturn>(
+    findTrackersAsParticipant(...args)
   )
 
   if (error) return { error }
@@ -185,7 +182,7 @@ async function createSingleTracker(params: {
   trackerType: TrackerType,
   displayName: string,
   creatorId: string,
-  players: z.infer<typeof participantsSchemaBase.shape.players>
+  players: z.infer<typeof participantsSchema.shape.players>
 }) {
   const { trackerType, displayName, creatorId, players } = params
 

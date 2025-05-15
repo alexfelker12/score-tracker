@@ -1,5 +1,9 @@
 import type { TrackerLinkProps } from "@/components/trackers/tracker-link";
 
+export const TRACKERTYPE_TO_PAGETITLE = {
+  "schwimmen": "Schwimmen"
+} as const
+
 export const TRACKERS: TrackerLinkProps[] = [
   {
     name: "Schwimmen",

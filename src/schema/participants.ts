@@ -13,7 +13,8 @@ import { z } from "zod"
 //   )
 // })
 
-export const participantsSchemaBase = z.object({
+// export const participantsSchemaBase = z.object({
+export const participantsSchema = z.object({
   displayName: z.string().min(1, {
     message: "This field may not be empty"
   }),
