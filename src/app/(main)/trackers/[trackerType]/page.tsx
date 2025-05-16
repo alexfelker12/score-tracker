@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 
@@ -21,10 +21,10 @@ type PathToPropsCast = keyof typeof PATH_TO_TRACKERPROPS
 export default async function TrackersPage({
   params,
 }: {
-  params: Promise<{ trackerTypePath: string }>
+  params: Promise<{ trackerType: string }>
 }) {
   // get tracker type from dynamic route params
-  const { trackerTypePath } = await params
+  const { trackerType } = await params
 
   // export default async function Schwimmen() {
   const session = await auth.api.getSession({
@@ -33,7 +33,8 @@ export default async function TrackersPage({
 
   if (!session) redirect("/sign-in")
 
-  const trackerType = trackerTypePath || "schwimmen"
+  if (!Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType)) notFound()
+
   const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
   const queryKey = ["trackers", trackerPathType, session.user.id, "trackers"]
 
