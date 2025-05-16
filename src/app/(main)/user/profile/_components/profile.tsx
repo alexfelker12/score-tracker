@@ -1,28 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
+import { useRouter } from "next/navigation";
 
-import { useMutationState, useQuery } from "@tanstack/react-query";
+import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { FindUserDataByIdReturn, getUserDataById } from "@/server/actions/user/profile/actions";
 
+import { UseUpdateUserProps } from "@/hooks/use-update-user";
+
 import { getQueryClient } from "@/lib/get-query-client";
+import { auth } from "@/lib/auth";
 
 import { SquarePenIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { ProfileWrapperProps } from "../page";
 import { ProfileDefaultView } from "./profile-default-view";
 import { ProfileEditView } from "./profile-edit-view";
-import { useRouter } from "next/navigation";
-import { UseUpdateUserProps } from "@/hooks/use-update-user";
 
 
-export const Profile = (params: ProfileWrapperProps) => {
-  const { session } = params;
+type ProfileProps = {
+  session: typeof auth.$Infer.Session
+  dataPromise: ReturnType<typeof getUserDataById>
+}
+export const Profile = (params: ProfileProps) => {
+  const { session, dataPromise } = params;
   const queryKey = ["user", session.user.id, "profile"]
   const updateKey = [...queryKey, "update"]
 
@@ -32,8 +37,9 @@ export const Profile = (params: ProfileWrapperProps) => {
   const router = useRouter()
 
   //* fetch user data - prefetched on server
-  const qc = getQueryClient()
-  const { data: user, isPending: isQueryPending, isFetching } = useQuery({
+  const { invalidateQueries } = getQueryClient()
+  const { data: user, isPending: isQueryPending, isFetching } = useSuspenseQuery({
+    initialData: use(dataPromise),
     queryFn: () => getUserDataById({ userId: session.user.id }),
     queryKey, refetchOnMount: false, refetchOnReconnect: false
   });
@@ -47,7 +53,7 @@ export const Profile = (params: ProfileWrapperProps) => {
   //* react to update change
   const successfulUpdate: UseUpdateUserProps["onSuccess"] = (imageUpdated) => {
     // invalidate to get the latest user data
-    qc.invalidateQueries({ queryKey })
+    invalidateQueries({ queryKey })
     // return to default view mode
     setIsEditing(false)
     // notify user that the profile has been updated successfully
@@ -61,7 +67,7 @@ export const Profile = (params: ProfileWrapperProps) => {
       <div className="flex justify-between w-full">
         <div>
           {/* heading + description */}
-          <h1 className="text-2xl">Your profile</h1>
+          <h1 className="font-bold text-2xl">Your profile</h1>
         </div>
         <Button
           className="transition-colors" variant="outline"
