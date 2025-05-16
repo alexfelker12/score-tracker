@@ -9,14 +9,14 @@ import { Prisma, User } from "@prisma/client/edge"
 //*** POST
 //* create trackerPlayer (add to tracker)
 async function addTrackerPlayer(params: {
-  userId: string
+  // userId: string
   trackerId: string
   playerOrGuest: {
     displayName: string
     player?: User
   }
 }) {
-  const { userId, trackerId, playerOrGuest } = params
+  const { trackerId, playerOrGuest } = params
 
   const player = {
     ...(playerOrGuest.player
@@ -33,7 +33,7 @@ async function addTrackerPlayer(params: {
       tracker: {
         connect: {
           id: trackerId,
-          creatorId: userId
+          // creatorId: userId
         }
       },
       displayName: playerOrGuest.player
@@ -70,15 +70,21 @@ export async function addPlayerToTracker(...args: AddTrackerPlayerArgs) {
 //* delete trackerPlayer
 async function deleteTrackerPlayer(params: {
   trackerPlayerId: string
-  userId: string
+  userIdIfPlayer: string | undefined
 }) {
-  const { trackerPlayerId, userId } = params
+  const { trackerPlayerId, userIdIfPlayer } = params
   return await prisma.trackerPlayer.delete({
     where: {
       id: trackerPlayerId,
-      tracker: {
-        creatorId: userId
-      }
+      ...(
+        userIdIfPlayer ? {
+          tracker: {
+            creatorId: {
+              not: userIdIfPlayer
+            }
+          }
+        } : {}
+      )
     }
   })
 }

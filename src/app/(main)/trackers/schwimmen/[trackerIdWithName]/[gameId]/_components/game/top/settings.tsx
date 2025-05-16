@@ -102,7 +102,7 @@ export const Settings = () => {
           "gap-6 [&_.hide-on-adjust]:transition-opacity",
           meta.isAdjustingSize && "[&_.hide-on-adjust]:opacity-0 bg-background/0 border-transparent shadow-none"
         )}
-        isAdjusting={meta.isAdjustingSize}
+        hideOverlay={meta.isAdjustingSize}
       >
         <DialogHeader className="hide-on-adjust">
           <DialogTitle>Game settings</DialogTitle>

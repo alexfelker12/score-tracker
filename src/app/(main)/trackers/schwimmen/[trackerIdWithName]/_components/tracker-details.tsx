@@ -2,22 +2,21 @@
 
 //* next/react
 import Link from "next/link";
-import React from "react";
+import React, { Suspense, use } from "react";
 
 //* packages
 import { TrackerPlayer, User } from "@prisma/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 
 //* server
 import { getTrackerById } from "@/server/actions/tracker/actions";
 import { addPlayerToTracker, deleteTrackerPlayerById } from "@/server/actions/tracker/trackerPlayer/actions";
 
 //* lib
-import { useSession } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
+import { cn, timeElapsed } from "@/lib/utils";
 
 //* icons
-import { Loader2Icon, Trash2Icon, UserIcon } from "lucide-react";
+import { Loader2Icon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
 
 //* components
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -26,26 +25,25 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 //* local
-import { AddPlayerDialog } from "../../_components/tracker-create-form";
-import { TimeElapsed } from "../../_components/trackers";
-import { TrackerDetailsWrapProps } from "../page";
+import { AddPlayerDialog } from "@/components/trackers/add-player-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { auth } from "@/lib/auth";
+import { getOtherUsers } from "@/server/actions/user/actions";
 import { CreateGameForm } from "./create-game-form";
 
-
-export type TrackerDetailsProps = TrackerDetailsWrapProps & {}
-export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
-  const { data: session, isPending: isSessionPending } = useSession()
-
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
-
-  //? invalidating not reliable, has conflicts with refetch options -> manual refetch
-  // const { invalidateQueries } = getQueryClient()
-
-  const { data, isPending, isFetching, refetch } = useQuery({
-    queryKey: ["trackers", trackerId],
+export type TrackerDetailsProps = {
+  session: typeof auth.$Infer.Session
+  trackerId: string
+  queryKey?: string[]
+  dataPromise: ReturnType<typeof getTrackerById>
+  playerDialogDataPromise: ReturnType<typeof getOtherUsers>
+}
+export const TrackerDetails = ({ session, trackerId, queryKey, dataPromise, playerDialogDataPromise }: TrackerDetailsProps) => {
+  const { data: { data, error }, isPending, isFetching, refetch } = useSuspenseQuery({
+    initialData: use(dataPromise),
+    queryKey: queryKey || ["trackers", trackerId],
     queryFn: () => getTrackerById(trackerId),
-    refetchOnMount: false,
-    refetchOnReconnect: false
+    refetchOnMount: false, refetchOnReconnect: false
   })
 
   //* POST create player
@@ -54,7 +52,7 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
     mutationFn: addPlayerToTracker,
     onSettled: async (data) => {
       if (data && data.data) {
-        //? await invalidateQueries({ queryKey: ["trackers", trackerId] })
+        // await invalidateQueries({ queryKey: ["trackers", trackerId] })
         await refetch()
       } else if (data && data.error) { }
     },
@@ -66,7 +64,7 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
     mutationFn: deleteTrackerPlayerById,
     onSettled: async (data) => {
       if (data && data.data) {
-        //? await invalidateQueries({ queryKey: ["trackers", trackerId] })
+        // await invalidateQueries({ queryKey: ["trackers", trackerId] })
         await refetch()
         setPendingDeleteId(null) // reset after deletion completes
       } else if (data && data.error) {
@@ -75,121 +73,169 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
     },
   })
 
+  const [open, setOpen] = React.useState<boolean>(false)
+  const [subOpen, setSubOpen] = React.useState<boolean>(false)
+  const [sub2Open, setSub2Open] = React.useState<boolean>(false)
+  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
+
+  //? invalidating not reliable, has conflicts with refetch options -> manual refetch
+  // const { invalidateQueries } = getQueryClient()
+
 
   if (isPending) return <LoadingTrackerDetails />
-  if (!data) return <ErrorMessage />
-  if (data.error) return <ErrorMessage error={data.error} />
-  if (!data.data) return <InvalidTrackerMessage />
 
-  if (data.data) return (
+  if (error) return <ErrorMessage error={error} />
+  if (!data) return <InvalidTrackerMessage />
+
+  if (data) return (
     <div className="flex flex-col gap-4">
 
-      <p className="font-semibold text-xl">
-        {data.data.displayName}
-      </p>
+      <div className="flex justify-between items-center">
 
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between items-center">
-          <h3>Players:</h3>
-          {isSessionPending
-            ? <div className="flex justify-center items-center px-1.5 border border-transparent w-9"><Loader2Icon className="text-primary animate-spin" /></div>
-            : session && <div
-              className={cn((isAddingPending || isDeletePending || data.data.players.length >= 9 || session.user.id !== data.data?.creatorId) && "opacity-50 pointer-events-none")}
-            >
-              <AddPlayerDialog
-                userId={session.user.id}
-                userPlayers={data.data.players.flatMap((trackerPlayer) => trackerPlayer.player ? trackerPlayer.player.id : [])}
-                guestPlayers={data.data.players.flatMap((trackerPlayer) => trackerPlayer.player ? [] : trackerPlayer.displayName)}
-                saveFunc={(participant) => {
-                  if (isAddingPending || isDeletePending || (data.data && data.data.players.length >= 9) || !session || session.user.id !== data.data?.creatorId) return;
+        <h2 className="font-bold text-2xl">
+          {data.displayName}
+        </h2>
 
-                  addPlayer({
-                    userId: session.user.id,
-                    trackerId: trackerId,
-                    playerOrGuest: {
-                      displayName: participant.guest ? participant.name : participant.user.displayUsername || participant.user.name,
-                      player: !participant.guest ? participant.user : undefined
-                    }
-                  })
-                }}
-                canAddField={true}
-              />
-            </div>
-          }
-        </div>
-        {data.data.players.map((trackerPlayer) => {
-          return (
-            <div key={trackerPlayer.id} className="flex justify-between items-center gap-4 p-1.5 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <TrackerPlayerDetails trackerPlayer={trackerPlayer} />
-              </div>
-              {session && session.user.id === trackerPlayer.playerId
-                ? <span className="w-9 text-center text-muted-foreground text-sm italic">you</span>
-                : <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      disabled={
-                        isSessionPending ||
-                        !session ||
-                        session.user.id !== data.data?.creatorId ||
-                        data.data?.players.length <= 2 ||
-                        (isDeletePending && pendingDeleteId !== trackerPlayer.id)
-                      }
-                    >
-                      {isDeletePending && pendingDeleteId === trackerPlayer.id ?
-                        <Loader2Icon className="animate-spin" /> :
-                        <Trash2Icon />}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action will delete <span className="text-primary">{trackerPlayer.player ? trackerPlayer.player.displayUsername || trackerPlayer.player.name : trackerPlayer.displayName}</span> from this tracker
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        variant="destructive"
-                        onClick={() => {
-                          if (isSessionPending || !session || session.user.id !== data.data?.creatorId || data.data?.players.length <= 2) return;
+        <div className="flex gap-2">
+          {/* participants */}
+          <Dialog open={open} onOpenChange={setOpen}>
 
-                          // set the pending delete ID to this player's ID
-                          setPendingDeleteId(trackerPlayer.id)
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+              >
+                <UsersIcon />
+              </Button>
+            </DialogTrigger>
 
-                          deletePlayer({
-                            userId: session.user.id,
-                            trackerPlayerId: trackerPlayer.id
+            <DialogContent hidden={subOpen || sub2Open}>
+              <DialogHeader>
+                <DialogTitle>Tracker players</DialogTitle>
+                <DialogDescription>
+                  Manage users to add them to a game
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col gap-2">
+                {session &&
+                  <div
+                    className={cn("self-end",
+                      (
+                        isAddingPending
+                        || isDeletePending
+                      ) && "opacity-50 pointer-events-none"
+                    )}
+                  >
+                    <Suspense fallback={<Skeleton className="w-32 h-9" />}>
+                      <AddPlayerDialog
+                        userId={session.user.id}
+                        userPlayers={data.players.flatMap((trackerPlayer) => trackerPlayer.player ? trackerPlayer.player.id : [])}
+                        guestPlayers={data.players.flatMap((trackerPlayer) => trackerPlayer.player ? [] : trackerPlayer.displayName)}
+                        dataPromise={playerDialogDataPromise}
+                        saveFunc={(participant) => {
+                          if (
+                            isAddingPending
+                            || isDeletePending
+                            || !session
+                          ) return;
+
+                          addPlayer({
+                            // userId: session.user.id,
+                            trackerId: trackerId,
+                            playerOrGuest: {
+                              displayName: participant.guest ? participant.name : participant.user.displayUsername || participant.user.name,
+                              player: !participant.guest ? participant.user : undefined
+                            }
                           })
                         }}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              }
-            </div>
-          )
-        })}
-        {(isFetching && isAddingPending) && <Skeleton className="w-full h-[50px]" />}
+                        open={subOpen}
+                        setOpen={setSubOpen}
+                      />
+                    </Suspense>
+                  </div>
+                }
+
+                {data.players.map((trackerPlayer) => {
+                  return (
+                    <div key={trackerPlayer.id} className="flex justify-between items-center gap-4 p-1.5 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <TrackerPlayerDetails trackerPlayer={trackerPlayer} />
+                      </div>
+                      {session && session.user.id === trackerPlayer.playerId
+                        ? <span className="w-9 text-center text-muted-foreground text-sm italic">you</span>
+                        : <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              disabled={
+                                !session
+                                || (isDeletePending && pendingDeleteId !== trackerPlayer.id)
+                              }
+                            >
+                              {isDeletePending && pendingDeleteId === trackerPlayer.id ?
+                                <Loader2Icon className="animate-spin" /> :
+                                <Trash2Icon />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent
+                            className="z-[100]"
+                            onOpenAutoFocus={() => setSub2Open(true)}
+                            onCloseAutoFocus={() => setSub2Open(false)}
+                            hideOverlay
+                          >
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action will delete <span className="text-primary">{trackerPlayer.player ? trackerPlayer.player.displayUsername || trackerPlayer.player.name : trackerPlayer.displayName}</span> from this tracker
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() => {
+                                  // set the pending delete ID to this player's ID
+                                  setPendingDeleteId(trackerPlayer.id)
+
+                                  deletePlayer({
+                                    trackerPlayerId: trackerPlayer.id,
+                                    userIdIfPlayer: trackerPlayer.player?.id
+                                  })
+                                }}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      }
+                    </div>
+                  )
+                })}
+                {(isFetching && isAddingPending) && <Skeleton className="w-full h-[50px]" />}
+              </div>
+
+            </DialogContent>
+          </Dialog>
+
+          {/* new game */}
+          <CreateGameForm
+            minPlayers={2}
+            maxPlayers={9}
+            trackerId={trackerId}
+            players={data.players}
+          />
+        </div>
       </div>
 
-      <CreateGameForm
-        minPlayers={2}
-        maxPlayers={9}
-        trackerId={trackerId}
-        players={data.data.players}
-      />
 
       <div>
         <h3>Games:</h3>
         {/* display games as tabs, each tab has games based on status */}
-        {data.data.games.length > 0
-          ? data.data.games.map((game) => {
+        {data.games.length > 0
+          ? data.games.map((game) => {
             return (
               <div
                 key={game.id}
@@ -197,7 +243,7 @@ export const TrackerDetails = ({ trackerId }: TrackerDetailsProps) => {
               >
                 <span>-</span>
                 <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>{game.id} - {game.status}</Link>
-                <span className="ml-[calc(6.41px+.5rem)] text-muted-foreground text-sm"><TimeElapsed createdAt={game.createdAt} /></span>
+                <span className="ml-[calc(6.41px+.5rem)] text-muted-foreground text-sm">{timeElapsed(game.createdAt)}</span>
               </div>
             )
           })
@@ -215,7 +261,7 @@ type TrackerPlayerProps = {
     player: User | null
   }
 }
-const TrackerPlayerDetails = ({ trackerPlayer }: TrackerPlayerProps) => {
+export const TrackerPlayerDetails = ({ trackerPlayer }: TrackerPlayerProps) => {
   return (
     <>
       <Avatar className="size-9">
@@ -236,7 +282,6 @@ const TrackerPlayerDetails = ({ trackerPlayer }: TrackerPlayerProps) => {
     </>
   );
 }
-
 
 const LoadingTrackerDetails = () => (
   <div className="flex flex-1 justify-center items-center">

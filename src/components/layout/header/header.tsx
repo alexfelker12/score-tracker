@@ -1,7 +1,6 @@
 import { MainNav, MobileNav } from '@/components/layout/header/nav';
 import { WebIcon } from '@/components/layout/header/web-icon';
 
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { User } from './user';
 

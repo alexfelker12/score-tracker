@@ -1,7 +1,5 @@
 "use client"
 
-import { Suspense } from 'react';
-
 import { useSession } from "@/lib/auth-client";
 
 import { ChevronDownIcon } from 'lucide-react';

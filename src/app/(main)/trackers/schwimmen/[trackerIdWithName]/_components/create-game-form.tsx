@@ -14,14 +14,13 @@ import { createGame } from "@/server/actions/game/actions"
 
 import { getQueryClient } from "@/lib/get-query-client"
 
-import { GripHorizontalIcon, Loader2Icon, UserIcon } from "lucide-react"
+import { DicesIcon, GripHorizontalIcon, Loader2Icon, UserIcon } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { LabeledSeparator } from "@/components/ui/labeled-separator"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-
 
 
 //* types
@@ -42,7 +41,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
   const { invalidateQueries } = getQueryClient()
   const { push } = useRouter()
 
-  const [error, setError] = React.useState<string | null>(null)
+  const [error, setError] = React.useState<string | null>()
   const [selectedPlayerIds, setSelectedPlayerIds] = React.useState<string[]>(
     players.map((player) => player.id)
   )
@@ -56,7 +55,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
         push(`/trackers/schwimmen/${data.data.trackerId}-${encodeURIComponent(data.data.tracker.displayName)}/${data.data.id}`)
 
         //* invalidate query to refetch latest data
-        invalidateQueries({ queryKey: ["trackers", trackerId] })
+        await invalidateQueries({ queryKey: ["trackers", trackerId] })
       }
     },
   })
@@ -80,6 +79,11 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
       const added = newIds.filter(id => !stillValid.includes(id))
       return [...stillValid, ...added]
     })
+
+    // reevaluate error on player amount change
+    const minPlayerError = (players.length > maxPlayers) && `Maximum ${maxPlayers} participants allowed`
+    const maxPlayerError = (players.length < minPlayers) && `Minimum ${minPlayers} participants required`
+    setError(minPlayerError || maxPlayerError || null)
   }, [players])
 
 
@@ -116,7 +120,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="self-end">Create a game</Button>
+        <Button className="self-end"><DicesIcon /> New game</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col max-h-[95%]">
         <DialogHeader>

@@ -46,15 +46,18 @@ function AlertDialogOverlay({
 }
 
 function AlertDialogContent({
+  hideOverlay,
   className,
   container,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>
-  & Pick<React.ComponentProps<typeof AlertDialogPrimitive.Portal>, "container">
+  & Pick<React.ComponentProps<typeof AlertDialogPrimitive.Portal>, "container"> & {
+    hideOverlay?: boolean
+  }
 ) {
   return (
     <AlertDialogPortal container={container}>
-      <AlertDialogOverlay />
+      {!hideOverlay && <AlertDialogOverlay />}
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(

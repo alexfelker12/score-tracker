@@ -6,6 +6,7 @@ export default function Trackers() {
   return (
     <main className="flex flex-col gap-6">
       <Breadcrumbs />
+      
       <div>
         {/* heading + description */}
         <h1 className="text-2xl">Trackers</h1>

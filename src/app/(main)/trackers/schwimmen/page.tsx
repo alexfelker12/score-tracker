@@ -1,110 +1,102 @@
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { TrackerType } from "@prisma/client/edge";
-import { getCookie } from 'cookies-next/server';
-
-import { getAllArchivedTrackersForCreator, getAllTrackersAsParticipant, getAllTrackersByCreator } from "@/server/actions/tracker/actions";
 
 import { auth } from "@/lib/auth";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { TrackerForm } from "./_components/tracker-create-form";
 import { TrackerListing } from "./_components/tracker-listing";
-import { TrackerCardsLoading } from "./_components/trackers";
 
-import { Command, CommandInput, CommandList } from "@/components/ui/command";
-import { TrackerTabTrigger } from "./_components/tracker-tab-triggers";
+import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
+import { getAllTrackersAsParticipant } from "@/server/actions/tracker/actions";
+import { getOtherUsers } from "@/server/actions/user/actions";
+import { CommandWrapperLoading } from "./_components/tracker-loading";
 
-export default async function Schwimmen() {
+type PathToPropsCast = keyof typeof PATH_TO_TRACKERPROPS
+export default async function TrackersPage({
+  params,
+}: {
+  params: Promise<{ trackerTypePath: string }>
+}) {
+  // get tracker type from dynamic route params
+  const { trackerTypePath } = await params
+
+  // export default async function Schwimmen() {
   const session = await auth.api.getSession({
     headers: await headers()
   })
+
+  if (!session) redirect("/sign-in")
+
+  const trackerType = trackerTypePath || "schwimmen"
+  const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
+  const queryKey = ["trackers", trackerPathType, session.user.id, "trackers"]
+
+  // const qc = getQueryClient()
+  // qc.prefetchQuery({
+  //   queryKey,
+  //   queryFn: () => getAllTrackersAsParticipant(trackerPathType, session.user.id)
+  // })
+
+  const playerDialogDataPromise = getOtherUsers(session.user.id)
+  const participatingTrackerDataPromise = getAllTrackersAsParticipant(trackerPathType, session.user.id)
 
   return (
     <main className="flex flex-col gap-6">
       <Breadcrumbs />
 
       <div className="space-y-4">
-        <h2 className="font-bold text-2xl">Create tracker for `Schwimmen`</h2>
+        <div className="flex justify-between">
+          <h2 className="font-bold text-2xl">{PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].title}</h2>
+
+          {/* <Suspense fallback={<Skeleton className="w-32 h-9" />}> */}
+            <TrackerForm session={session} trackerType={trackerPathType} dataPromise={playerDialogDataPromise} />
+          {/* </Suspense> */}
+        </div>
 
         {/* create tracker form */}
-        {session && <TrackerForm session={session} minPlayers={2} maxPlayers={9} trackerType="SCHWIMMEN" />}
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="font-bold text-xl">Available trackers for `Schwimmen`</h2>
+        {/* <TrackerForm session={session} minPlayers={2} maxPlayers={9} trackerType={trackerPathType} /> */}
 
         {/* trackers associated with user */}
-        <TrackerWrapper />
+        <Tabs defaultValue="trackers">
+          {/* tabs */}
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="trackers">Trackers</TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
+          </TabsList>
+
+          {/* content */}
+          <TabsContent value="trackers">
+            <Suspense fallback={<CommandWrapperLoading />}>
+
+              {/* <HydrationBoundary state={dehydrate(qc)}> */}
+              {/* tracker, where user is participating */}
+              <TrackerListing
+                session={session}
+                trackerType={trackerPathType}
+                dataPromise={participatingTrackerDataPromise}
+                queryKey={queryKey}
+              />
+              {/* </HydrationBoundary> */}
+
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="archived">
+            <Card className="p-0 rounded-md">
+              <CardContent className="place-items-center grid p-2">
+                <span className="text-muted-foreground text-sm italic">Cooming soon...</span>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+        </Tabs>
       </div>
+
     </main>
-  );
-}
-
-const trackerType: TrackerType = "SCHWIMMEN"
-async function TrackerWrapper() {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  })
-  const lastTab = await getCookie("schwimmen-last-tab", { cookies }) || "my-trackers"
-
-  if (session) return (
-    <Tabs defaultValue={lastTab} className="">
-      <TabsList className="grid grid-cols-3 w-full">
-        <TrackerTabTrigger value="my-trackers" cookieKey="schwimmen-last-tab">My Trackers</TrackerTabTrigger>
-        <TrackerTabTrigger value="other" cookieKey="schwimmen-last-tab">Other</TrackerTabTrigger>
-        <TrackerTabTrigger value="archived" cookieKey="schwimmen-last-tab">Archived</TrackerTabTrigger>
-      </TabsList>
-      <TabsContent value="my-trackers">
-        <Suspense fallback={<Loading />}>
-          {/* tracker created by user */}
-          <TrackerListing
-            trackerType={trackerType}
-            userId={session.user.id}
-            queryFunc={getAllTrackersByCreator}
-            queryFuncName="getAllTrackersByCreator"
-          />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="other">
-        <Suspense fallback={<Loading />}>
-          {/* tracker, where user is participating */}
-          <TrackerListing
-            trackerType={trackerType}
-            userId={session.user.id}
-            queryFunc={getAllTrackersAsParticipant}
-            queryFuncName="getAllTrackersAsParticipant"
-          />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="archived">
-        <Suspense fallback={<Loading />}>
-          {/* tracker archived by user */}
-          <TrackerListing
-            trackerType={trackerType}
-            userId={session.user.id}
-            queryFunc={getAllArchivedTrackersForCreator}
-            queryFuncName="getAllArchivedTrackersForCreator"
-          />
-        </Suspense>
-      </TabsContent>
-    </Tabs>
-  );
-}
-
-const Loading = () => {
-  return (
-    <div>
-      {/* <Skeleton className="w-full h-9" /> */}
-      <Command className="shadow-md border w-full">
-        <CommandInput placeholder="Search trackers..." disabled />
-        <CommandList className="[&>div]:gap-1 [&>div]:grid md:[&>div]:grid-cols-2 p-1">
-          <TrackerCardsLoading />
-        </CommandList>
-      </Command>
-    </div>
   );
 }

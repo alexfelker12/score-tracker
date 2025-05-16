@@ -1,8 +1,12 @@
 import type { TrackerLinkProps } from "@/components/trackers/tracker-link";
+import { TrackerType } from "@prisma/client";
 
-export const TRACKERTYPE_TO_PAGETITLE = {
-  "schwimmen": "Schwimmen"
-} as const
+export const PATH_TO_TRACKERPROPS = {
+  "schwimmen": {
+    title: "Schwimmen",
+    trackerType: "SCHWIMMEN" as TrackerType
+  }
+}
 
 export const TRACKERS: TrackerLinkProps[] = [
   {
