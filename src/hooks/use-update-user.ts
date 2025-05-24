@@ -8,7 +8,7 @@ import { updateUser } from "@/lib/auth-client";
 
 export type UseUpdateUserProps = {
   userId: string
-  onSuccess: (imageUpdated: boolean) => void
+  onSuccess: () => void
 }
 export type UseUpdateUserFuncProps = {
   username: string
@@ -25,7 +25,7 @@ export const useUpdateUser = ({ userId, onSuccess }: UseUpdateUserProps) => {
         break;
       case "USERNAME_IS_INVALID":
         toast.error("Error while updating profile", {
-          description: "Username contains invalid characters. Only numbers, letters and underscores are allowed"
+          description: "Username contains invalid characters. Only numbers, letters, underscores and points are allowed"
         })
         break;
       default:
@@ -42,11 +42,10 @@ export const useUpdateUser = ({ userId, onSuccess }: UseUpdateUserProps) => {
       if (error) return { error }
       return { data }
     },
-    //* dont use second arg - error
-    onSettled: (res, _, variables) => {
+    onSettled: (res,) => {
       const data = res?.data
       if (data && data.data) {
-        onSuccess(!!variables.image)
+        onSuccess()
       } else if (data && data.error) {
         handleUpdateError(data.error.code)
       }

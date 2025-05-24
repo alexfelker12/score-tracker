@@ -1,7 +1,7 @@
 "use client";
 
-import React, { use } from "react";
 import { useRouter } from "next/navigation";
+import React, { use } from "react";
 
 import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,7 +10,6 @@ import { FindUserDataByIdReturn, getUserDataById } from "@/server/actions/user/p
 
 import { UseUpdateUserProps } from "@/hooks/use-update-user";
 
-import { getQueryClient } from "@/lib/get-query-client";
 import { auth } from "@/lib/auth";
 
 import { SquarePenIcon, XIcon } from "lucide-react";
@@ -37,8 +36,8 @@ export const Profile = (params: ProfileProps) => {
   const router = useRouter()
 
   //* fetch user data - prefetched on server
-  const { invalidateQueries } = getQueryClient()
-  const { data: user, isPending: isQueryPending, isFetching } = useSuspenseQuery({
+  // const { invalidateQueries } = getQueryClient()
+  const { data: user, isPending: isQueryPending, isFetching, refetch } = useSuspenseQuery({
     initialData: use(dataPromise),
     queryFn: () => getUserDataById({ userId: session.user.id }),
     queryKey, refetchOnMount: false, refetchOnReconnect: false
@@ -51,15 +50,16 @@ export const Profile = (params: ProfileProps) => {
   }).some((pending) => pending)
 
   //* react to update change
-  const successfulUpdate: UseUpdateUserProps["onSuccess"] = (imageUpdated) => {
-    // invalidate to get the latest user data
-    invalidateQueries({ queryKey })
-    // return to default view mode
-    setIsEditing(false)
+  const successfulUpdate: UseUpdateUserProps["onSuccess"] = () => {
     // notify user that the profile has been updated successfully
     toast.success("Your profile was successfully updated")
+
     // refresh the page to reload newest image for user dropdown - only if profile picture was changed
-    if (imageUpdated) router.refresh()
+    router.refresh()
+    refetch()
+
+    // return to default view mode
+    setIsEditing(false)
   }
 
   return (
