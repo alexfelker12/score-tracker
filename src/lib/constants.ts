@@ -1,4 +1,4 @@
-import type { TrackerLinkProps } from "@/components/trackers/tracker-link";
+import type { TrackerLinkProps } from "@/components/ui/trackers/tracker-link";
 import { TrackerType } from "@prisma/client";
 
 export const PATH_TO_TRACKERPROPS = {

@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 //* local
-import { AddPlayerDialog } from "@/components/trackers/add-player-dialog";
+import { AddPlayerDialog } from "@/components/ui/trackers/add-player-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { auth } from "@/lib/auth";
 import { getOtherUsers } from "@/server/actions/user/actions";

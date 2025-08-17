@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type TrackerLinkProps = {
+  basePath?: string
   name: string
   href: string
   description: string
@@ -14,9 +15,9 @@ export type TrackerLinkProps = {
   maxPlayers?: number
 }
 
-export const TrackerLink = ({ name, href, description, categories }: TrackerLinkProps) => {
+export const TrackerLink = ({ basePath = "/trackers", name, href, description, categories }: TrackerLinkProps) => {
   return (
-    <Link href={`/trackers${href}`} className="group">
+    <Link href={`${basePath}${href}`} className="group">
       <Card className="justify-between gap-4 group-hover:bg-accent py-4 w-full h-full transition-all">
         <CardHeader className="px-4">
 

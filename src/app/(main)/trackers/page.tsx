@@ -1,6 +1,6 @@
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { TrackerLink } from "@/components/ui/trackers/tracker-link";
 import { TRACKERS } from "@/lib/constants";
-import { TrackerLink } from "@/components/trackers/tracker-link";
 
 export default function Trackers() {
   return (
@@ -9,7 +9,7 @@ export default function Trackers() {
       
       <div>
         {/* heading + description */}
-        <h1 className="text-2xl">Trackers</h1>
+        <h1 className="font-bold text-2xl">Trackers</h1>
         <p className="text-muted-foreground text-sm">Explore trackers for different games</p>
       </div>
 
