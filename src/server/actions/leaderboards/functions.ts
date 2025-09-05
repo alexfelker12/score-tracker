@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/server/prisma"
-import { Prisma, TrackerType, User } from "@prisma/client"
+import { TrackerType, User } from "@prisma/client"
 
 
 

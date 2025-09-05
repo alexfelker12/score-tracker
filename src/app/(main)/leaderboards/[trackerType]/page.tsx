@@ -1,24 +1,13 @@
-import { headers } from "next/headers";
-import { notFound, redirect } from "next/navigation";
-
-
-import { auth } from "@/lib/auth";
+import { notFound } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
-import { getAllTrackersAsParticipant } from "@/server/actions/tracker/actions";
-import { getOtherUsers } from "@/server/actions/user/actions";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { ListFilterIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
 import { getLeaderboard } from "@/server/actions/leaderboards/functions";
+import { ListFilterIcon } from "lucide-react";
 
 
 
@@ -49,8 +38,8 @@ export default async function TrackersPage({
 
   if (!Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType)) notFound()
 
-  const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
-  const queryKey = ["trackers", trackerPathType, "trackers"]
+  // const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
+  // const queryKey = ["trackers", trackerPathType, "trackers"]
 
   const leaderboard = await getLeaderboard();
   console.log(leaderboard);
