@@ -34,7 +34,6 @@ export const config = {
   //* + one or more
   matcher: [
     "/trackers/:path+",
-    "/leaderboards/:path*",
     "/user/:path*",
   ],
 }
