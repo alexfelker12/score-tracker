@@ -53,7 +53,7 @@ export async function getCompletedGames(params: {
 //? NonNullable<Prisma.PromiseReturnType<typeof getCompletedGames>[number]["participants"][number]["user"]>
 type LeaderboardEntryUserType = Pick<User, "id" | "displayUsername" | "image" | "name">
 
-type LeaderboardEntry = {
+export type LeaderboardEntryType = {
   user: LeaderboardEntryUserType
   placing: number
   metricValue: string
@@ -64,10 +64,10 @@ type LeaderboardEntry = {
  * 
  * @returns Array of leaderboard entries
  */
-export async function getLeaderboard() {
-  const games = await getCompletedGames({ trackerQueryBy: "SCHWIMMEN" });
+export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: TrackerQueryType }) {
+  const games = await getCompletedGames({ trackerQueryBy });
 
-  const leaderboard: LeaderboardEntry[] = []
+  const leaderboard: LeaderboardEntryType[] = []
   const uniqueUsers = new Map() // count of appearances & wins
 
   //* STEP 1 - count appearance & wins
@@ -135,7 +135,7 @@ export async function getLeaderboard() {
 
     leaderboard.push({
       user: mappedEntry.user,
-      metricValue: String(thisMetricValue),
+      metricValue: `${thisMetricValue*100}%`,
       placing: (idx + 1) - reduceState.offset
     })
 

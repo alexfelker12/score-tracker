@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
 import { getLeaderboard } from "@/server/actions/leaderboards/functions";
 import { ListFilterIcon } from "lucide-react";
+import { Leaderboard } from "./_components/leaderboard";
 
 
 
@@ -38,11 +39,10 @@ export default async function TrackersPage({
 
   if (!Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType)) notFound()
 
-  // const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
+  const trackerPathType = PATH_TO_TRACKERPROPS[trackerType as PathToPropsCast].trackerType
   // const queryKey = ["trackers", trackerPathType, "trackers"]
 
-  const leaderboard = await getLeaderboard();
-  console.log(leaderboard);
+  const leaderboard = getLeaderboard({ trackerQueryBy: trackerPathType });
 
   return (
     <main className="flex flex-col gap-6">
@@ -102,15 +102,7 @@ export default async function TrackersPage({
       </div>
 
       <div className="flex flex-col gap-y-4">
-        {leaderboard.map(({user, placing, metricValue}) => {
-          return (
-            <div key={user.id}>
-              <p>Name: {user.displayUsername || user.name}</p>
-              <p>Placing: {placing}</p>
-              <p>MetricValue: {metricValue}</p>
-            </div>
-          )
-        })}
+        <Leaderboard dataPromise={leaderboard} trackerType={trackerPathType} />
       </div>
 
     </main>
