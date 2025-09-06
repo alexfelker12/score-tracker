@@ -1,7 +1,7 @@
 import { BreadcrumbType } from "@/components/breadcrumbs"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { IGNORED_HREFS } from "./constants"
+import { IGNORED_HREFS, PATH_TO_TRACKERPROPS } from "./constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -147,4 +147,24 @@ export const isUniqueKey = (arr1: string[], arr2: string[]) => {
 
   return (arr1[0] === arr2[0] && arr1[1] === arr2[1]) ||
     (arr1[0] === arr2[1] && arr1[1] === arr2[0]);
+}
+
+/**
+ * Checks if passed TrackerType exists (in PATH_TO_TRACKERPROPS)
+ * 
+ * @param trackerType string which is a TrackerType enum
+ * @returns validity of the passed TrackerType
+ */
+export const isValidTrackerType = (trackerType: string) => {
+  return !Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType)
+}
+
+/**
+ * extracts the PATH_TO_TRACKERPROPS object by the passed TrackerType. Function expects the param to be a valid TrackerType enum, else the code will fail
+ * 
+ * @param trackerType string which is a TrackerType enum
+ * @returns PATH_TO_TRACKERPROPS object of TrackerType
+ */ 
+export const extractTrackerPathType = (trackerType: string) => {
+  return PATH_TO_TRACKERPROPS[trackerType as keyof typeof PATH_TO_TRACKERPROPS]
 }

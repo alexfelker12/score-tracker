@@ -12,8 +12,8 @@ export const LeaderboardEntry = ({ entry: { user, placing, metricValue } }: Lead
       </Avatar> */}
       <div className="">
         <p>Name: {user.displayUsername || user.name}</p>
+        <p>Wins: {metricValue}</p>
         <p>Placing: {placing}</p>
-        <p>Winrate: {metricValue}</p>
       </div>
     </>
   );

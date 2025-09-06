@@ -5,31 +5,29 @@ import { TrackerType, User } from "@prisma/client"
 
 
 
-export type TrackerQueryType = TrackerType | string[]
-export async function getCompletedGames(params: {
-  trackerQueryBy: TrackerQueryType
-}) {
-  const { trackerQueryBy } = params
+export type LeaderboardParams = {
+  trackerType: TrackerType
+  trackerIds?: string[]
+}
+/**
+ * fetches all games with the status COMPLETED from the db by TrackerType and tracker ids (optional)
+ * 
+ * @param params trackerType: TrackerType, trackerIds?: string []
+ * @returns Array of completed games
+ */
+export async function getCompletedGames(params: LeaderboardParams) {
+  const { trackerType, trackerIds } = params
 
   return await prisma.game.findMany({
     where: {
       tracker: {
+        type: trackerType,
         ...(
-          //* variable is of type string when it is an enum, else it would be of type "object" (= array)
-          typeof trackerQueryBy === "string"
-            //* passed param is a TrackerType
-            ? {
-              type: trackerQueryBy as TrackerType
-            }
-            //* passed param is an array of tracker ids
-            : {
-              id: {
-                in: trackerQueryBy as string[]
-              }
-            }
+          trackerIds // fetch only 
+            ? {}
+            : { id: { in: trackerIds } }
         )
       },
-      //* only evaluate completed games
       status: "COMPLETED"
     },
     include: {
@@ -64,21 +62,19 @@ export type LeaderboardEntryType = {
  * 
  * @returns Array of leaderboard entries
  */
-export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: TrackerQueryType }) {
-  const games = await getCompletedGames({ trackerQueryBy });
+export async function getLeaderboard(params: LeaderboardParams) {
+  const games = await getCompletedGames(params);
 
   const leaderboard: LeaderboardEntryType[] = []
   const uniqueUsers = new Map() // count of appearances & wins
+  const mappedOutput = [];
 
   //* STEP 1 - count appearance & wins
   for (const game of games) {
     if (game.gameData.type !== "SCHWIMMEN") continue;
 
-    // determine winnerId - id of winner is the GameParticipant id -> save userId as winnerId on match
-    let winnerId = "";
-    for (const participant of game.participants) {
-      if (game.gameData.winner === participant.id && participant.userId) winnerId = participant.userId
-    }
+    //? GameParticipant id of winner
+    const winnerId = game.gameData.winner;
 
     // collect appearance and win count for every user
     for (const participant of game.participants) {
@@ -89,11 +85,11 @@ export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: Track
       if (uniqueUsers.has(userId)) {
         // increment the appearance count and eventually win count
         uniqueUsers.get(userId).appearance++
-        if (winnerId === userId) uniqueUsers.get(userId).wins++
+        if (winnerId === participant.id) uniqueUsers.get(userId).wins++
       } else {
         uniqueUsers.set(userId, {
           appearance: 1, // directly set to 1
-          wins: winnerId === userId ? 1 : 0, // 1 if initial appearce is also a win,
+          wins: winnerId === participant.id ? 1 : 0, // 1 if initial appearce is also a win,
           user: participant.user
         })
       }
@@ -103,11 +99,11 @@ export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: Track
   }
 
 
-  //* STEP 2 - map to return output
-  const mappedOutput = [];
+  //* STEP 2 - calculate metricValue 
   for (const mapEntry of uniqueUsers.values()) {
     const user = mapEntry.user
-    const metricValue = Number.parseFloat((mapEntry.wins / mapEntry.appearance).toFixed(2)) // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
+    // const metricValue = Number.parseFloat((mapEntry.wins / mapEntry.appearance).toFixed(4)) // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
+    const metricValue = mapEntry.wins // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
 
     mappedOutput.push({ user, metricValue })
   }
@@ -119,7 +115,7 @@ export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: Track
   })
 
 
-  //* STEP 4 - calculate placing
+  //* STEP 4 - calculate placing & build return array
   mappedOutput.reduce((reduceState, mappedEntry, idx) => {
     // save metricValues
     const prevMetricValue = reduceState.prevMetricValue
@@ -135,7 +131,8 @@ export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: Track
 
     leaderboard.push({
       user: mappedEntry.user,
-      metricValue: `${thisMetricValue*100}%`,
+      // metricValue: `${thisMetricValue * 100}%`,
+      metricValue: String(thisMetricValue),
       placing: (idx + 1) - reduceState.offset
     })
 
@@ -147,3 +144,11 @@ export async function getLeaderboard({ trackerQueryBy }: { trackerQueryBy: Track
 
   return leaderboard
 }
+
+
+/**
+ * LeaderboardCalcInterface.ts z.13 -> TODO: think of a more general structure
+ * 
+ * TODO: split current code into logical functions to abstract leaderboard calculation
+ * -> Calc Classes should be a collection of functions used in getLeaderboard to do the necessary calculations decoupled from implementation logic
+ */
