@@ -7,19 +7,20 @@ import { use } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 //* local
-import { getLeaderboard, LeaderboardEntryType, TrackerQueryType } from "@/server/actions/leaderboards/functions";
+import { getLeaderboard, LeaderboardEntryType } from "@/server/actions/leaderboards/functions";
+import { TrackerType } from "@prisma/client";
 import { LeaderboardEntry } from "./leaderboard-entry";
 
 export type LeaderboardProps = {
   dataPromise: Promise<LeaderboardEntryType[]>
-  trackerType: TrackerQueryType
+  trackerType: TrackerType
 }
 export const Leaderboard = ({ trackerType, dataPromise }: LeaderboardProps) => {
   // const { data: { data, error }, isPending, isFetching, refetch } = useSuspenseQuery({
   const { data: leaderboard } = useSuspenseQuery({
     initialData: use(dataPromise),
     queryKey: ["leaderboard", trackerType, "all"],
-    queryFn: () => getLeaderboard({ trackerQueryBy: trackerType }),
+    queryFn: () => getLeaderboard({ trackerType }),
     refetchOnMount: false, refetchOnReconnect: false
   })
 
