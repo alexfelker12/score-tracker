@@ -1,5 +1,6 @@
 "use server"
 
+import { getLeaderboardCalcClass } from "@/server/helpers/get-leaderboard-calc-class"
 import { prisma } from "@/server/prisma"
 import { TrackerType, User } from "@prisma/client"
 
@@ -22,12 +23,13 @@ export async function getCompletedGames(params: LeaderboardParams) {
     where: {
       tracker: {
         type: trackerType,
-        ...(
-          trackerIds // fetch only 
-            ? {}
-            : { id: { in: trackerIds } }
-        )
+
       },
+      ...(
+        trackerIds // fetch only 
+          ? { trackerId: { in: trackerIds } }
+          : {}
+      ),
       status: "COMPLETED"
     },
     include: {
@@ -49,7 +51,7 @@ export async function getCompletedGames(params: LeaderboardParams) {
 }
 
 //? NonNullable<Prisma.PromiseReturnType<typeof getCompletedGames>[number]["participants"][number]["user"]>
-type LeaderboardEntryUserType = Pick<User, "id" | "displayUsername" | "image" | "name">
+export type LeaderboardEntryUserType = Pick<User, "id" | "displayUsername" | "image" | "name">
 
 export type LeaderboardEntryType = {
   user: LeaderboardEntryUserType
@@ -57,82 +59,56 @@ export type LeaderboardEntryType = {
   metricValue: string
 }
 /**
- * 
- * provisional function to calculate win rate of players by all trackers
+ * Wrapper function using calc classes to build the leaderboard array
  * 
  * @returns Array of leaderboard entries
  */
-export async function getLeaderboard(params: LeaderboardParams) {
-  const games = await getCompletedGames(params);
+export async function getLeaderboard(params: LeaderboardParams & { metric: string, sortBy?: "ASC" | "DESC" }) {
+  const { trackerType, trackerIds, metric, sortBy = "DESC" } = params
+
+  const games = await getCompletedGames({ trackerType, trackerIds });
+  const calc = getLeaderboardCalcClass(params.trackerType, metric)
+  if (!calc) return [];
 
   const leaderboard: LeaderboardEntryType[] = []
-  const uniqueUsers = new Map() // count of appearances & wins
-  const mappedOutput = [];
 
-  //* STEP 1 - count appearance & wins
+  //* STEP 1 - collect metric values
   for (const game of games) {
-    if (game.gameData.type !== "SCHWIMMEN") continue;
-
-    //? GameParticipant id of winner
-    const winnerId = game.gameData.winner;
-
     // collect appearance and win count for every user
-    for (const participant of game.participants) {
-
-      const userId = participant.userId
-      if (!userId) continue; // only evaluate participants who are users
-
-      if (uniqueUsers.has(userId)) {
-        // increment the appearance count and eventually win count
-        uniqueUsers.get(userId).appearance++
-        if (winnerId === participant.id) uniqueUsers.get(userId).wins++
-      } else {
-        uniqueUsers.set(userId, {
-          appearance: 1, // directly set to 1
-          wins: winnerId === participant.id ? 1 : 0, // 1 if initial appearce is also a win,
-          user: participant.user
-        })
-      }
-
-    }
-
+    calc.collectMetricValue({ game })
   }
 
+  //* STEP 2 - calculate metric value 
+  const mappedOutput = calc.calculateMetricValue()
 
-  //* STEP 2 - calculate metricValue 
-  for (const mapEntry of uniqueUsers.values()) {
-    const user = mapEntry.user
-    // const metricValue = Number.parseFloat((mapEntry.wins / mapEntry.appearance).toFixed(4)) // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
-    const metricValue = mapEntry.wins // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
-
-    mappedOutput.push({ user, metricValue })
+  //* STEP 3 - sort by metric value
+  if (sortBy === "ASC") {
+    mappedOutput.sort((a, b) => {
+      return a.metricValue - b.metricValue
+    })
+  } else {
+    mappedOutput.sort((a, b) => {
+      return b.metricValue - a.metricValue
+    })
   }
-
-
-  //* STEP 3 - sort by metricValue
-  mappedOutput.sort((a, b) => {
-    return b.metricValue - a.metricValue
-  })
-
 
   //* STEP 4 - calculate placing & build return array
   mappedOutput.reduce((reduceState, mappedEntry, idx) => {
-    // save metricValues
+    // save metric values
     const prevMetricValue = reduceState.prevMetricValue
     const thisMetricValue = mappedEntry.metricValue
-    // compare prev and this metrc value
+    // compare prev and this metric value
     if (thisMetricValue === prevMetricValue) {
       reduceState.offset++ // increase offset if placing is equal
     } else {
-      // else reset offset count and set new metricValue for next comparison
+      // else reset offset count and set new metric value for next comparison
       reduceState.offset = 0
       reduceState.prevMetricValue = thisMetricValue
     }
 
     leaderboard.push({
       user: mappedEntry.user,
-      // metricValue: `${thisMetricValue * 100}%`,
-      metricValue: String(thisMetricValue),
+      metricValue: calc.formatMetricValue(thisMetricValue),
       placing: (idx + 1) - reduceState.offset
     })
 
@@ -144,11 +120,3 @@ export async function getLeaderboard(params: LeaderboardParams) {
 
   return leaderboard
 }
-
-
-/**
- * LeaderboardCalcInterface.ts z.13 -> TODO: think of a more general structure
- * 
- * TODO: split current code into logical functions to abstract leaderboard calculation
- * -> Calc Classes should be a collection of functions used in getLeaderboard to do the necessary calculations decoupled from implementation logic
- */

@@ -1,15 +1,21 @@
-export interface LeaderboardCalc {
-  //* STEP 1 - count appearance & wins
-  countAppearceAndMetric: () => void
-  //* STEP 2 - calculate metricValue 
-  calculateMetric: () => void
-  //* STEP 3 - sort by metricValue
-  sortByMetric: () => void
-  formatMetricValue: () => string
-  getMappedOutput: () => void
+import { getCompletedGames, LeaderboardEntryUserType } from "@/server/actions/leaderboards/functions"
+import { Prisma, TrackerType } from "@prisma/client"
+
+export interface LeaderboardCalc<T> {
+  // static
+  uniqueUsers: Map<string, { user: LeaderboardEntryUserType } & T>
+  trackerType: TrackerType
+  getTrackerType: () => TrackerType
+
+  // calc methods
+  collectMetricValue: (params: {
+    game: Prisma.PromiseReturnType<typeof getCompletedGames>[number]
+  }) => void
+
+  calculateMetricValue: () => {
+    user: LeaderboardEntryUserType
+    metricValue: number
+  }[]
+
+  formatMetricValue: (metricValue: number) => string
 }
-
-// export interface LeaderboardCalc2 {
-//   // TODO: think of a more general structure
-// }
-

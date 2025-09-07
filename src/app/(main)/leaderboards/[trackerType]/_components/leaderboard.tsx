@@ -20,7 +20,7 @@ export const Leaderboard = ({ trackerType, dataPromise }: LeaderboardProps) => {
   const { data: leaderboard } = useSuspenseQuery({
     initialData: use(dataPromise),
     queryKey: ["leaderboard", trackerType, "all"],
-    queryFn: () => getLeaderboard({ trackerType }),
+    queryFn: () => getLeaderboard({ trackerType, metric: "total-nukes" }),
     refetchOnMount: false, refetchOnReconnect: false
   })
 

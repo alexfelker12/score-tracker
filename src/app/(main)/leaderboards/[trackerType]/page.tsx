@@ -26,7 +26,7 @@ export default async function TrackersPage({
   const finalTrackerType = trackerPathType.trackerType
   const finalTrackerTitle = trackerPathType.title
 
-  const leaderboard = getLeaderboard({ trackerType: finalTrackerType });
+  const leaderboard = getLeaderboard({ trackerType: finalTrackerType, metric: "total-nukes" });
 
   return (
     <main className="flex flex-col gap-6">
