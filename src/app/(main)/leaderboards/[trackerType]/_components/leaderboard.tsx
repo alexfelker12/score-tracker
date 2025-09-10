@@ -1,37 +1,38 @@
 "use client"
 
-//* next/react
-import { use } from "react";
-
 //* packages
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { TrackerType } from "@prisma/client";
+
+//* server
+import { getLeaderboardByTrackerType } from "@/server/actions/leaderboards/actions";
+
+//* hooks
+import { useLeaderboardQuery } from "@/hooks/use-leaderboard-query";
 
 //* local
-import { getLeaderboard, LeaderboardEntryType } from "@/server/actions/leaderboards/functions";
-import { TrackerType } from "@prisma/client";
+import { Loader2Icon } from "lucide-react";
 import { LeaderboardEntry } from "./leaderboard-entry";
+import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
+
 
 export type LeaderboardProps = {
-  dataPromise: Promise<LeaderboardEntryType[]>
+  dataPromise: ReturnType<typeof getLeaderboardByTrackerType>
   trackerType: TrackerType
 }
 export const Leaderboard = ({ trackerType, dataPromise }: LeaderboardProps) => {
-  // const { data: { data, error }, isPending, isFetching, refetch } = useSuspenseQuery({
-  const { data: leaderboard } = useSuspenseQuery({
-    initialData: use(dataPromise),
-    queryKey: ["leaderboard", trackerType, "all"],
-    queryFn: () => getLeaderboard({ trackerType, metric: "total-nukes" }),
-    refetchOnMount: false, refetchOnReconnect: false
+  const { data: { data: leaderboard, error }, isFetching } = useLeaderboardQuery({
+    initialData: dataPromise,
+    trackerType,
+    metric: "total-wins"
   })
 
 
-  // if (isPending) return <LoadingTrackerDetails />
+  if (isFetching) return <LoadingLeaderboard />
 
-  // if (error) return <ErrorMessage error={error} />
-  // if (!data) return <InvalidTrackerMessage />
+  if (error) return <ErrorMessage />
+  if (!leaderboard.length) return <EmptyLeaderboard trackerType={trackerType} />
 
-  // if (data) 
-  return (
+  if (leaderboard) return (
     <div className="flex flex-col gap-y-4">
       {leaderboard.map((entry) => {
         return (
@@ -39,5 +40,28 @@ export const Leaderboard = ({ trackerType, dataPromise }: LeaderboardProps) => {
         )
       })}
     </div >
+  );
+}
+
+const ErrorMessage = () => {
+  return (
+    <p>Could not load leaderboard, try again later.</p>
+  );
+}
+
+const EmptyLeaderboard = ({ trackerType }: { trackerType: TrackerType }) => {
+  return (
+    <p>
+      There is currently no leaderboard data for the game
+      {PATH_TO_TRACKERPROPS[trackerType.toLowerCase() as keyof typeof PATH_TO_TRACKERPROPS].title}
+    </p>
+  );
+}
+
+const LoadingLeaderboard = () => {
+  return (
+    <div className="flex flex-1 justify-center items-center">
+      <Loader2Icon className="text-primary animate-spin size-8" />
+    </div>
   );
 }

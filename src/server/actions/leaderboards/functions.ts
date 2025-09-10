@@ -58,12 +58,14 @@ export type LeaderboardEntryType = {
   placing: number
   metricValue: string
 }
+
+export type GetLeaderboardParams = LeaderboardParams & { metric: string, sortBy?: "ASC" | "DESC" }
 /**
  * Wrapper function using calc classes to build the leaderboard array
  * 
  * @returns Array of leaderboard entries
  */
-export async function getLeaderboard(params: LeaderboardParams & { metric: string, sortBy?: "ASC" | "DESC" }) {
+export async function getLeaderboard(params: GetLeaderboardParams) {
   const { trackerType, trackerIds, metric, sortBy = "DESC" } = params
 
   const games = await getCompletedGames({ trackerType, trackerIds });
