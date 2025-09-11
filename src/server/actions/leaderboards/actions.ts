@@ -2,7 +2,7 @@
 
 import { tryCatch } from "@/server/helpers/try-catch"
 import { Prisma } from "@prisma/client"
-import { getLeaderboard, GetLeaderboardParams } from "./functions"
+import { getLeaderboard } from "./functions"
 
 
 

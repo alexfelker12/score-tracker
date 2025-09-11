@@ -96,6 +96,7 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
 
   //* STEP 4 - calculate placing & build return array
   mappedOutput.reduce((reduceState, mappedEntry, idx) => {
+
     // save metric values
     const prevMetricValue = reduceState.prevMetricValue
     const thisMetricValue = mappedEntry.metricValue
@@ -108,7 +109,7 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
       reduceState.prevMetricValue = thisMetricValue
     }
 
-    leaderboard.push({
+    if (thisMetricValue > 0) leaderboard.push({
       user: mappedEntry.user,
       metricValue: calc.formatMetricValue(thisMetricValue),
       placing: (idx + 1) - reduceState.offset
@@ -117,7 +118,7 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
     return reduceState
   }, {
     offset: 0,
-    prevMetricValue: 0
+    prevMetricValue: -1
   })
 
   return leaderboard

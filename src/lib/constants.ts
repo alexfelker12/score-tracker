@@ -5,6 +5,10 @@ export const PATH_TO_TRACKERPROPS = {
   "schwimmen": {
     title: "Schwimmen",
     trackerType: "SCHWIMMEN" as TrackerType
+  },
+  "durak": {
+    title: "Durak",
+    trackerType: "DURAK" as TrackerType
   }
 }
 

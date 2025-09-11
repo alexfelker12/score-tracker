@@ -55,3 +55,4 @@ src/app/trackers/schwimmen/\[trackerId\]/__old
 
 todos.yml
 src/app/trackers/schwimmen/\[trackerIdWithName\]/\[gameId\]/_components/game/players/player-claude.tsx
+src/app/(main)/leaderboards/\[trackerType\]/_components/filter/leaderboard-filter2.tsx

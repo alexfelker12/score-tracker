@@ -1,8 +1,10 @@
 import { TrackerType } from "@prisma/client";
-import { SchwimmenCalc_TotalWins } from "../classes/leaderboards/schwimmen_calcs/TotalWins";
-import { SchwimmenCalc_Winrate } from "../classes/leaderboards/schwimmen_calcs/Winrate";
 import { SchwimmenCalc_TotalGames } from "../classes/leaderboards/schwimmen_calcs/TotalGames";
 import { SchwimmenCalc_TotalNukes } from "../classes/leaderboards/schwimmen_calcs/TotalNukes";
+import { SchwimmenCalc_TotalUnbreakables } from "../classes/leaderboards/schwimmen_calcs/TotalUnbreakables";
+import { SchwimmenCalc_TotalUntouchables } from "../classes/leaderboards/schwimmen_calcs/TotalUntouchables";
+import { SchwimmenCalc_TotalWins } from "../classes/leaderboards/schwimmen_calcs/TotalWins";
+import { SchwimmenCalc_Winrate } from "../classes/leaderboards/schwimmen_calcs/Winrate";
 
 
 /**
@@ -27,18 +29,18 @@ export function getLeaderboardCalcClass(trackerType: TrackerType, metric: string
       return new SchwimmenCalc_TotalGames()
     case "SCHWIMMEN-total-nukes":
       return new SchwimmenCalc_TotalNukes()
-    // case "SCHWIMMEN-total-unbreakable":
-    //   return new SchwimmenCalc_TotalUnbreakable()
-    // case "SCHWIMMEN-total-untouchable":
-    //   return new SchwimmenCalc_TotalUntouchable()
+    case "SCHWIMMEN-total-unbreakable":
+      return new SchwimmenCalc_TotalUnbreakables()
+    case "SCHWIMMEN-total-untouchable":
+      return new SchwimmenCalc_TotalUntouchables()
     // case "SCHWIMMEN-total-times-swimmer":
-    //   return new SchwimmenCalc_TotalUnbreakable()
+    // TODO  return new SchwimmenCalc_TotalUnbreakable()
     // case "SCHWIMMEN-average-times-swimmer":
-    //   return new SchwimmenCalc_TotalUntouchable()
+    // TODO  return new SchwimmenCalc_TotalUntouchable()
     // case "SCHWIMMEN-total-finale-appearances":
-    //   return new SchwimmenCalc_TotalUnbreakable()
+    // TODO  return new SchwimmenCalc_TotalUnbreakable()
     // case "SCHWIMMEN-average-finale-appearances":
-    //   return new SchwimmenCalc_TotalUntouchable()
+    // TODO  return new SchwimmenCalc_TotalUntouchable()
 
     default:
   }

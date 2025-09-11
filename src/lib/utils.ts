@@ -156,7 +156,7 @@ export const isUniqueKey = (arr1: string[], arr2: string[]) => {
  * @returns validity of the passed TrackerType
  */
 export const isValidTrackerType = (trackerType: string) => {
-  return !Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType)
+  return !Object.keys(PATH_TO_TRACKERPROPS).includes(trackerType.toLowerCase())
 }
 
 /**
