@@ -11,7 +11,6 @@ import { useLeaderboardQuery } from "@/hooks/use-leaderboard-query";
 
 //* local
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PATH_TO_TRACKERPROPS } from "@/lib/constants";
 import { useLeaderboardFilterStore } from "@/store/leaderboardFilterStore";
 import { AlertCircleIcon, Loader2Icon } from "lucide-react";
 import { LeaderboardEntry } from "./leaderboard-entry";
@@ -35,10 +34,12 @@ export const Leaderboard = ({ trackerType }: LeaderboardProps) => {
 
   if (isFetching) return <LoadingLeaderboard />
   if (data && data.error) return <ErrorMessage />
-  if (data && !data.data.length) return <EmptyLeaderboard trackerType={trackerType} />
+  if (data && !data.data.length) return <EmptyLeaderboard
+  // trackerType={trackerType}
+  />
 
   if (data && data.data) return (
-    <div className="flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-2">
       {data.data.map((entry) => {
         return (
           <LeaderboardEntry key={entry.user.id} entry={entry} />
@@ -54,17 +55,27 @@ const ErrorMessage = () => {
   );
 }
 
-const EmptyLeaderboard = ({ trackerType }: { trackerType: TrackerType }) => {
+const EmptyLeaderboard = (
+  // { trackerType }: { trackerType: TrackerType }
+) => {
+  // const metric = useLeaderboardFilterStore((state) => state.metric)
+  // const { metricObj, MetricIcon } = getMetricObj(metric)
+
+  // PATH_TO_TRACKERPROPS[trackerType.toLowerCase() as keyof typeof PATH_TO_TRACKERPROPS].title
+  // ^ title
+
   return (
     <Alert>
       <AlertCircleIcon />
-      <AlertTitle>Wow such empty!</AlertTitle>
+      <AlertTitle>Leaderboard empty!</AlertTitle>
       <AlertDescription>
-        <span>
-          There is currently no leaderboard data for the game <span className="font-bold">
-            {PATH_TO_TRACKERPROPS[trackerType.toLowerCase() as keyof typeof PATH_TO_TRACKERPROPS].title}
-          </span>
-        </span>
+        {/* <div> */}
+        <p> There is currently no data for this metric </p>
+        {/* <p className="font-bold">
+            <MetricIcon className="inline-block size-4 align-middle" />
+            <span className="align-middle"> {metricObj?.name}</span>
+          </p> */}
+        {/* </div> */}
       </AlertDescription>
     </Alert>
   );
@@ -72,7 +83,7 @@ const EmptyLeaderboard = ({ trackerType }: { trackerType: TrackerType }) => {
 
 const LoadingLeaderboard = () => {
   return (
-    <div className="flex flex-1 justify-center items-center">
+    <div className="flex flex-1 justify-center items-center h-20">
       <Loader2Icon className="text-primary animate-spin size-8" />
     </div>
   );

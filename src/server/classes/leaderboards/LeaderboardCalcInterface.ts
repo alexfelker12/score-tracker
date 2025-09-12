@@ -19,3 +19,5 @@ export interface LeaderboardCalc<T> {
 
   formatMetricValue: (metricValue: number) => string
 }
+
+// TODO: create an abstract base implementation because currently all calcClasses (except winrate) have the same calculate and formatMetricValue logic, only difference is the generic property. Override is always possible...

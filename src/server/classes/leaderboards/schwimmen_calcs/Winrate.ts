@@ -50,7 +50,7 @@ export class SchwimmenCalc_Winrate implements StaticLeaderboardCalc {
   }
 
   formatMetricValue: StaticLeaderboardCalc["formatMetricValue"] = (metricValue) => {
-    return `${metricValue * 100}%`
+    return `${(metricValue * 100).toFixed(2)}%`
   }
 
 }

@@ -95,8 +95,8 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
   }
 
   //* STEP 4 - calculate placing & build return array
+  // standard competition ranking
   mappedOutput.reduce((reduceState, mappedEntry, idx) => {
-
     // save metric values
     const prevMetricValue = reduceState.prevMetricValue
     const thisMetricValue = mappedEntry.metricValue
@@ -104,8 +104,15 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
     if (thisMetricValue === prevMetricValue) {
       reduceState.offset++ // increase offset if placing is equal
     } else {
-      // else reset offset count and set new metric value for next comparison
-      reduceState.offset = 0
+      //? standard competition ranking
+      // 1224 -> two same placement create an offset for the next placement
+      //? dense competition ranking
+      // 1223 -> no offset reset for placement there for no gaps in the actual ranking
+      
+      // difference between standard and dense ranking is reseting the value when a lower value gets found 
+      // reduceState.offset = 0 // -> commented out
+
+      // set new metric value for next comparison
       reduceState.prevMetricValue = thisMetricValue
     }
 
@@ -119,7 +126,8 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
   }, {
     offset: 0,
     prevMetricValue: -1
-  })
+  });
 
-  return leaderboard
+
+  return leaderboard;
 }

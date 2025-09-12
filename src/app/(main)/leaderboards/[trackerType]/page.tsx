@@ -10,6 +10,7 @@ import { extractTrackerPathType, isValidTrackerType } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { LeaderboardFilter } from "./_components/filter/leaderboard-filter";
 import { Leaderboard } from "./_components/leaderboard";
+import { LeaderboardHead } from "./_components/filter/leaderboard-head";
 
 
 export default async function TrackersPage({
@@ -36,27 +37,30 @@ export default async function TrackersPage({
     <main className="flex flex-col gap-6">
       <Breadcrumbs />
 
-      <div className="space-y-4">
-        <div className="flex justify-between gap-4">
-          <h2 className="font-bold text-2xl">{finalTrackerTitle}</h2>
+      <section className="space-y-4">
+        <div className="space-y-4">
+          <div className="flex justify-between gap-4">
+            <h2 className="font-bold text-2xl">{finalTrackerTitle}</h2>
 
-          <LeaderboardFilter />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-y-4">
-        {/* <Suspense fallback={
-          <div className="flex flex-1 justify-center items-center">
-            <Loader2Icon className="text-primary animate-spin size-8" />
+            <LeaderboardFilter />
           </div>
-        }> */}
-        <Leaderboard
-          // dataPromise={leaderboard} 
-          trackerType={finalTrackerType}
-        />
-        {/* </Suspense> */}
-      </div>
+        </div>
 
+        <div className="space-y-2">
+          <LeaderboardHead />
+
+          {/* <Suspense fallback={
+          <div className="flex flex-1 justify-center items-center">
+          <Loader2Icon className="text-primary animate-spin size-8" />
+          </div>
+          }> */}
+          <Leaderboard
+            // dataPromise={leaderboard} 
+            trackerType={finalTrackerType}
+          />
+          {/* </Suspense> */}
+        </div>
+      </section>
 
     </main>
   );

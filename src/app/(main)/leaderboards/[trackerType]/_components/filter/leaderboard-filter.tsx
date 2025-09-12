@@ -27,7 +27,7 @@ type Metric = {
   unit: string
   disabled: boolean
 }
-const metrics: Metric[] = [
+export const metrics: Metric[] = [
   {
     id: "total-wins",
     name: "Total wins",
@@ -85,8 +85,10 @@ const metrics: Metric[] = [
     disabled: false
   },
 ]
-const getMetricObj = (id: string) => {
-  return metrics.find((metric) => metric.id === id)
+export const getMetricObj = (id: string) => {
+  const metricObj = metrics.find((metric) => metric.id === id)
+  const MetricIcon = metricObj?.icon || AwardIcon
+  return { metricObj, MetricIcon }
 }
 
 //* calculates width and height of filter depending on available width and height of popover
@@ -110,8 +112,7 @@ export const LeaderboardFilter = () => {
     + (!!trackerIds && trackerIds.length > 0 ? 1 : 0)
     ;
   const resetDisabled = selectedMetric === "total-wins" && trackerIds === undefined;
-  const selectedMetricObj = getMetricObj(selectedMetric)
-  const SelectedMetricIcon = selectedMetricObj?.icon || AwardIcon
+  const { metricObj, MetricIcon } = getMetricObj(selectedMetric)
 
   const handleApplyFilter = () => {
     setMetric(selectedMetric)
@@ -219,9 +220,9 @@ export const LeaderboardFilter = () => {
             {/* </ScrollArea> */}
 
             <p className="-mt-1 text-sm">
-              <SelectedMetricIcon className="inline-block size-4 align-middle" />
-              <span className="align-middle"> {selectedMetricObj?.name}: </span>
-              <span className="inline text-muted-foreground align-middle">{selectedMetricObj?.description}</span>
+              <MetricIcon className="inline-block size-4 align-middle" />
+              <span className="align-middle"> {metricObj?.name}: </span>
+              <span className="inline text-muted-foreground align-middle">{metricObj?.description}</span>
             </p>
           </div>
         </div>
