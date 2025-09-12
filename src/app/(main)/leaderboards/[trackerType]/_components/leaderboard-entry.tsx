@@ -33,7 +33,7 @@ export const LeaderboardEntry = ({ entry: { user, placing, metricValue } }: Lead
   const hasTopThreePlacement = isTopOne || isTopTwo || isTopThree
   const username = user.displayUsername || user.name
 
-  const placementStyles = getPlacementStyles(placing + (placing === 2 ? 1 : 0))
+  const placementStyles = getPlacementStyles(placing)
 
   return (
     <Card
