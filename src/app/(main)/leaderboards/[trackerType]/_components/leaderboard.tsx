@@ -23,17 +23,16 @@ export type LeaderboardProps = {
 }
 export const Leaderboard = ({ trackerType }: LeaderboardProps) => {
   // metric
-  const metric = useLeaderboardFilterStore((state) => state.metric)
+  const { metric, trackerIds } = useLeaderboardFilterStore()
 
   // query
   const { data, isFetching } = useLeaderboardQuery({
     // initialData: metric === "total-wins" ? dataPromise : undefined,
-    trackerType,
-    metric
+    trackerType, trackerIds, metric
   })
 
-  if (isFetching) return <LoadingLeaderboard />
-  if (data && data.error) return <ErrorMessage />
+  if (isFetching) return <LoadingSpinner />
+  if (data && data.error) return <ErrorMessage message="Could not load leaderboard, try again later." />
   if (data && !data.data.length) return <EmptyLeaderboard
   // trackerType={trackerType}
   />
@@ -49,9 +48,17 @@ export const Leaderboard = ({ trackerType }: LeaderboardProps) => {
   );
 }
 
-const ErrorMessage = () => {
+export const LoadingSpinner = () => {
   return (
-    <p>Could not load leaderboard, try again later.</p>
+    <div className="flex flex-1 justify-center items-center h-20">
+      <Loader2Icon className="text-primary animate-spin size-8" />
+    </div>
+  );
+}
+
+export const ErrorMessage = ({ message }: { message: string }) => {
+  return (
+    <p>{message}</p>
   );
 }
 
@@ -78,13 +85,5 @@ const EmptyLeaderboard = (
         {/* </div> */}
       </AlertDescription>
     </Alert>
-  );
-}
-
-const LoadingLeaderboard = () => {
-  return (
-    <div className="flex flex-1 justify-center items-center h-20">
-      <Loader2Icon className="text-primary animate-spin size-8" />
-    </div>
   );
 }

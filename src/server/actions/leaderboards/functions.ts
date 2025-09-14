@@ -8,7 +8,7 @@ import { TrackerType, User } from "@prisma/client"
 
 export type LeaderboardParams = {
   trackerType: TrackerType
-  trackerIds?: string[]
+  trackerIds: string[]
 }
 /**
  * fetches all games with the status COMPLETED from the db by TrackerType and tracker ids (optional)
@@ -26,7 +26,7 @@ export async function getCompletedGames(params: LeaderboardParams) {
 
       },
       ...(
-        trackerIds // fetch only 
+        trackerIds.length > 0 // fetch only 
           ? { trackerId: { in: trackerIds } }
           : {}
       ),
@@ -108,7 +108,7 @@ export async function getLeaderboard(params: GetLeaderboardParams) {
       // 1224 -> two same placement create an offset for the next placement
       //? dense competition ranking
       // 1223 -> no offset reset for placement there for no gaps in the actual ranking
-      
+
       // difference between standard and dense ranking is reseting the value when a lower value gets found 
       // reduceState.offset = 0 // -> commented out
 

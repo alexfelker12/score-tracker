@@ -42,7 +42,7 @@ export default async function TrackersPage({
           <div className="flex justify-between gap-4">
             <h2 className="font-bold text-2xl">{finalTrackerTitle}</h2>
 
-            <LeaderboardFilter />
+            <LeaderboardFilter trackerType={finalTrackerType} />
           </div>
         </div>
 

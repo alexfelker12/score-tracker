@@ -3,12 +3,12 @@ import { create } from "zustand"
 
 type LeaderboardFilterState = {
   metric: string
-  trackerIds: string[] | undefined
+  trackerIds: string[]
 }
 
 type LeaderboardFilterActions = {
   setMetric: (metric: string) => void
-  setTrackerIds: (trackerIds: string[] | undefined) => void
+  setTrackerIds: (trackerIds: string[]) => void
 }
 
 export type LeaderboardFilterStore = LeaderboardFilterState & LeaderboardFilterActions
@@ -18,7 +18,7 @@ export const useLeaderboardFilterStore = create<LeaderboardFilterStore>()(
     
     // state
     metric: "total-wins",
-    trackerIds: undefined,
+    trackerIds: [],
 
     // setters
     setMetric: (metric) => set({ metric }),

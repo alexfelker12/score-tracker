@@ -1,13 +1,15 @@
+import { LeaderboardEntryType } from "@/server/actions/leaderboards/functions";
+
+import { cn } from "@/lib/utils";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { LeaderboardEntryType } from "@/server/actions/leaderboards/functions";
+
 
 type LeaderboardEntryProps = {
   entry: LeaderboardEntryType
 }
-
 
 const getPlacementStyles = (placing: number) => {
   // created variable for tailwind intellisense
@@ -38,7 +40,7 @@ export const LeaderboardEntry = ({ entry: { user, placing, metricValue } }: Lead
   return (
     <Card
       className={cn(
-        "flex flex-row items-center gap-2 hover:bg-accent p-3 border-2 rounded-md transition-all",
+        "flex flex-row items-center gap-2 p-3 border-2 rounded-md transition-all",
         placementStyles
       )}
     >
@@ -55,7 +57,7 @@ export const LeaderboardEntry = ({ entry: { user, placing, metricValue } }: Lead
       {/* avatar */}
       <Avatar className="size-9">
         <AvatarImage src={user.image ?? undefined} alt={username} />
-        <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
+        <AvatarFallback className="text-sm">{username.slice(0, 2).toUpperCase()}</AvatarFallback>
       </Avatar>
 
       {/* username */}

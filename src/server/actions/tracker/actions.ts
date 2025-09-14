@@ -48,7 +48,7 @@ export async function getAllTrackersByCreator(...args: FindTrackersByCreatorArgs
   return { data }
 }
 
-//* all trackers where player is participant and not creator
+//* all trackers where player is participant
 async function findTrackersAsParticipant(trackerType: TrackerType, userId: string) {
   return await prisma.tracker.findMany({
     where: {

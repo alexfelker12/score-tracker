@@ -1,10 +1,21 @@
 "use client"
 
-//* icons
-import { AwardIcon, BombIcon, ChevronDown, CrownIcon, FilterIcon, HandIcon, LucideIcon, PercentIcon, RotateCcwIcon, ShieldHalfIcon, UsersIcon } from "lucide-react";
+import React from "react";
+
+import { TrackerType } from "@prisma/client";
+
+import { FindTrackersForLeaderboardReturn } from "@/server/actions/leaderboards/actions";
+
+import { useLeaderboardTrackersQuery } from "@/hooks/use-leaderboard-trackers-query";
+import { useTimeout } from "@/hooks/use-timeout";
+
+import { cn } from "@/lib/utils";
 
 //* stores
 import { useLeaderboardFilterStore } from "@/store/leaderboardFilterStore";
+
+//* icons
+import { AwardIcon, BombIcon, ChevronDown, CrownIcon, FilterIcon, HandIcon, LucideIcon, PercentIcon, RotateCcwIcon, ShieldHalfIcon, UsersIcon } from "lucide-react";
 
 //* components
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +24,8 @@ import { Label } from "@/components/ui/label";
 import { LabeledSeparator } from "@/components/ui/labeled-separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTimeout } from "@/hooks/use-timeout";
-import { cn } from "@/lib/utils";
-import React from "react";
+import { ToggleGroup } from "@/components/ui/toggle-group";
+import { LeaderboardFilterTrackers } from "./leaderboard-filter-trackers";
 
 
 type Metric = {
@@ -95,7 +104,10 @@ export const getMetricObj = (id: string) => {
 // written here for organizational purposes
 const popoverWidthHeight = "w-[min(calc(var(--radix-popper-available-width)-var(--spacing,0.25rem)*8),480px)] max-h-[calc(var(--radix-popper-available-height)-var(--spacing,0.25rem)*4)]"
 
-export const LeaderboardFilter = () => {
+type LeaderboardFilterProps = {
+  trackerType: TrackerType
+}
+export const LeaderboardFilter = ({ trackerType }: LeaderboardFilterProps) => {
   // store values and functions
   const {
     metric, trackerIds,
@@ -104,33 +116,52 @@ export const LeaderboardFilter = () => {
 
   const [isOpen, setIsOpen] = React.useState<boolean>(false)
   const [selectedMetric, setSelectedMetric] = React.useState<string>("total-wins")
-  const [selectedTrackerIds, setSelectedTrackerIds] = React.useState<string[] | undefined>(undefined)
+  const [selectedTrackerMode, setSelectedTrackerMode] = React.useState<string>("all")
+  const [selectedTrackerIds, setSelectedTrackerIds] = React.useState<string[]>([])
+
+  const { data } = useLeaderboardTrackersQuery({ trackerType })
+  const selectedTrackers = data && data.data &&
+    data.data.filter((tracker) => selectedTrackerIds.includes(tracker.id))
 
   // badge count
   const filterCount = 0
     + (metric !== "total-wins" ? 1 : 0)
-    + (!!trackerIds && trackerIds.length > 0 ? 1 : 0)
+    + (trackerIds.length > 0 ? 1 : 0)
     ;
-  const resetDisabled = selectedMetric === "total-wins" && trackerIds === undefined;
+
+  // reset button disabled state
+  const resetDisabled = selectedMetric === "total-wins" && selectedTrackerMode === "all";
+
   const { metricObj, MetricIcon } = getMetricObj(selectedMetric)
 
   const handleApplyFilter = () => {
     setMetric(selectedMetric)
-    setTrackerIds(selectedTrackerIds)
+    setTrackerIds(selectedTrackerMode === "specific" ? selectedTrackerIds : [])
     setIsOpen(false)
+    if (selectedTrackerIds.length === 0) setSelectedTrackerMode("all")
   }
 
   const resetFilter = () => {
     if (resetDisabled) return;
     setSelectedMetric("total-wins")
-    setSelectedTrackerIds(undefined)
+    setSelectedTrackerMode("all")
+    setSelectedTrackerIds([])
   }
 
   // reset selected filters on close/cancel
   useTimeout(() => {
-    if (metric === selectedMetric && trackerIds === selectedTrackerIds) return;
+    if (
+      metric === selectedMetric
+      && trackerIds === selectedTrackerIds
+      && (
+        (selectedTrackerIds.length > 0 && selectedTrackerMode === "specific")
+        ||
+        (selectedTrackerIds.length === 0 && selectedTrackerMode === "all")
+      )
+    ) return;
     setSelectedMetric(metric)
     setSelectedTrackerIds(trackerIds)
+    setSelectedTrackerMode(trackerIds.length > 0 ? "specific" : "all")
   }, isOpen ? null : 150)
 
   return (
@@ -166,25 +197,71 @@ export const LeaderboardFilter = () => {
 
         {/* tracker and metric filter */}
         <div className="space-y-4 overflow-y-auto grow">
+
+          {/* trackers */}
           <div className="space-y-2">
             <LabeledSeparator>Trackers</LabeledSeparator>
 
-            <Tabs defaultValue="all">
-              <TabsList className="w-full">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="specific" disabled>Specific</TabsTrigger>
-              </TabsList>
+            <RadioGroup
+              className="gap-1"
+              value={selectedTrackerMode}
+              onValueChange={setSelectedTrackerMode}
+            >
+              {/* all */}
+              <Label
+                htmlFor="all-trackers"
+                className={cn(
+                  "flex gap-2 p-2 border-2 border-muted rounded-md font-normal text-sm",
+                  selectedTrackerMode === "all" && "border-primary"
+                )}
+              >
+                <RadioGroupItem
+                  value="all"
+                  id="all-trackers"
+                />
+                <span>All</span>
+              </Label>
 
-              <TabsContent value="all">
-                {/* <CustomTabContent message="hi from all" /> */}
-              </TabsContent>
+              {/* specific */}
+              <div
+                className="grid px-2 [&>*]:py-2 border-2 border-muted rounded-md"
+              >
+                <Label
+                  htmlFor="specific-trackers"
+                  className={cn(
+                    "flex gap-2 font-normal text-sm",
+                    selectedTrackerMode === "specific" && "border-b"
+                  )}
+                >
+                  <RadioGroupItem
+                    value="specific"
+                    id="specific-trackers"
+                  />
+                  <span>Specific</span>
+                </Label>
 
-              <TabsContent value="specific">
-                {/* <CustomTabContent message="hi from specific" /> */}
-              </TabsContent>
-            </Tabs>
+                {selectedTrackerMode === "specific" &&
+                  <ToggleGroup
+                    value={selectedTrackerIds}
+                    onValueChange={setSelectedTrackerIds}
+                    type="multiple"
+                    className="gap-1 grid w-full"
+                  >
+                    <LeaderboardFilterTrackers
+                      trackerType={trackerType}
+                    />
+                  </ToggleGroup>
+                }
+              </div>
+
+            </RadioGroup>
+
+            {/* selected trackers container */}
+            {selectedTrackerMode === "specific" && <SelectedTrackers selectedTrackers={selectedTrackers} />}
+
           </div>
 
+          {/* metric */}
           <div className="space-y-2">
             <LabeledSeparator>Metric</LabeledSeparator>
 
@@ -244,14 +321,27 @@ export const LeaderboardFilter = () => {
           </Button>
         </div>
 
-      </PopoverContent>
-    </Popover>
+      </PopoverContent >
+    </Popover >
   );
 }
 
-// const CustomTabContent = ({ message }: { message: string }) => {
-//   console.log(message)
-//   return (
-//     <></>
-//   );
-// }
+const SelectedTrackers = ({
+  selectedTrackers
+}: {
+  selectedTrackers: FindTrackersForLeaderboardReturn | undefined
+}) => {
+  if (!selectedTrackers || selectedTrackers.length === 0) return;
+
+  return (
+    <p className="[&>*]:last:hidden text-sm">
+      Selected: {selectedTrackers.map((selectedTracker) => (
+        <React.Fragment key={selectedTracker.id}>
+          <span className="text-muted-foreground">{selectedTracker.displayName}</span>
+          <span className="text-muted-foreground">, </span>
+        </React.Fragment>
+      ))}
+    </p>
+  );
+}
+

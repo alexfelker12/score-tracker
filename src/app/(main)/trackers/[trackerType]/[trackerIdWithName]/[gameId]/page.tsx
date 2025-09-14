@@ -39,7 +39,7 @@ export default async function GamePage({
           href: "/trackers"
         },
         {
-          name: "Schwimmen",
+          name: "> Schwimmen",
           href: "/trackers/schwimmen"
         }
       ]
