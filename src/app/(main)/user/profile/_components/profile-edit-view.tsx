@@ -56,8 +56,8 @@ export const ProfileEditView = (params: ProfileViewProps & Pick<UseUpdateUserPro
     //* preview image
     const fileReader = new FileReader()
     fileReader.onload = (e) => {
-      const result = e.target?.result as string
-      setPreviewImage(result)
+      const result = e.target?.result
+      if (typeof result === "string") setPreviewImage(result)
     }
     fileReader.readAsDataURL(file)
   }
@@ -96,6 +96,8 @@ export const ProfileEditView = (params: ProfileViewProps & Pick<UseUpdateUserPro
     }
   }
 
+  const imageFile = form.watch("imageFile") as File | undefined
+
   return (
     <div className="space-y-6">
       {/* Image upload section */}
@@ -103,11 +105,11 @@ export const ProfileEditView = (params: ProfileViewProps & Pick<UseUpdateUserPro
         <div className="relative">
 
           <Avatar className="size-24">
-            <AvatarImage src={previewImage || user.image || undefined} alt="Profile" />
+            <AvatarImage src={previewImage ?? user.image ?? ""} alt="Profile" />
             {!user.image && <AvatarFallback><UserIcon className="size-12" /></AvatarFallback>}
           </Avatar>
 
-          {form.watch("imageFile") && (
+          {imageFile && (
             <Button
               type="button"
               variant="destructive"

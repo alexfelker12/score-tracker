@@ -74,7 +74,7 @@ export const Profile = (params: ProfileProps) => {
           onClick={() => { setIsEditing(!isEditing) }}
           disabled={isUpdatePending || isQueryPending || isFetching}
         >
-          {isEditing ? <><XIcon /> Cancel</> : <><SquarePenIcon /> Edit</>}
+          {isEditing ? <><XIcon /> <span>Cancel</span></> : <><SquarePenIcon /> <span>Edit</span></>}
         </Button>
       </div>
 
