@@ -1,53 +1,25 @@
-import { TrackerType } from "@prisma/client";
-import { LeaderboardCalc } from "../LeaderboardCalcInterface";
+import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
-type StaticLeaderboardCalc = LeaderboardCalc<{
-  appearance: number
-}>
+type TotalGamesEntry = { appearances: number }
+type TotalGamesCalc = LeaderboardCalc<TotalGamesEntry>
 
-export class SchwimmenCalc_TotalGames implements StaticLeaderboardCalc {
-  trackerType = "SCHWIMMEN" as TrackerType
-  uniqueUsers: StaticLeaderboardCalc["uniqueUsers"] = new Map()
+export class SchwimmenCalc_TotalGames
+  extends BaseLeaderboardCalc<TotalGamesEntry, "appearances"> {
+    
+  trackerType = "SCHWIMMEN" as const
 
-  getTrackerType() {
-    return this.trackerType
-  }
+  collectMetricValue: TotalGamesCalc["collectMetricValue"] = ({ game }) => {
+    if (game.gameData.type !== this.trackerType) return
 
-  collectMetricValue: StaticLeaderboardCalc["collectMetricValue"] = ({ game }) => {
-    for (const participant of game.participants) {
-      if (game.gameData.type !== "SCHWIMMEN") continue;
+    for (const p of game.participants) {
+      if (!p.userId || !p.user) continue // only evaluate participants who are users
 
-      const userId = participant.userId
-      const user = participant.user
-      if (!userId || !user) continue; // only evaluate participants who are users
+      const entry = this.ensureUser(p.userId, p.user, {
+        appearances: 0,
+      })
 
-      const uniqueUsers = this.uniqueUsers
-      if (uniqueUsers.has(userId)) {
-        // increment the appearance count
-        uniqueUsers.get(userId)!.appearance++
-      } else {
-        uniqueUsers.set(userId, {
-          appearance: 1, // directly set to 1
-          user
-        })
-      }
+      entry.appearances++
     }
-  }
-
-  calculateMetricValue: StaticLeaderboardCalc["calculateMetricValue"] = () => {
-    const mappedOutput = []
-    for (const mapEntry of this.uniqueUsers.values()) {
-      const user = mapEntry.user
-      const metricValue = mapEntry.appearance
-
-      mappedOutput.push({ user, metricValue })
-    }
-
-    return mappedOutput
-  }
-
-  formatMetricValue: StaticLeaderboardCalc["formatMetricValue"] = (metricValue) => {
-    return `${metricValue}`
   }
 
 }

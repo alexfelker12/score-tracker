@@ -19,6 +19,6 @@ export const useLeaderboardTrackersQuery = ({
     refetchOnMount: false,
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000 // 5 min
+    staleTime: 10 * 60 * 1000 // 10 min
   })
 }

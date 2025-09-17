@@ -1,61 +1,43 @@
-import { TrackerType } from "@prisma/client";
-import { LeaderboardCalc } from "../LeaderboardCalcInterface";
+import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
-type StaticLeaderboardCalc = LeaderboardCalc<{
-  nukes: number
-}>
+type TotalNukesEntry = { nukes: number }
+type TotalNukesCalc = LeaderboardCalc<TotalNukesEntry>
 
-export class SchwimmenCalc_TotalNukes implements StaticLeaderboardCalc {
-  trackerType = "SCHWIMMEN" as TrackerType
-  uniqueUsers: StaticLeaderboardCalc["uniqueUsers"] = new Map()
+export class SchwimmenCalc_TotalNukes
+  extends BaseLeaderboardCalc<TotalNukesEntry, "nukes"> {
 
-  getTrackerType() {
-    return this.trackerType
-  }
+  trackerType = "SCHWIMMEN" as const
 
-  collectMetricValue: StaticLeaderboardCalc["collectMetricValue"] = ({ game }) => {
+  collectMetricValue: TotalNukesCalc["collectMetricValue"] = ({ game }) => {
+    if (game.gameData.type !== this.trackerType) return
+
     // first map all GameParticipants to their user, if user exists
     const mappedUsers = new Map<string, string>()
-    for (const participant of game.participants) {
-      const userId = participant.userId
-      const user = participant.user
-      if (!userId || !user) continue; // only evaluate participants who are users
+    for (const p of game.participants) {
+      if (!p.userId || !p.user) continue // only evaluate participants who are users
 
-      //* create connection between GameParticipant id and user id
-      mappedUsers.set(participant.id, userId)
+      // create temporary connection between GameParticipant id and user id
+      mappedUsers.set(p.id, p.userId)
 
-      if (this.uniqueUsers.has(userId)) continue; // user id already in instance's uniqueUsers
-      this.uniqueUsers.set(userId, {
-        nukes: 0, // initially no user has nukes, will be filled in the next loop
-        user
+      // call to initially set this user
+      this.ensureUser(p.userId, p.user, {
+        nukes: 0,
       })
     }
 
+    // then count nukes which appeared in the rounds
     for (const round of game.rounds) {
-      if (round.data.type !== "SCHWIMMEN") continue;
+      if (round.data.type !== this.trackerType) continue;
 
-      //* nukerId = user id of user who nuked
+      // nukerId = participant id of user who nuked
       const nukerId = round.data.nukeBy
       const userId = nukerId && mappedUsers.get(nukerId)
       if (!userId) continue;
-      this.uniqueUsers.get(userId)!.nukes++
+
+      // because of previous init entry is definitely defined
+      const entry = this.uniqueUsers.get(userId)!
+      entry.nukes++
     }
-  }
-
-  calculateMetricValue: StaticLeaderboardCalc["calculateMetricValue"] = () => {
-    const mappedOutput = []
-    for (const mapEntry of this.uniqueUsers.values()) {
-      const user = mapEntry.user
-      const metricValue = mapEntry.nukes
-
-      mappedOutput.push({ user, metricValue })
-    }
-
-    return mappedOutput
-  }
-
-  formatMetricValue: StaticLeaderboardCalc["formatMetricValue"] = (metricValue) => {
-    return `${metricValue}`
   }
 
 }

@@ -1,56 +1,42 @@
-import { TrackerType } from "@prisma/client";
-import { LeaderboardCalc } from "../LeaderboardCalcInterface";
+import { getCompletedGames } from "@/server/actions/leaderboards/functions";
+import { Prisma } from "@prisma/client";
+import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
-type StaticLeaderboardCalc = LeaderboardCalc<{
-  appearance: number
-  wins: number
-}>
+type WinrateEntry = { totalWins: number; totalGames: number }
+type WinrateCalc = LeaderboardCalc<WinrateEntry>
 
-export class SchwimmenCalc_Winrate implements StaticLeaderboardCalc {
-  trackerType = "SCHWIMMEN" as TrackerType
-  uniqueUsers: StaticLeaderboardCalc["uniqueUsers"] = new Map()
+export class SchwimmenCalc_Winrate
+  extends BaseLeaderboardCalc<WinrateEntry, "totalGames"> {
 
-  getTrackerType() {
-    return this.trackerType
-  }
+  trackerType = "SCHWIMMEN" as const
 
-  collectMetricValue: StaticLeaderboardCalc["collectMetricValue"] = ({ game }) => {
-    for (const participant of game.participants) {
-      if (game.gameData.type !== "SCHWIMMEN") continue;
+  // no constructor -> unnecessary because of overrite
 
-      const userId = participant.userId
-      const user = participant.user
-      if (!userId || !user) continue; // only evaluate participants who are users
+  collectMetricValue: WinrateCalc["collectMetricValue"] = ({ game }) => {
+    if (game.gameData.type !== this.trackerType) return
 
-      const uniqueUsers = this.uniqueUsers
-      if (uniqueUsers.has(userId)) {
-        // increment the appearance count and eventually win count
-        uniqueUsers.get(userId)!.appearance++
-        if (game.gameData.winner === participant.id) uniqueUsers.get(userId)!.wins++
-      } else {
-        uniqueUsers.set(userId, {
-          appearance: 1, // directly set to 1
-          wins: game.gameData.winner === participant.id ? 1 : 0, // 1 if initial appearce is also a win,
-          user
-        })
-      }
+    for (const p of game.participants) {
+      if (!p.userId || !p.user) continue // only evaluate participants who are users
+
+      const entry = this.ensureUser(p.userId, p.user, {
+        totalWins: 0,
+        totalGames: 0,
+      })
+
+      entry.totalGames++
+      if (game.gameData.winner === p.id) entry.totalWins++
     }
   }
 
-  calculateMetricValue: StaticLeaderboardCalc["calculateMetricValue"] = () => {
-    const mappedOutput = []
-    for (const mapEntry of this.uniqueUsers.values()) {
-      const user = mapEntry.user
-      const metricValue = Number.parseFloat((mapEntry.wins / mapEntry.appearance).toFixed(4)) // appearance will never be 0, because the user would not appear in uniqueUsers if it had 0 appearances
-
-      mappedOutput.push({ user, metricValue })
-    }
-
-    return mappedOutput
+  calculateMetricValue: WinrateCalc["calculateMetricValue"] = () => {
+    return Array.from(this.uniqueUsers.values()).map(e => ({
+      user: e.user,
+      metricValue: parseFloat((e.totalWins / e.totalGames).toFixed(4)),
+    }))
   }
 
-  formatMetricValue: StaticLeaderboardCalc["formatMetricValue"] = (metricValue) => {
-    return `${(metricValue * 100).toFixed(2)}%`
+  formatMetricValue: WinrateCalc["formatMetricValue"] = (value) => {
+    return `${(value * 100).toFixed(2)}%`
   }
-
+  
 }

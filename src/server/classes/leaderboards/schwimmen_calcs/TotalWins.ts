@@ -1,53 +1,25 @@
-import { TrackerType } from "@prisma/client";
-import { LeaderboardCalc } from "../LeaderboardCalcInterface";
+import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
-type StaticLeaderboardCalc = LeaderboardCalc<{
-  wins: number
-}>
+type TotalWinsEntry = { wins: number }
+type TotalWinsCalc = LeaderboardCalc<TotalWinsEntry>
 
-export class SchwimmenCalc_TotalWins implements StaticLeaderboardCalc {
-  trackerType = "SCHWIMMEN" as TrackerType
-  uniqueUsers: StaticLeaderboardCalc["uniqueUsers"] = new Map()
+export class SchwimmenCalc_TotalWins
+  extends BaseLeaderboardCalc<TotalWinsEntry, "wins"> {
 
-  getTrackerType() {
-    return this.trackerType
-  }
+  trackerType = "SCHWIMMEN" as const
 
-  collectMetricValue: StaticLeaderboardCalc["collectMetricValue"] = ({ game }) => {
-    if (game.gameData.type !== "SCHWIMMEN") return;
+  collectMetricValue: TotalWinsCalc["collectMetricValue"] = ({ game }) => {
+    if (game.gameData.type !== this.trackerType) return
 
-    for (const participant of game.participants) {
-      const userId = participant.userId
-      const user = participant.user
-      if (!userId || !user) continue; // only evaluate participants who are users
+    for (const p of game.participants) {
+      if (!p.userId || !p.user) continue // only evaluate participants who are users
 
-      const uniqueUsers = this.uniqueUsers
-      if (uniqueUsers.has(userId)) {
-        // increment win count if winner
-        if (game.gameData.winner === participant.id) uniqueUsers.get(userId)!.wins++
-      } else {
-        uniqueUsers.set(userId, {
-          wins: game.gameData.winner === participant.id ? 1 : 0, // 1 if initial appearance is also a win,
-          user
-        })
-      }
+      const entry = this.ensureUser(p.userId, p.user, {
+        wins: 0,
+      })
+
+      if (game.gameData.winner === p.id) entry.wins++
     }
-  }
-
-  calculateMetricValue: StaticLeaderboardCalc["calculateMetricValue"] = () => {
-    const mappedOutput = []
-    for (const mapEntry of this.uniqueUsers.values()) {
-      const user = mapEntry.user
-      const metricValue = mapEntry.wins
-
-      mappedOutput.push({ user, metricValue })
-    }
-
-    return mappedOutput
-  }
-
-  formatMetricValue: StaticLeaderboardCalc["formatMetricValue"] = (metricValue) => {
-    return `${metricValue}`
   }
 
 }

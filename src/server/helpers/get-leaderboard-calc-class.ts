@@ -22,17 +22,17 @@ export function getLeaderboardCalcClass(trackerType: TrackerType, metric: string
 
     //* SCHWIMMEN
     case "SCHWIMMEN-winrate":
-      return new SchwimmenCalc_Winrate()
+      return new SchwimmenCalc_Winrate("totalGames") // <- needs some value for metricKey but is actually unnecessary because its not used
     case "SCHWIMMEN-total-wins":
-      return new SchwimmenCalc_TotalWins()
+      return new SchwimmenCalc_TotalWins("wins")
     case "SCHWIMMEN-total-games":
-      return new SchwimmenCalc_TotalGames()
+      return new SchwimmenCalc_TotalGames("appearances")
     case "SCHWIMMEN-total-nukes":
-      return new SchwimmenCalc_TotalNukes()
+      return new SchwimmenCalc_TotalNukes("nukes")
     case "SCHWIMMEN-total-unbreakable":
-      return new SchwimmenCalc_TotalUnbreakables()
+      return new SchwimmenCalc_TotalUnbreakables("unbreakables")
     case "SCHWIMMEN-total-untouchable":
-      return new SchwimmenCalc_TotalUntouchables()
+      return new SchwimmenCalc_TotalUntouchables("untouchables")
     // case "SCHWIMMEN-total-times-swimmer":
     // TODO  return new SchwimmenCalc_TotalUnbreakable()
     // case "SCHWIMMEN-average-times-swimmer":
