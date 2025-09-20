@@ -5,6 +5,8 @@ import { SchwimmenCalc_TotalUnbreakables } from "../classes/leaderboards/schwimm
 import { SchwimmenCalc_TotalUntouchables } from "../classes/leaderboards/schwimmen_calcs/TotalUntouchables";
 import { SchwimmenCalc_TotalWins } from "../classes/leaderboards/schwimmen_calcs/TotalWins";
 import { SchwimmenCalc_Winrate } from "../classes/leaderboards/schwimmen_calcs/Winrate";
+import { SchwimmenCalc_TotalSwimmer } from "../classes/leaderboards/schwimmen_calcs/TotalSwimmer";
+import { SchwimmenCalc_AverageSwimmer } from "../classes/leaderboards/schwimmen_calcs/AverageSwimmer";
 
 
 /**
@@ -33,15 +35,16 @@ export function getLeaderboardCalcClass(trackerType: TrackerType, metric: string
       return new SchwimmenCalc_TotalUnbreakables("unbreakables")
     case "SCHWIMMEN-total-untouchable":
       return new SchwimmenCalc_TotalUntouchables("untouchables")
-    // case "SCHWIMMEN-total-times-swimmer":
-    // TODO  return new SchwimmenCalc_TotalUnbreakable()
-    // case "SCHWIMMEN-average-times-swimmer":
-    // TODO  return new SchwimmenCalc_TotalUntouchable()
+    case "SCHWIMMEN-total-times-swimmer":
+      return new SchwimmenCalc_TotalSwimmer("swimmer")
+    case "SCHWIMMEN-average-times-swimmer":
+      return new SchwimmenCalc_AverageSwimmer("totalGames") // <- needs some value for metricKey but is actually unnecessary because its not used
     // case "SCHWIMMEN-total-finale-appearances":
-    // TODO  return new SchwimmenCalc_TotalUnbreakable()
+    // TODO  return new SchwimmenCalc_()
     // case "SCHWIMMEN-average-finale-appearances":
-    // TODO  return new SchwimmenCalc_TotalUntouchable()
-
+    // TODO  return new SchwimmenCalc_()
+    // case "SCHWIMMEN-average-nukes":
+    // TODO  return new SchwimmenCalc_()
     default:
   }
 }

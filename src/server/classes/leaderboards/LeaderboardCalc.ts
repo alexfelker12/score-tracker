@@ -4,7 +4,7 @@ import { getCompletedGames, LeaderboardEntryUserType } from "@/server/actions/le
 /**
  * interface which implements base class for leaderboard calculation
  */
-export interface LeaderboardCalc<T extends Record<string, any>> {
+export interface LeaderboardCalc<T extends Record<string, unknown>> {
   trackerType: TrackerType
   uniqueUsers: Map<string, { user: LeaderboardEntryUserType } & T>
 
@@ -24,7 +24,7 @@ export interface LeaderboardCalc<T extends Record<string, any>> {
  * abstract base class implementation, which centralizes common functionality for less code duplication
  */
 export abstract class BaseLeaderboardCalc<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
   K extends keyof T = keyof T
 > implements LeaderboardCalc<T> {
   abstract trackerType: TrackerType

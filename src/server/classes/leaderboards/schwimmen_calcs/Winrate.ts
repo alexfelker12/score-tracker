@@ -1,5 +1,3 @@
-import { getCompletedGames } from "@/server/actions/leaderboards/functions";
-import { Prisma } from "@prisma/client";
 import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
 type WinrateEntry = { totalWins: number; totalGames: number }

@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ToggleGroup } from "@/components/ui/toggle-group";
 import { LeaderboardFilterTrackers } from "./leaderboard-filter-trackers";
+import { ManSwimmingIcon } from "@/components/icons/man-swimming";
 
 
 type Metric = {
@@ -91,6 +92,22 @@ export const metrics: Metric[] = [
     description: "Shows the amount of times a player won without losing a life",
     icon: HandIcon,
     unit: "",
+    disabled: false
+  },
+  {
+    id: "total-times-swimmer",
+    name: "Total Swimmer",
+    description: "Shows the amount of times a player was the swimmer",
+    icon: ManSwimmingIcon as LucideIcon,
+    unit: "",
+    disabled: false
+  },
+  {
+    id: "average-times-swimmer",
+    name: "Ø Swimmer",
+    description: "Shows the percentage of games the player was the swimmer",
+    icon: ManSwimmingIcon as LucideIcon,
+    unit: "%",
     disabled: false
   },
 ]

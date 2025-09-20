@@ -1,24 +1,24 @@
 import { BaseLeaderboardCalc, LeaderboardCalc } from "../LeaderboardCalc";
 
-type TotalWinsEntry = { wins: number }
-type TotalWinsCalc = LeaderboardCalc<TotalWinsEntry>
+type TotalSwimmerEntry = { swimmer: number }
+type TotalSwimmerCalc = LeaderboardCalc<TotalSwimmerEntry>
 
-export class SchwimmenCalc_TotalWins
-  extends BaseLeaderboardCalc<TotalWinsEntry, "wins"> {
+export class SchwimmenCalc_TotalSwimmer
+  extends BaseLeaderboardCalc<TotalSwimmerEntry, "swimmer"> {
 
   trackerType = "SCHWIMMEN" as const
 
-  collectMetricValue: TotalWinsCalc["collectMetricValue"] = ({ game }) => {
+  collectMetricValue: TotalSwimmerCalc["collectMetricValue"] = ({ game }) => {
     if (game.gameData.type !== this.trackerType) return
 
     for (const p of game.participants) {
       if (!p.userId || !p.user) continue // only evaluate participants who are users
 
-      if (game.gameData.winner === p.id) {
+      if (game.gameData.swimming === p.id) {
         const entry = this.ensureUser(p.userId, p.user, {
-          wins: 0,
+          swimmer: 0,
         })
-        entry.wins++
+        entry.swimmer++
       }
 
     }
