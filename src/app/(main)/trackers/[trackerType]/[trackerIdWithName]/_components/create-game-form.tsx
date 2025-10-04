@@ -122,7 +122,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
       <DialogTrigger asChild>
         <Button className="self-end"><DicesIcon /> New game</Button>
       </DialogTrigger>
-      <DialogContent className="flex flex-col max-h-[95%]">
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Choose participants</DialogTitle>
           <DialogDescription>
@@ -143,7 +143,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             {/** selected players, simultaneously the orderable players */}
             {(selectedPlayerIds.length > 0) &&
               <>
-                <LabeledSeparator>selected players</LabeledSeparator>
+                <LabeledSeparator className="w-full">selected players</LabeledSeparator>
 
                 <DndContext
                   sensors={sensors}
@@ -170,7 +170,7 @@ export const CreateGameForm = ({ minPlayers, maxPlayers, trackerId, players }: C
             {/* deselected players */}
             {(players.length > selectedPlayerIds.length) &&
               <>
-                <LabeledSeparator>deselected players</LabeledSeparator>
+                <LabeledSeparator className="w-full">deselected players</LabeledSeparator>
 
                 {players
                   .filter(p => !selectedPlayerIds.includes(p.id))

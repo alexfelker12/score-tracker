@@ -109,18 +109,17 @@ export const TrackerDetails = ({ session, trackerId, queryKey, dataPromise, play
               </Button>
             </DialogTrigger>
 
-            <DialogContent hidden={subOpen || sub2Open}>
+            <DialogContent hidden={subOpen || sub2Open} className="flex flex-col px-4">
               <DialogHeader>
                 <DialogTitle>Tracker players</DialogTitle>
-                <DialogDescription>
-                  Manage users to add them to a game
-                </DialogDescription>
+                <DialogDescription>Manage users to add them to a game</DialogDescription>
               </DialogHeader>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 overflow-hidden">
+
                 {session &&
                   <div
-                    className={cn("self-end",
+                    className={cn("pr-2 self-end",
                       (
                         isAddingPending
                         || isDeletePending
@@ -156,65 +155,69 @@ export const TrackerDetails = ({ session, trackerId, queryKey, dataPromise, play
                   </div>
                 }
 
-                {data.players.map((trackerPlayer) => {
-                  return (
-                    <div key={trackerPlayer.id} className="flex justify-between items-center gap-4 p-1.5 border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <TrackerPlayerDetails trackerPlayer={trackerPlayer} />
-                      </div>
-                      {session && session.user.id === trackerPlayer.playerId
-                        ? <span className="w-9 text-center text-muted-foreground text-sm italic">you</span>
-                        : <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              disabled={
-                                !session
-                                || (isDeletePending && pendingDeleteId !== trackerPlayer.id)
-                              }
-                            >
-                              {isDeletePending && pendingDeleteId === trackerPlayer.id ?
-                                <Loader2Icon className="animate-spin" /> :
-                                <Trash2Icon />}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent
-                            className="z-[100]"
-                            onOpenAutoFocus={() => setSub2Open(true)}
-                            onCloseAutoFocus={() => setSub2Open(false)}
-                            hideOverlay
-                          >
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action will delete <span className="text-primary">{trackerPlayer.player ? trackerPlayer.player.displayUsername || trackerPlayer.player.name : trackerPlayer.displayName}</span> from this tracker
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                variant="destructive"
-                                onClick={() => {
-                                  // set the pending delete ID to this player's ID
-                                  setPendingDeleteId(trackerPlayer.id)
-
-                                  deletePlayer({
-                                    trackerPlayerId: trackerPlayer.id,
-                                    userIdIfPlayer: trackerPlayer.player?.id
-                                  })
-                                }}
+                <div className="flex flex-col gap-2 px-2 overflow-y-auto">
+                  {data.players.map((trackerPlayer) => {
+                    return (
+                      <div key={trackerPlayer.id} className="flex justify-between items-center gap-4 p-1.5 border rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <TrackerPlayerDetails trackerPlayer={trackerPlayer} />
+                        </div>
+                        {session && session.user.id === trackerPlayer.playerId
+                          ? <span className="w-9 text-center text-muted-foreground text-sm italic">you</span>
+                          : <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                disabled={
+                                  !session
+                                  || (isDeletePending && pendingDeleteId !== trackerPlayer.id)
+                                }
                               >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      }
-                    </div>
-                  )
-                })}
-                {(isFetching && isAddingPending) && <Skeleton className="w-full h-[50px]" />}
+                                {isDeletePending && pendingDeleteId === trackerPlayer.id ?
+                                  <Loader2Icon className="animate-spin" /> :
+                                  <Trash2Icon />}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent
+                              className="z-[100]"
+                              onOpenAutoFocus={() => setSub2Open(true)}
+                              onCloseAutoFocus={() => setSub2Open(false)}
+                              hideOverlay
+                            >
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action will delete <span className="text-primary">{trackerPlayer.player ? trackerPlayer.player.displayUsername || trackerPlayer.player.name : trackerPlayer.displayName}</span> from this tracker
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  variant="destructive"
+                                  onClick={() => {
+                                    // set the pending delete ID to this player's ID
+                                    setPendingDeleteId(trackerPlayer.id)
+
+                                    deletePlayer({
+                                      trackerPlayerId: trackerPlayer.id,
+                                      userIdIfPlayer: trackerPlayer.player?.id
+                                    })
+                                  }}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        }
+                      </div>
+                    )
+                  })}
+
+                  {(isFetching && isAddingPending) && <Skeleton className="w-full h-[50px]" />}
+                </div>
+
               </div>
 
             </DialogContent>

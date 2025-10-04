@@ -76,7 +76,7 @@ export const AddPlayerDialog = ({
           <PlusIcon className="size-5" /> Add player
         </Button>
       </DialogTrigger>
-      <DialogContent hideOverlay={controlled}>
+      <DialogContent hideOverlay={controlled} className="overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add a player</DialogTitle>
           <DialogDescription>
@@ -192,7 +192,7 @@ export const AddPlayerDialog = ({
                   guestInputRef.current?.focus()
                 }}
                 className={cn(
-                  "size-6 absolute right-1.5 top-1/2 -translate-y-1/2 transition-opacity shrink-0",
+                  "top-1/2 right-1.5 absolute transition-opacity -translate-y-1/2 size-6 shrink-0",
                   guestInputDisabled || !guest
                     ? "!opacity-0 select-none"
                     : "opacity-100"
