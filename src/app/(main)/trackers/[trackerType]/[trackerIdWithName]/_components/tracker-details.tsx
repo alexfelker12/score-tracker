@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { auth } from "@/lib/auth";
 import { getOtherUsers } from "@/server/actions/user/actions";
 import { CreateGameForm } from "./create-game-form";
+import { TrackerGames } from "./tracker-games";
 
 export type TrackerDetailsProps = {
   session: typeof auth.$Infer.Session
@@ -237,25 +238,10 @@ export const TrackerDetails = ({ session, trackerId, queryKey, dataPromise, play
       <div>
         <h3>Games:</h3>
         {/* display games as tabs, each tab has games based on status */}
-        {data.games.length > 0
-          ? data.games.map((game) => {
-            return (
-              <div
-                key={game.id}
-                className="flex flex-wrap gap-x-2 mb-2"
-              >
-                <span>-</span>
-                <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>{game.id} - {game.status}</Link>
-                <span className="ml-[calc(6.41px+.5rem)] text-muted-foreground text-sm">{timeElapsed(game.createdAt)}</span>
-              </div>
-            )
-          })
-          :
-          <span className="italic">No games played yet</span>
-        }
+        <TrackerGames games={data.games} />
       </div>
 
-    </div >
+    </div>
   );
 }
 

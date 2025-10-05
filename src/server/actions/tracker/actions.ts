@@ -3,7 +3,7 @@
 import { participantsSchema } from "@/schema/participants"
 import { tryCatch } from "@/server/helpers/try-catch"
 import { prisma } from "@/server/prisma"
-import { Prisma, TrackerType } from "@prisma/client/edge"
+import { Game, Prisma, TrackerType } from "@prisma/client/edge"
 import { z } from "zod"
 
 
@@ -152,7 +152,12 @@ async function findTrackerById(trackerId: string) {
               displayName: true
             }
           },
-          status: true
+          status: true,
+          _count: {
+            select: {
+              participants: true
+            }
+          }
         },
         orderBy: {
           createdAt: "desc"
@@ -164,6 +169,27 @@ async function findTrackerById(trackerId: string) {
 }
 export type FindTrackerByIdReturn = Prisma.PromiseReturnType<typeof findTrackerById>
 export type FindTrackerByIdArgs = Parameters<typeof findTrackerById>
+export type FindTrackerByIdReturnGames = Prisma.GameGetPayload<{
+  select: {
+    id: true,
+    createdAt: true,
+    tracker: {
+      select: {
+        id: true,
+        displayName: true
+      }
+    },
+    status: true,
+    _count: {
+      select: {
+        participants: true
+      }
+    }
+  },
+  orderBy: {
+    createdAt: "desc"
+  }
+}>[]
 
 export async function getTrackerById(...args: FindTrackerByIdArgs) {
   const { data, error } = await tryCatch<FindTrackerByIdReturn>(

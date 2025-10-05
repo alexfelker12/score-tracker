@@ -76,7 +76,10 @@ export const AddPlayerDialog = ({
           <PlusIcon className="size-5" /> Add player
         </Button>
       </DialogTrigger>
-      <DialogContent hideOverlay={controlled} className="overflow-hidden">
+      <DialogContent
+        // hideOverlay={controlled} // <- makes command list unscrollable
+        className="overflow-hidden"
+      >
         <DialogHeader>
           <DialogTitle>Add a player</DialogTitle>
           <DialogDescription>
