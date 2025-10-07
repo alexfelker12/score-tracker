@@ -13,7 +13,7 @@ import { getTrackerById } from "@/server/actions/tracker/actions";
 import { addPlayerToTracker, deleteTrackerPlayerById } from "@/server/actions/tracker/trackerPlayer/actions";
 
 //* lib
-import { cn, timeElapsed } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 //* icons
 import { Loader2Icon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
@@ -25,8 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 //* local
-import { AddPlayerDialog } from "@/components/ui/trackers/add-player-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AddPlayerDialog } from "@/components/ui/trackers/add-player-dialog";
 import { auth } from "@/lib/auth";
 import { getOtherUsers } from "@/server/actions/user/actions";
 import { CreateGameForm } from "./create-game-form";
