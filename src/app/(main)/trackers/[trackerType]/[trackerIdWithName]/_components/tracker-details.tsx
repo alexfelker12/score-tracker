@@ -235,8 +235,11 @@ export const TrackerDetails = ({ session, trackerId, queryKey, dataPromise, play
       </div>
 
 
-      <div>
-        <h3>Games:</h3>
+      <div className="space-y-1">
+        <div>
+          <h3 className="font-semibold">Games</h3>
+          <div className="border-b-2 w-full"></div>
+        </div>
         {/* display games as tabs, each tab has games based on status */}
         <TrackerGames games={data.games} />
       </div>
@@ -266,7 +269,8 @@ export const TrackerPlayerDetails = ({ trackerPlayer }: TrackerPlayerProps) => {
           : <>
             <span className="font-medium text-sm leading-none">{trackerPlayer.displayName}</span>
             <span className="text-muted-foreground text-xs italic leading-none">Guest</span>
-          </>}
+          </>
+        }
       </div>
     </>
   );

@@ -3,7 +3,7 @@
 import { participantsSchema } from "@/schema/participants"
 import { tryCatch } from "@/server/helpers/try-catch"
 import { prisma } from "@/server/prisma"
-import { Game, Prisma, TrackerType } from "@prisma/client/edge"
+import { Prisma, TrackerType } from "@prisma/client/edge"
 import { z } from "zod"
 
 
@@ -149,15 +149,23 @@ async function findTrackerById(trackerId: string) {
           tracker: {
             select: {
               id: true,
-              displayName: true
+              displayName: true,
+              type: true
             }
           },
           status: true,
-          _count: {
-            select: {
-              participants: true
+          participants: {
+            include: {
+              user: {
+                select: {
+                  displayUsername: true,
+                  name: true,
+                  image: true
+                }
+              }
             }
-          }
+          },
+          gameData: true
         },
         orderBy: {
           createdAt: "desc"
@@ -169,27 +177,35 @@ async function findTrackerById(trackerId: string) {
 }
 export type FindTrackerByIdReturn = Prisma.PromiseReturnType<typeof findTrackerById>
 export type FindTrackerByIdArgs = Parameters<typeof findTrackerById>
-export type FindTrackerByIdReturnGames = Prisma.GameGetPayload<{
+export type FindTrackerByIdReturnGame = Prisma.GameGetPayload<{
   select: {
     id: true,
     createdAt: true,
     tracker: {
       select: {
         id: true,
-        displayName: true
+        displayName: true,
+        type: true
       }
     },
     status: true,
-    _count: {
-      select: {
-        participants: true
+    participants: {
+      include: {
+        user: {
+          select: {
+            displayUsername: true,
+            name: true,
+            image: true
+          }
+        }
       }
-    }
+    },
+    gameData: true
   },
   orderBy: {
     createdAt: "desc"
   }
-}>[]
+}>
 
 export async function getTrackerById(...args: FindTrackerByIdArgs) {
   const { data, error } = await tryCatch<FindTrackerByIdReturn>(

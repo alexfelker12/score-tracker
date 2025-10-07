@@ -1,32 +1,19 @@
 "use client"
 
-//* next/react
-import Link from "next/link";
-import React from "react";
-
-//* packages
-
-//* server
-import { FindTrackerByIdReturnGames } from "@/server/actions/tracker/actions";
-
-//* lib
-import { timeElapsed } from "@/lib/utils";
+import { ItemGroup } from "@/components/ui/item";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-//* icons
-
-//* components
-
-//* local
+import { GameCard } from "@/components/ui/trackers/game-cards/_game-card";
+import { FindTrackerByIdReturnGame } from "@/server/actions/tracker/actions";
+import { GameStatus } from "@prisma/client";
 
 export type TrackerGamesProps = {
-  games: FindTrackerByIdReturnGames
+  games: FindTrackerByIdReturnGame[]
 }
 export const TrackerGames = ({ games }: TrackerGamesProps) => {
 
-  const activeGames: typeof games = []
-  const completedGames: typeof games = []
-  const canceledGames: typeof games = []
+  const activeGames: FindTrackerByIdReturnGame[] = []
+  const completedGames: FindTrackerByIdReturnGame[] = []
+  const canceledGames: FindTrackerByIdReturnGame[] = []
 
   games.forEach((game) => {
     switch (game.status) {
@@ -58,43 +45,48 @@ export const TrackerGames = ({ games }: TrackerGamesProps) => {
       {/* content */}
       <TabsContent value="active">
         {activeGames.length > 0
-          ? activeGames.map((game) => <GameCard key={game.id} game={game} />)
-          : <span className="flex justify-self-center p-2 text-muted-foreground text-sm">Currently no active games</span>
+          ?
+          <ItemGroup className="gap-y-1">
+            {activeGames.map((game) => <GameCard key={game.id} game={game} />)}
+          </ItemGroup>
+          :
+          <NoGamesNotice status="ACTIVE" />
         }
       </TabsContent>
 
       <TabsContent value="completed">
         {completedGames.length > 0
-          ? completedGames.map((game) => <GameCard key={game.id} game={game} />)
-          : <span className="flex justify-self-center p-2 text-muted-foreground text-sm">Currently no completed games</span>
+          ?
+          <ItemGroup className="gap-y-1">
+            {completedGames.map((game) => <GameCard key={game.id} game={game} />)}
+          </ItemGroup>
+          :
+          <NoGamesNotice status="COMPLETED" />
         }
       </TabsContent>
 
       <TabsContent value="canceled">
         {canceledGames.length > 0
-          ? canceledGames.map((game) => <GameCard key={game.id} game={game} />)
-          : <span className="flex justify-self-center p-2 text-muted-foreground text-sm">Currently no canceled games</span>
+          ?
+          <ItemGroup className="gap-y-1">
+            {canceledGames.map((game) => <GameCard key={game.id} game={game} />)}
+          </ItemGroup>
+          :
+          <NoGamesNotice status="CANCELLED" />
         }
       </TabsContent>
     </Tabs>
   );
 }
 
-type GameCardProps = {
-  game: FindTrackerByIdReturnGames[number]
+type NoGamesNoticeProps = {
+  status: GameStatus
 }
-const GameCard = ({ game }: GameCardProps) => {
+const NoGamesNotice = ({ status }: NoGamesNoticeProps) => {
+  const lowerCaseStatus = status.toLowerCase()
   return (
-    <div
-      className="flex flex-wrap justify-between gap-x-2 mb-2"
-    >
-      <span className="space-x-2">
-        <span>-</span>
-        <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>
-          {game.id}
-        </Link>
-      </span>
-      <span className="ml-[calc(6.41px+.5rem)] text-muted-foreground text-sm">{timeElapsed(game.createdAt)}</span>
-    </div>
+    <span className="flex justify-center p-2 border rounded-md text-muted-foreground text-sm">
+      Currently no {lowerCaseStatus} games
+    </span>
   );
 }
