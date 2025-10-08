@@ -33,12 +33,15 @@ export const SchwimmenGameCard = ({ game }: SchwimmenGameCardProps) => {
   return (
     <Item size="xs" variant="outline">
       <ItemContent className="gap-0.5">
-        <ItemTitle>{timeDate} - {game.participants.length} players</ItemTitle>
-        <ItemDescription>
-          <Link href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}>
-            {game.id}
-          </Link>
-        </ItemDescription>
+        <Link
+          className="group/link"
+          href={`/trackers/schwimmen/${encodeURIComponent(game.tracker.id) + "-" + game.tracker.displayName}/${game.id}`}
+        >
+          <ItemTitle>{timeDate} - {game.participants.length} players</ItemTitle>
+          <ItemDescription className="group-hover/link:text-primary underline underline-offset-4">
+            Game-ID:{game.id}
+          </ItemDescription>
+        </Link>
       </ItemContent>
       <ItemActions>
         <Dialog>
