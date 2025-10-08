@@ -7,13 +7,13 @@ import { ProfileViewProps } from "./profile";
 
 export const ProfileDefaultView = ({ userData }: ProfileViewProps) => {
   return (
-    <div className="flex md:flex-row flex-col items-center md:items-start md:space-x-6 space-y-4 md:space-y-0">
+    <div className="flex flex-row items-center space-x-6 space-y-0">
       <Avatar className="size-24">
         <AvatarImage src={userData.image || undefined} alt={userData.displayUsername || "User"} />
         {!userData.image && <AvatarFallback><UserIcon className="size-12" /></AvatarFallback>}
       </Avatar>
 
-      <div className="space-y-1 text-center md:text-left">
+      <div className="space-y-1 text-left">
         <h2 className="font-bold text-xl">
           {userData.displayUsername || "Anonymous User"}
         </h2>

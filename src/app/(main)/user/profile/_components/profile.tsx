@@ -54,7 +54,7 @@ export const Profile = (params: ProfileProps) => {
     // notify user that the profile has been updated successfully
     toast.success("Your profile was successfully updated")
 
-    // refresh the page to reload newest image for user dropdown - only if profile picture was changed
+    // refresh the page to reload newest image for user dropdown
     router.refresh()
     refetch()
 
