@@ -44,9 +44,9 @@ export const ProfileImage = ({ className }: ProfileImageProps) => {
     setDeleteImage(false)
   };
 
-  if (!isEditing && deleteImage) {
+  if (!isEditing && (deleteImage || croppedImage)) {
     setTimeout(() => {
-      setDeleteImage(false)
+      handleReset()
     }, 0)
   }
 
