@@ -164,7 +164,58 @@ export const isValidTrackerType = (trackerType: string) => {
  * 
  * @param trackerType string which is a TrackerType enum
  * @returns PATH_TO_TRACKERPROPS object of TrackerType
- */ 
+ */
 export const extractTrackerPathType = (trackerType: string) => {
   return PATH_TO_TRACKERPROPS[trackerType as keyof typeof PATH_TO_TRACKERPROPS]
 }
+
+/**
+ * turns the base64 string from react-crop-image to a js File object, using the fetch method
+ * 
+ * @param base64String string
+ * @param filename Optional string
+ * @returns Promise File
+ */
+export async function base64ToFile(base64String: string, filename?: string) {
+  const res = await fetch(base64String);
+  const blob = await res.blob();
+  const mime = blob.type || "image/jpeg";
+  return new File([blob], filename || "file", { type: mime });
+}
+
+/**
+ * username validator, checks for length, trailing whitespaces and for generic characters:
+ * /^[A-Za-z0-9_. ]+$/ -> alphanummeric letters, numbers, dots, underscores and whitespaces
+ * 
+ * @param username 
+ * @returns Object { valid: boolean, if invalid - reason: string }
+ */
+export function validateUsername(username: string) {
+  //* length check
+  if (username.length < 1 || username.length > 16) {
+    return { valid: false, reason: "Username must be between 1 and 16 characters long" };
+  }
+
+  //* no leading spaces
+  if (username.startsWith(" ")) {
+    return { valid: false, reason: "Username cannot start or end with a space" };
+  }
+
+  //* no leading or trailing spaces
+  // if (username.startsWith(" ") || username.endsWith(" ")) {
+  //   return { valid: false, reason: "Username cannot start or end with a space" };
+  // }
+
+  //* no consecutive spaces
+  if (username.includes("  ")) {
+    return { valid: false, reason: "Username cannot contain consecutive spaces" };
+  }
+
+  //* allowed characters only
+  if (!/^[A-Za-z0-9_. ]+$/.test(username)) {
+    return { valid: false, reason: "Username can only contain letters, numbers, underscores, dots, and spaces" };
+  }
+
+  return { valid: true };
+}
+

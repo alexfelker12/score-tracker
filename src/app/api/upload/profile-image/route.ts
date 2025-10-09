@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     //* generate a unique filename for new profile picture
-    const fileExtension = file.name.split('.').pop();
+    const fileExtension = file.type.split('/').pop();
     const filename = `profile-images/${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
 
     const arrayBuffer = await file.arrayBuffer();

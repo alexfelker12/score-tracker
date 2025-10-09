@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CropIcon, RotateCcwIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 import {
@@ -27,6 +27,7 @@ import ReactCrop, {
 import { cn } from "@/lib/utils";
 
 import "react-image-crop/dist/ReactCrop.css";
+import { VariantProps } from "class-variance-authority";
 
 const centerAspectCrop = (
   mediaWidth: number,
@@ -36,14 +37,14 @@ const centerAspectCrop = (
   centerCrop(
     aspect
       ? makeAspectCrop(
-          {
-            unit: "%",
-            width: 90,
-          },
-          aspect,
-          mediaWidth,
-          mediaHeight
-        )
+        {
+          unit: "%",
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight
+      )
       : { x: 0, y: 0, width: 90, height: 90, unit: "%" },
     mediaWidth,
     mediaHeight
@@ -263,7 +264,7 @@ export const ImageCropContent = ({
       {imgSrc && (
         <img
           alt="crop"
-          className="size-full"
+          className="rounded-md size-full"
           onLoad={onImageLoad}
           ref={imgRef}
           src={imgSrc}
@@ -273,7 +274,7 @@ export const ImageCropContent = ({
   );
 };
 
-export type ImageCropApplyProps = ComponentProps<"button"> & {
+export type ImageCropApplyProps = ComponentProps<"button"> & VariantProps<typeof buttonVariants> & {
   asChild?: boolean;
 };
 
@@ -305,7 +306,7 @@ export const ImageCropApply = ({
   );
 };
 
-export type ImageCropResetProps = ComponentProps<"button"> & {
+export type ImageCropResetProps = ComponentProps<"button"> & VariantProps<typeof buttonVariants> & {
   asChild?: boolean;
 };
 

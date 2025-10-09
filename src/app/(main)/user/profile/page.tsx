@@ -8,9 +8,8 @@ import { auth } from "@/lib/auth";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Profile } from "./_components-new/Profile"
+import { Profile } from "./_components-new/Profile";
+import { ProfileSkeleton } from "./_components-new/ProfileSkeleton";
 
 
 export default async function UserProfile() {
@@ -38,18 +37,5 @@ export default async function UserProfile() {
         </Suspense>
       </div>
     </main >
-  );
-}
-
-const ProfileSkeleton = () => {
-  return (
-    <div className="flex flex-col gap-y-4 p-4 border rounded-md w-full">
-      <Skeleton className="rounded-full size-24 self-center" />
-      <Separator className="w-full" />
-      <div className="space-y-3">
-        <Skeleton className="mt-1 w-24 h-5" />
-        <Skeleton className="w-44 h-3.5" />
-      </div>
-    </div>
   );
 }

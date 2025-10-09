@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { username } from "better-auth/plugins"
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/server/prisma";
+import { validateUsername } from "./utils";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
@@ -9,7 +10,8 @@ export const auth = betterAuth({
     // process.env.VERCEL_URL!, // only on production
     process.env.VERCEL_URL!,
     "http://192.168.178.71:3000",
-    "https://bw-score-tracker.vercel.app"
+    "https://bw-score-tracker.vercel.app",
+    "https://bw-tracker.de/"
   ],
   emailAndPassword: {
     enabled: true,
@@ -29,7 +31,14 @@ export const auth = betterAuth({
   },
   plugins: [
     username({
-      minUsernameLength: 1
+      minUsernameLength: 1,
+      usernameValidator: (username) => {
+        if (username === "admin") {
+          return false
+        }
+        const { valid } = validateUsername(username) // global username validator
+        return valid
+      }
     })
   ]
 })

@@ -1,29 +1,40 @@
 "use client";
 
-import { MailIcon } from "lucide-react";
-import { useProfileContext } from "./ProfileContext";
 import { Input } from "@/components/ui/input";
 
+import { useUsernameValidation } from "@/hooks/use-username-validation";
+import { useProfileContext } from "./ProfileContext";
 
-export const ProfileUsername = () => {
-  const { user, isEditing, username, setNewUsername } = useProfileContext()
+
+type ProfileUsernameProps = React.ComponentProps<"span">
+export const ProfileUsername = ({ }: ProfileUsernameProps) => {
+  const { user, disabled, isEditing } = useProfileContext()
+  const currentUsername = user.displayUsername || user.name
+
+  const { isValid, error, validate } = useUsernameValidation()
+
+  if (!isEditing && !isValid) {
+    validate(currentUsername) // reset validation with current (valid) username
+  }
+
   return (
-    <>
-      <span className="font-bold text-xl">
-        {isEditing
-          ? <Input
-            value={username}
-            onInput={(e) => setNewUsername(e.currentTarget.value)}
-            className="-mx-[5px] px-1 py-0.5 h-7 text-xl align-middle"
+    <div className="inline-flex flex-col gap-y-0.5">
+      {isEditing
+        ? <>
+          <Input
+            id="newUsername"
+            name="newUsername"
+            autoComplete="off"
+            defaultValue={currentUsername}
+            onInput={e => validate(e.currentTarget.value)}
+            aria-invalid={!isValid}
+            disabled={disabled}
+            className="px-1 py-0.5 h-7 font-bold text-xl align-middle"
           />
-          :
-          <span>{username}</span>
-        }
-      </span>
-
-      <span className="flex items-center gap-1.5 text-muted-foreground">
-        <MailIcon className="size-4" /> {user.email}
-      </span>
-    </>
+          {!isValid && <span className="text-destructive text-sm">{error}</span>}
+        </>
+        : <span className="font-bold text-xl">{currentUsername}</span>
+      }
+    </div>
   );
 }

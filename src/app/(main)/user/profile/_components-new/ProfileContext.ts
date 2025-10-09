@@ -4,11 +4,14 @@ import { createContext, use } from "react";
 
 const ProfileContext = createContext<{
   user: User
-  buttonsDisabled: boolean
+  disabled: boolean
   isEditing: boolean
-  toggleEditing: () => void
-  username: string
-  setNewUsername: (newUsername: string) => void
+
+  // image
+  croppedImage: string | undefined
+  setCroppedImage: (image: string | undefined) => void
+  deleteImage: boolean
+  setDeleteImage: (del: boolean) => void
 } | null>(null)
 
 export function useProfileContext() {
