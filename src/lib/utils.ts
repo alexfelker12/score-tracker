@@ -192,8 +192,8 @@ export async function base64ToFile(base64String: string, filename?: string) {
  */
 export function validateUsername(username: string) {
   //* length check
-  if (username.length < 1 || username.length > 16) {
-    return { valid: false, reason: "Username must be between 1 and 16 characters long" };
+  if (username.length < 1 || username.length > 25) {
+    return { valid: false, reason: "Username must be between 1 and 25 characters long" };
   }
 
   //* no leading spaces
